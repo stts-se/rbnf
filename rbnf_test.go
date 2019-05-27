@@ -218,3 +218,79 @@ func Test_Expand1(t *testing.T) {
 	}
 
 }
+
+func Test_Expand2(t *testing.T) {
+	defaultRules := RuleSet{
+		Name: "default",
+		Rules: []BaseRule{
+			{0, "", "", "noll", "", "", 10},
+			{1, "", "", "ett", "", "", 10},
+			{2, "", "", "två", "", "", 10},
+			{3, "", "", "tre", "", "", 10},
+			{4, "", "", "fyra", "", "", 10},
+			{5, "", "", "fem", "", "", 10},
+			{6, "", "", "sex", "", "", 10},
+			{7, "", "", "sju", "", "", 10},
+			{8, "", "", "åtta", "", "", 10},
+			{9, "", "", "nio", "", "", 10},
+			{10, "", "", "tio", "", "", 10},
+			{11, "", "", "elva", "", "", 10},
+			{12, "", "", "tolv", "", "", 10},
+			{13, "", "", "tretton", "", "", 10},
+			{14, "", "", "fjorton", "", "", 10},
+			{15, "", "", "femton", "", "", 10},
+			{16, "", "", "sexton", "", "", 10},
+			{17, "", "", "sjutton", "", "", 10},
+			{18, "", "", "arton", "", "", 10},
+			{19, "", "", "nitton", "", "", 10},
+			{20, "", "", "tjugo", "-", "[>>]", 10},
+			{30, "", "", "trettio", "-", "[>>]", 10},
+			{40, "", "", "fyrtio", "-", "[>>]", 10},
+			{50, "", "", "femtio", "-", "[>>]", 10},
+			{60, "", "", "sextio", "-", "[>>]", 10},
+			{70, "", "", "sjuttio", "-", "[>>]", 10},
+			{80, "", "", "åttio", "-", "[>>]", 10},
+			{90, "", "", "nittio", "-", "[>>]", 10},
+			{100, "<<", "", "hundra", " ", "[>>]", 10},
+			{1100, "<<", " ", "hundra", " ", "[>>]", 100},
+			{2000, "<<", " ", "tusen", " ", "[>>]", 10},
+		},
+	}
+
+	g, err := NewRuleSetGroup(
+		"years",
+		[]RuleSet{
+			defaultRules,
+		})
+	if err != nil {
+		t.Errorf("Couldn't create rule set group : %v", err)
+	}
+
+	// TEST
+	var exp, res string
+
+	res, err = g.Expand(12, "default")
+	exp = "tolv"
+	if res != exp {
+		t.Errorf(fs, exp, res)
+	}
+
+	res, err = g.Expand(1803, "default")
+	exp = "arton hundra tre"
+	if res != exp {
+		t.Errorf(fs, exp, res)
+	}
+
+	res, err = g.Expand(1983, "default")
+	exp = "nitton hundra åttio-tre"
+	if res != exp {
+		t.Errorf(fs, exp, res)
+	}
+
+	res, err = g.Expand(2001, "default")
+	exp = "två tusen ett"
+	if res != exp {
+		t.Errorf(fs, exp, res)
+	}
+
+}
