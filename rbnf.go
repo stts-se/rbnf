@@ -3,6 +3,7 @@ package rbnf
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 )
 
@@ -18,6 +19,7 @@ type BaseRule struct {
 	SpellOut     string
 	RightPadding string
 	RightSub     string
+	Radix        int
 }
 
 type RuleSetGroup struct {
@@ -25,35 +27,47 @@ type RuleSetGroup struct {
 	RuleSets map[string]RuleSet
 }
 
-func NewRuleSetGroup(name string, ruleSets map[string]RuleSet) (RuleSetGroup, error) {
-	for _, ruleSet := range ruleSets {
+func NewRuleSetGroup(name string, ruleSets []RuleSet) (RuleSetGroup, error) {
+	rsMap := make(map[string]RuleSet)
+	for _, rs := range ruleSets {
+		// sort each rule set in ascending order
+		sort.Slice(rs.Rules, func(i, j int) bool { return rs.Rules[i].BaseNum < rs.Rules[j].BaseNum })
+		rsMap[rs.Name] = rs
+	}
+	res := RuleSetGroup{Name: name, RuleSets: rsMap}
+
+	for _, ruleSet := range res.RuleSets {
 		for _, rule := range ruleSet.Rules {
-			if isRuleName(rule.LeftPadding) {
+			if isRuleName(rule.LeftSub) {
+				if _, ok := res.RuleSets[rule.LeftSub]; !ok {
+					return res, fmt.Errorf("No such rule set: %s", rule.LeftSub)
+				}
+			}
+			if isRuleName(rule.RightSub) {
+				if _, ok := res.RuleSets[rule.RightSub]; !ok {
+					return res, fmt.Errorf("No such rule set: %s", rule.RightSub)
+				}
 			}
 		}
 	}
-	return RuleSetGroup{Name: name, RuleSets: ruleSets}, nil
+	return res, nil
 }
 
 func (r BaseRule) Divisor() int {
 	/** http://icu-project.org/apiref/icu4c/classRuleBasedNumberFormat.html
-	bv/rad>: 	bv specifies the rule's base value.
-
-	To calculate the divisor, let the radix be rad, and the exponent be the highest exponent of the radix that yields a result less than or equal to the base value.
+	To calculate the divisor, let [...] the exponent be the highest exponent of the radix that yields a result less than or equal to the base value.
 	If the exponent is positive or 0, the divisor is the radix raised to the power of the exponent; otherwise, the divisor is 1.
 	*/
-
-	radix := 10 // TODO: variable radix
 
 	//for rad >= 0
 	//exponent : the highest exponent of the radix that is less than or equal to the base value
 	//divisor: radix^exponent
 	var exponent, divisor int
-	for i := 1; exp(radix, i) <= r.BaseNum; i++ {
+	for i := 1; exp(r.Radix, i) <= r.BaseNum; i++ {
 		exponent = i
 	}
 	if exponent >= 0 {
-		divisor = exp(radix, exponent)
+		divisor = exp(r.Radix, exponent)
 	} else {
 		divisor = 1
 	}
@@ -69,7 +83,6 @@ func (g RuleSetGroup) Expand(n int, ruleSet string) (string, error) {
 
 func (g RuleSetGroup) expand(n int, ruleSet RuleSet) string {
 
-	// TODO: sort rules in ascending order
 	var factor BaseRule
 	for _, r := range ruleSet.Rules {
 		if r.BaseNum <= n {
