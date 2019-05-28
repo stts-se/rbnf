@@ -73,7 +73,7 @@ func TestRulesFromXMLFile(t *testing.T) {
 
 	fmt.Printf("%#v\n", sor)
 
-	if w, g := "spellout-numbering", sor.RuleSets["spellout-numbering"].Name; w != g {
+	if w, g := "spellout-numbering-t", sor.RuleSets["spellout-numbering-t"].Name; w != g {
 		t.Errorf("wanted '%s' got '%s'", w, g)
 	}
 }

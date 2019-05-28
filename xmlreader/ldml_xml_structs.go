@@ -32,7 +32,7 @@ type Rbnfrule struct {
 	XMLName   xml.Name `xml:"rbnfrule,omitempty" json:"rbnfrule,omitempty"`
 	Attrradix string   `xml:"radix,attr"  json:",omitempty"`
 	Attrvalue string   `xml:"value,attr"  json:",omitempty"`
-	string    string   `xml:",chardata" json:",omitempty"`
+	String    string   `xml:",chardata" json:",omitempty"`
 }
 
 type Ruleset struct {

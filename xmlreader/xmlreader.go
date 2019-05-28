@@ -4,6 +4,8 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/stts-se/rbnf"
@@ -27,8 +29,21 @@ func readXMLFile(fn string) (Ldml, error) {
 
 func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 	var res rbnf.RuleSet
+	res.Name = rs.Attrtype
 	for _, r := range rs.Rbnfrule {
-		fmt.Printf("RULE %#v\n", r)
+		//fmt.Printf("RULE %#v\n", r)
+		rule := rbnf.BaseRule{}
+		baseNum, err := strconv.Atoi(r.Attrvalue)
+		if err != nil {
+
+			fmt.Fprintf(os.Stderr, "failed to convert rule. Skipping: %v : %v\n", r, err)
+			//return res, fmt.Errorf("rule conversion failed : %v", err)
+			continue
+		}
+
+		rule.Base = baseNum
+
+		res.Rules = append(res.Rules, rule)
 	}
 
 	return res, nil
