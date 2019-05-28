@@ -158,9 +158,9 @@ func main() {
 			log.Fatalf("Couldn't parse numeral %v : %v", s, err)
 		}
 
-		res, err := g.Expand(n, "default")
+		res, err := g.Spellout(n, "default")
 		if err != nil {
-			log.Fatalf("Couldn't expand numeral %v : %v", n, err)
+			log.Fatalf("Couldn't spellout numeral %v : %v", n, err)
 		}
 		fmt.Printf("%s\n", res)
 	}

@@ -22,6 +22,26 @@ type BaseRule struct {
 	Radix        int
 }
 
+// type IntRule struct {
+// 	BaseNum      int
+// 	LeftSub      string
+// 	LeftPadding  string
+// 	SpellOut     string
+// 	RightPadding string
+// 	RightSub     string
+// 	Radix        int
+// }
+
+// type MatchRes struct {
+// 	Left   string
+// 	Middle string
+// 	Right  string
+// }
+
+// type BaseRule interface {
+// 	Match(input string) MatchRes
+// }
+
 type RuleSetGroup struct {
 	Name     string
 	RuleSets map[string]RuleSet
@@ -74,30 +94,40 @@ func (r BaseRule) Divisor() int {
 	return divisor
 }
 
-func (g RuleSetGroup) Expand(n int, ruleSet string) (string, error) {
+func (g RuleSetGroup) Spellout(n int, ruleSet string) (string, error) {
 	if rs, ok := g.RuleSets[ruleSet]; ok {
-		return g.expand(n, rs), nil
+		return g.spellout(n, rs), nil
 	}
 	return "", fmt.Errorf("No such rule set: %s", ruleSet)
 }
 
-func (g RuleSetGroup) expand(n int, ruleSet RuleSet) string {
-
-	var factor BaseRule
+func findMatchingRule(n int, ruleSet RuleSet) (BaseRule, bool) {
+	var res BaseRule
+	var found = false
 	for _, r := range ruleSet.Rules {
 		if r.BaseNum <= n {
-			factor = r
+			res = r
+			found = true
 		}
 		if r.BaseNum > n {
 			break
 		}
 	}
+	return res, found
+}
 
-	if n == 0 && factor.BaseNum == n {
-		return factor.SpellOut
+func (g RuleSetGroup) spellout(n int, ruleSet RuleSet) string {
+
+	matchedRule, ok := findMatchingRule(n, ruleSet)
+	if !ok {
+		return fmt.Sprintf("%d", n)
 	}
 
-	divisor := factor.Divisor()
+	if n == 0 && matchedRule.BaseNum == n {
+		return matchedRule.SpellOut
+	}
+
+	divisor := matchedRule.Divisor()
 
 	// >> in normal rule: Divide the number by the rule's divisor and format the remainder
 	remainderRight := n % divisor
@@ -107,32 +137,32 @@ func (g RuleSetGroup) expand(n int, ruleSet RuleSet) string {
 
 	var left, right string
 	if remainderRight != 0 {
-		if factor.RightSub == "[>>]" { // Text in brackets is omitted if the number being formatted is an even multiple of 10
+		if matchedRule.RightSub == "[>>]" { // Text in brackets is omitted if the number being formatted is an even multiple of 10
 			if n%10 != 0 {
-				remSpelled := g.expand(remainderRight, ruleSet)
+				remSpelled := g.spellout(remainderRight, ruleSet)
 				right = remSpelled
 			}
-		} else if factor.RightSub == ">>" {
-			remSpelled := g.expand(remainderRight, ruleSet)
+		} else if matchedRule.RightSub == ">>" {
+			remSpelled := g.spellout(remainderRight, ruleSet)
 			right = remSpelled
-		} else if namedRuleSet, ok := g.RuleSets[factor.RightSub]; ok {
-			right = g.expand(remainderRight, namedRuleSet)
-		} else if factor.RightSub != "" {
-			log.Fatalf("Unknown rule context: %s", factor.RightSub)
+		} else if namedRuleSet, ok := g.RuleSets[matchedRule.RightSub]; ok {
+			right = g.spellout(remainderRight, namedRuleSet)
+		} else if matchedRule.RightSub != "" {
+			log.Fatalf("Unknown rule context: %s", matchedRule.RightSub)
 		}
 	}
 
 	if remainderLeft != 0 {
-		if factor.LeftSub == "<<" {
-			left = g.expand(remainderLeft, ruleSet)
-		} else if namedRuleSet, ok := g.RuleSets[factor.LeftSub]; ok {
-			left = g.expand(remainderLeft, namedRuleSet)
-		} else if factor.LeftSub != "" {
-			log.Fatalf("Unknown rule context: %s", factor.LeftSub)
+		if matchedRule.LeftSub == "<<" {
+			left = g.spellout(remainderLeft, ruleSet)
+		} else if namedRuleSet, ok := g.RuleSets[matchedRule.LeftSub]; ok {
+			left = g.spellout(remainderLeft, namedRuleSet)
+		} else if matchedRule.LeftSub != "" {
+			log.Fatalf("Unknown rule context: %s", matchedRule.LeftSub)
 		}
 	}
 
-	res := strings.TrimSpace(left + factor.LeftPadding + factor.SpellOut + factor.RightPadding + right)
+	res := strings.TrimSpace(left + matchedRule.LeftPadding + matchedRule.SpellOut + matchedRule.RightPadding + right)
 	return res
 }
 

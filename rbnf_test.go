@@ -60,7 +60,7 @@ func Test_Divisor(t *testing.T) {
 
 }
 
-func Test_Expand1(t *testing.T) {
+func Test_Spellout1(t *testing.T) {
 	defaultRules := RuleSet{
 		Name: "default",
 		Rules: []BaseRule{
@@ -199,19 +199,19 @@ func Test_Expand1(t *testing.T) {
 	// TEST
 	var exp, res string
 
-	res, err = g.Expand(12, "default")
+	res, err = g.Spellout(12, "default")
 	exp = "tolv"
 	if res != exp {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Expand(3106, "default")
+	res, err = g.Spellout(3106, "default")
 	exp = "tre tusen ett hundra sex"
 	if res != exp {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Expand(31607106, "default")
+	res, err = g.Spellout(31607106, "default")
 	exp = "trettio-en miljoner sex hundra sju tusen ett hundra sex"
 	if res != exp {
 		t.Errorf(fs, exp, res)
@@ -219,10 +219,12 @@ func Test_Expand1(t *testing.T) {
 
 }
 
-func Test_Expand2(t *testing.T) {
+func Test_Spellout2(t *testing.T) {
 	defaultRules := RuleSet{
 		Name: "default",
 		Rules: []BaseRule{
+			// {"-x", "", "", "minus", " ", ">>", 10},
+			// {"x.x", "<<", " ", "komma", " ", ">>", 10},
 			{0, "", "", "noll", "", "", 10},
 			{1, "", "", "ett", "", "", 10},
 			{2, "", "", "två", "", "", 10},
@@ -269,25 +271,25 @@ func Test_Expand2(t *testing.T) {
 	// TEST
 	var exp, res string
 
-	res, err = g.Expand(12, "default")
+	res, err = g.Spellout(12, "default")
 	exp = "tolv"
 	if res != exp {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Expand(1803, "default")
+	res, err = g.Spellout(1803, "default")
 	exp = "arton hundra tre"
 	if res != exp {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Expand(1983, "default")
+	res, err = g.Spellout(1983, "default")
 	exp = "nitton hundra åttio-tre"
 	if res != exp {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Expand(2001, "default")
+	res, err = g.Spellout(2001, "default")
 	exp = "två tusen ett"
 	if res != exp {
 		t.Errorf(fs, exp, res)
