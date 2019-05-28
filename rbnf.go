@@ -69,13 +69,6 @@ type MatchResult struct {
 	ForwardRight string
 }
 
-func (g RuleSetGroup) Spellout(input string, ruleSetName string) (string, error) {
-	if rs, ok := g.RuleSets[ruleSetName]; ok {
-		return g.spellout(input, rs), nil
-	}
-	return "", fmt.Errorf("No such rule set: %s", ruleSetName)
-}
-
 type RulePackage struct {
 	Language      string
 	RuleSetGroups map[string]RuleSetGroup
@@ -135,6 +128,13 @@ func findMatchingRule(input string, ruleSet RuleSet) (BaseRule, bool) {
 		}
 	}
 	return res, found
+}
+
+func (g RuleSetGroup) Spellout(input string, ruleSetName string) (string, error) {
+	if rs, ok := g.RuleSets[ruleSetName]; ok {
+		return g.spellout(input, rs), nil
+	}
+	return "", fmt.Errorf("No such rule set: %s", ruleSetName)
 }
 
 func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) string {
