@@ -199,19 +199,19 @@ func Test_Spellout1(t *testing.T) {
 	// TEST
 	var exp, res string
 
-	res, err = g.Spellout(12, "default")
+	res, err = g.Spellout("12", "default")
 	exp = "tolv"
 	if res != exp {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout(3106, "default")
+	res, err = g.Spellout("3106", "default")
 	exp = "tre tusen ett hundra sex"
 	if res != exp {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout(31607106, "default")
+	res, err = g.Spellout("31607106", "default")
 	exp = "trettio-en miljoner sex hundra sju tusen ett hundra sex"
 	if res != exp {
 		t.Errorf(fs, exp, res)
@@ -271,25 +271,25 @@ func Test_Spellout2(t *testing.T) {
 	// TEST
 	var exp, res string
 
-	res, err = g.Spellout(12, "default")
+	res, err = g.Spellout("12", "default")
 	exp = "tolv"
 	if res != exp {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout(1803, "default")
+	res, err = g.Spellout("1803", "default")
 	exp = "arton hundra tre"
 	if res != exp {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout(1983, "default")
+	res, err = g.Spellout("1983", "default")
 	exp = "nitton hundra åttio-tre"
 	if res != exp {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout(2001, "default")
+	res, err = g.Spellout("2001", "default")
 	exp = "två tusen ett"
 	if res != exp {
 		t.Errorf(fs, exp, res)

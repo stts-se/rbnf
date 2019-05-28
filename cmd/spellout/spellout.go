@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 
 	"github.com/stts-se/rbnf"
 )
@@ -153,14 +152,9 @@ func main() {
 
 	for _, s := range os.Args[1:] {
 
-		n, err := strconv.Atoi(s)
+		res, err := g.Spellout(s, "default")
 		if err != nil {
-			log.Fatalf("Couldn't parse numeral %v : %v", s, err)
-		}
-
-		res, err := g.Spellout(n, "default")
-		if err != nil {
-			log.Fatalf("Couldn't spellout numeral %v : %v", n, err)
+			log.Fatalf("Couldn't spellout numeral %v : %v", s, err)
 		}
 		fmt.Printf("%s\n", res)
 	}

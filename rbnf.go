@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -13,13 +14,82 @@ type RuleSet struct {
 }
 
 type BaseRule struct {
-	BaseNum      int
+	Base         int
 	LeftSub      string
 	LeftPadding  string
 	SpellOut     string
 	RightPadding string
 	RightSub     string
 	Radix        int
+}
+
+func (r BaseRule) Divisor() int {
+	/** http://icu-project.org/apiref/icu4c/classRuleBasedNumberFormat.html
+	To calculate the divisor, let [...] the exponent be the highest exponent of the radix that yields a result less than or equal to the base value.
+	If the exponent is positive or 0, the divisor is the radix raised to the power of the exponent; otherwise, the divisor is 1.
+	*/
+
+	//for rad >= 0
+	//exponent : the highest exponent of the radix that is less than or equal to the base value
+	//divisor: radix^exponent
+	var exponent, divisor int
+	for i := 1; exp(r.Radix, i) <= r.Base; i++ {
+		exponent = i
+	}
+	if exponent >= 0 {
+		divisor = exp(r.Radix, exponent)
+	} else {
+		divisor = 1
+	}
+	return divisor
+}
+func (r BaseRule) Matches(input string) bool {
+	n, err := strconv.Atoi(input)
+	if err != nil {
+		return false
+	}
+	return r.Base <= n
+}
+
+func (r BaseRule) Match(input string) MatchResult {
+	n, err := strconv.Atoi(input)
+	if err != nil {
+		return MatchResult{}
+	}
+	divisor := r.Divisor()
+	// >> in normal rule: Divide the number by the rule's divisor and format the remainder
+	right := n % divisor
+	// << in normal rule: Divide the number by the rule's divisor and format the quotient
+	left := n / divisor
+	return MatchResult{ForwardLeft: fmt.Sprintf("%d", left), ForwardRight: fmt.Sprintf("%d", right)}
+}
+
+type MatchResult struct {
+	ForwardLeft  string
+	ForwardRight string
+}
+
+func (g RuleSetGroup) Spellout(input string, ruleSetName string) (string, error) {
+	if rs, ok := g.RuleSets[ruleSetName]; ok {
+		return g.spellout(input, rs), nil
+	}
+	return "", fmt.Errorf("No such rule set: %s", ruleSetName)
+}
+
+type RulePackage struct {
+	Language      string
+	RuleSetGroups map[string]RuleSetGroup
+}
+
+func (p RulePackage) Spellout(input string, groupName string, ruleSetName string) (string, error) {
+	if g, ok := p.RuleSetGroups[groupName]; ok {
+		res, err := g.Spellout(input, ruleSetName)
+		if err != nil {
+			return "", err
+		}
+		return res, nil
+	}
+	return "", fmt.Errorf("No such rule set group: %s", groupName)
 }
 
 type RuleSetGroup struct {
@@ -31,7 +101,7 @@ func NewRuleSetGroup(name string, ruleSets []RuleSet) (RuleSetGroup, error) {
 	rsMap := make(map[string]RuleSet)
 	for _, rs := range ruleSets {
 		// sort each rule set in ascending order
-		sort.Slice(rs.Rules, func(i, j int) bool { return rs.Rules[i].BaseNum < rs.Rules[j].BaseNum })
+		sort.Slice(rs.Rules, func(i, j int) bool { return rs.Rules[i].Base < rs.Rules[j].Base })
 		rsMap[rs.Name] = rs
 	}
 	res := RuleSetGroup{Name: name, RuleSets: rsMap}
@@ -53,93 +123,56 @@ func NewRuleSetGroup(name string, ruleSets []RuleSet) (RuleSetGroup, error) {
 	return res, nil
 }
 
-func (r BaseRule) Divisor() int {
-	/** http://icu-project.org/apiref/icu4c/classRuleBasedNumberFormat.html
-	To calculate the divisor, let [...] the exponent be the highest exponent of the radix that yields a result less than or equal to the base value.
-	If the exponent is positive or 0, the divisor is the radix raised to the power of the exponent; otherwise, the divisor is 1.
-	*/
-
-	//for rad >= 0
-	//exponent : the highest exponent of the radix that is less than or equal to the base value
-	//divisor: radix^exponent
-	var exponent, divisor int
-	for i := 1; exp(r.Radix, i) <= r.BaseNum; i++ {
-		exponent = i
-	}
-	if exponent >= 0 {
-		divisor = exp(r.Radix, exponent)
-	} else {
-		divisor = 1
-	}
-	return divisor
-}
-
-func (g RuleSetGroup) Spellout(n int, ruleSet string) (string, error) {
-	if rs, ok := g.RuleSets[ruleSet]; ok {
-		return g.spellout(n, rs), nil
-	}
-	return "", fmt.Errorf("No such rule set: %s", ruleSet)
-}
-
-func findMatchingRule(n int, ruleSet RuleSet) (BaseRule, bool) {
+func findMatchingRule(input string, ruleSet RuleSet) (BaseRule, bool) {
 	var res BaseRule
 	var found = false
 	for _, r := range ruleSet.Rules {
-		if r.BaseNum <= n {
+		if r.Matches(input) {
 			res = r
 			found = true
-		}
-		if r.BaseNum > n {
+		} else {
 			break
 		}
 	}
 	return res, found
 }
 
-func (g RuleSetGroup) spellout(n int, ruleSet RuleSet) string {
+func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) string {
 
-	matchedRule, ok := findMatchingRule(n, ruleSet)
+	matchedRule, ok := findMatchingRule(input, ruleSet)
 	if !ok {
-		return fmt.Sprintf("%d", n)
+		return input
 	}
 
-	if n == 0 && matchedRule.BaseNum == n {
+	if fmt.Sprintf("%d", matchedRule.Base) == input {
+		// if n == 0 && matchedRule.Base == n {
 		return matchedRule.SpellOut
 	}
 
-	divisor := matchedRule.Divisor()
-
-	// >> in normal rule: Divide the number by the rule's divisor and format the remainder
-	remainderRight := n % divisor
-
-	// << in normal rule: Divide the number by the rule's divisor and format the quotient
-	remainderLeft := n / divisor
+	match := matchedRule.Match(input)
 
 	var left, right string
-	if remainderRight != 0 {
-		if matchedRule.RightSub == "[>>]" { // Text in brackets is omitted if the number being formatted is an even multiple of 10
-			if n%10 != 0 {
-				remSpelled := g.spellout(remainderRight, ruleSet)
-				right = remSpelled
-			}
-		} else if matchedRule.RightSub == ">>" {
-			remSpelled := g.spellout(remainderRight, ruleSet)
+	if matchedRule.RightSub == "[>>]" { // Text in brackets is omitted if the number being formatted is an even multiple of 10
+		//if n%10 != 0 {
+		if !strings.HasSuffix(input, "0") {
+			remSpelled := g.spellout(match.ForwardRight, ruleSet)
 			right = remSpelled
-		} else if namedRuleSet, ok := g.RuleSets[matchedRule.RightSub]; ok {
-			right = g.spellout(remainderRight, namedRuleSet)
-		} else if matchedRule.RightSub != "" {
-			log.Fatalf("Unknown rule context: %s", matchedRule.RightSub)
 		}
+	} else if matchedRule.RightSub == ">>" {
+		remSpelled := g.spellout(match.ForwardRight, ruleSet)
+		right = remSpelled
+	} else if namedRuleSet, ok := g.RuleSets[matchedRule.RightSub]; ok {
+		right = g.spellout(match.ForwardRight, namedRuleSet)
+	} else if matchedRule.RightSub != "" {
+		log.Fatalf("Unknown rule context: %s", matchedRule.RightSub)
 	}
 
-	if remainderLeft != 0 {
-		if matchedRule.LeftSub == "<<" {
-			left = g.spellout(remainderLeft, ruleSet)
-		} else if namedRuleSet, ok := g.RuleSets[matchedRule.LeftSub]; ok {
-			left = g.spellout(remainderLeft, namedRuleSet)
-		} else if matchedRule.LeftSub != "" {
-			log.Fatalf("Unknown rule context: %s", matchedRule.LeftSub)
-		}
+	if matchedRule.LeftSub == "<<" {
+		left = g.spellout(match.ForwardLeft, ruleSet)
+	} else if namedRuleSet, ok := g.RuleSets[matchedRule.LeftSub]; ok {
+		left = g.spellout(match.ForwardLeft, namedRuleSet)
+	} else if matchedRule.LeftSub != "" {
+		log.Fatalf("Unknown rule context: %s", matchedRule.LeftSub)
 	}
 
 	res := strings.TrimSpace(left + matchedRule.LeftPadding + matchedRule.SpellOut + matchedRule.RightPadding + right)
