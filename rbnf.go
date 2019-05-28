@@ -2,7 +2,6 @@ package rbnf
 
 import (
 	"fmt"
-	"log"
 	"sort"
 	"strconv"
 	"strings"
@@ -91,9 +90,6 @@ type RuleSetGroup struct {
 }
 
 func (g RuleSetGroup) FindRuleSet(ruleRef string) (RuleSet, bool) {
-	if !isRuleRef(ruleRef) {
-		return RuleSet{}, false
-	}
 	ruleName := strings.TrimPrefix(ruleRef, "%")
 	res, ok := g.RuleSets[ruleName]
 	return res, ok
@@ -140,22 +136,23 @@ func findMatchingRule(input string, ruleSet RuleSet) (BaseRule, bool) {
 }
 
 func (g RuleSetGroup) Spellout(input string, ruleSetName string) (string, error) {
-	if rs, ok := g.RuleSets[ruleSetName]; ok {
-		return g.spellout(input, rs), nil
+	if rs, ok := g.FindRuleSet(ruleSetName); ok {
+		return g.spellout(input, rs)
 	}
 	return "", fmt.Errorf("No such rule set: %s", ruleSetName)
 }
 
-func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) string {
+func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) (string, error) {
+	var err error
 
 	matchedRule, ok := findMatchingRule(input, ruleSet)
 	if !ok {
-		return input
+		return input, fmt.Errorf("No matching base rule for %s", input)
 	}
 
 	if fmt.Sprintf("%d", matchedRule.Base) == input {
 		// if n == 0 && matchedRule.Base == n {
-		return matchedRule.SpellOut
+		return matchedRule.SpellOut, nil
 	}
 
 	match := matchedRule.Match(input)
@@ -164,28 +161,43 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) string {
 	if matchedRule.RightSub == "[>>]" { // Text in brackets is omitted if the number being formatted is an even multiple of 10
 		//if n%10 != 0 {
 		if !strings.HasSuffix(input, "0") {
-			remSpelled := g.spellout(match.ForwardRight, ruleSet)
-			right = remSpelled
+			right, err = g.spellout(match.ForwardRight, ruleSet)
+			if err != nil {
+				return "", err
+			}
 		}
 	} else if matchedRule.RightSub == ">>" {
-		remSpelled := g.spellout(match.ForwardRight, ruleSet)
-		right = remSpelled
-	} else if namedRuleSet, ok := g.FindRuleSet((matchedRule.RightSub); ok {
-		right = g.spellout(match.ForwardRight, namedRuleSet)
+		right, err = g.spellout(match.ForwardRight, ruleSet)
+		if err != nil {
+			return "", err
+		}
+	} else if namedRuleSet, ok := g.FindRuleSet(matchedRule.RightSub); ok {
+		right, err = g.spellout(match.ForwardRight, namedRuleSet)
+		if err != nil {
+			return "", err
+		}
 	} else if matchedRule.RightSub != "" {
-		log.Fatalf("Unknown rule context: %s", matchedRule.RightSub)
+		return "", fmt.Errorf("Unknown rule context: %s", matchedRule.RightSub)
 	}
 
 	if matchedRule.LeftSub == "<<" {
-		left = g.spellout(match.ForwardLeft, ruleSet)
+		left, err = g.spellout(match.ForwardLeft, ruleSet)
+		if err != nil {
+			return "", err
+		}
+
 	} else if namedRuleSet, ok := g.FindRuleSet(matchedRule.LeftSub); ok {
-		left = g.spellout(match.ForwardLeft, namedRuleSet)
+		left, err = g.spellout(match.ForwardLeft, namedRuleSet)
+		if err != nil {
+			return "", err
+		}
+
 	} else if matchedRule.LeftSub != "" {
-		log.Fatalf("Unknown rule context: %s", matchedRule.LeftSub)
+		return "", fmt.Errorf("Unknown rule context: %s", matchedRule.LeftSub)
 	}
 
 	res := strings.TrimSpace(left + matchedRule.LeftPadding + matchedRule.SpellOut + matchedRule.RightPadding + right)
-	return res
+	return res, nil
 }
 
 func exp(x, y int) int {
@@ -197,5 +209,7 @@ func exp(x, y int) int {
 }
 
 func isRuleRef(s string) bool {
-	return strings.HasPrefix(s, "%") // s != "" && !strings.Contains(s, "<") && !strings.Contains(s, ">")
+	res := strings.HasPrefix(s, "%") || (s != "" && !strings.Contains(s, "<") && !strings.Contains(s, ">"))
+	//fmt.Printf("%v %v\n", s, res)
+	return res
 }

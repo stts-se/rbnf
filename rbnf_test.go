@@ -96,12 +96,12 @@ func Test_Spellout1(t *testing.T) {
 			{100, "<<", " ", "hundra", " ", "[>>]", 10},
 
 			{1000, "", " ", "ettusen", " ", "[>>]", 10},
-			{2000, "spellout-cardinal-reale", " ", "tusen", " ", "[>>]", 10},
+			{2000, "%spellout-cardinal-reale", " ", "tusen", " ", "[>>]", 10},
 
 			{1000000, "", " ", "en miljon", " ", "[>>]", 10},
-			{2000000, "spellout-cardinal-reale", " ", "miljoner", " ", "[>>]", 10},
+			{2000000, "%spellout-cardinal-reale", " ", "miljoner", " ", "[>>]", 10},
 			{1000000000, "", "", "en miljard", " ", "[>>]", 10},
-			{2000000000, "spellout-cardinal-reale", " ", "miljarder", " ", "[>>]", 10},
+			{2000000000, "%spellout-cardinal-reale", " ", "miljarder", " ", "[>>]", 10},
 		},
 	}
 
@@ -136,11 +136,11 @@ func Test_Spellout1(t *testing.T) {
 			{70, "", "", "sjuttio", "-", "[>>]", 10},
 			{80, "", "", "åttio", "-", "[>>]", 10},
 			{90, "", "", "nittio", "-", "[>>]", 10},
-			{100, "spellout-cardinal-neuter", " ", "hundra", " ", "[>>]", 10},
+			{100, "%spellout-cardinal-neuter", " ", "hundra", " ", "[>>]", 10},
 			{1000, "", " ", "ettusen", "-", "[>>]", 10},
-			{2000, "spellout-cardinal-reale", " ", "tusen", " ", "[>>]", 10},
+			{2000, "%spellout-cardinal-reale", " ", "tusen", " ", "[>>]", 10},
 			{1000000, "", " ", "en miljon", " ", "[>>]", 10},
-			{2000000, "spellout-cardinal-reale", " ", "miljoner", " ", "[>>]", 10},
+			{2000000, "%spellout-cardinal-reale", " ", "miljoner", " ", "[>>]", 10},
 		},
 	}
 
@@ -175,13 +175,13 @@ func Test_Spellout1(t *testing.T) {
 			{70, "", "", "sjuttio", "-", "[>>]", 10},
 			{80, "", "", "åttio", "-", "[>>]", 10},
 			{90, "", "", "nittio", "-", "[>>]", 10},
-			{100, "spellout-cardinal-neuter", "", "hundra", " ", "[>>]", 10},
+			{100, "%spellout-cardinal-neuter", "", "hundra", " ", "[>>]", 10},
 			{1000, "", "", "ettusen", " ", "[>>]", 10},
-			{2000, "spellout-cardinal-reale", "", "tusen", " ", "[>>]", 10},
+			{2000, "%spellout-cardinal-reale", "", "tusen", " ", "[>>]", 10},
 			{1000000, "", "", "en miljon", " ", "[>>]", 10},
-			{2000000, "spellout-cardinal-reale", " ", "miljoner", " ", "[>>]", 10},
+			{2000000, "%spellout-cardinal-reale", " ", "miljoner", " ", "[>>]", 10},
 			{1000000000, "", "", "en miljard", " ", "[>>]", 10},
-			{2000000000, "spellout-cardinal-reale", " ", "miljarder", " ", "[>>]", 10},
+			{2000000000, "%spellout-cardinal-reale", " ", "miljarder", " ", "[>>]", 10},
 		},
 	}
 
@@ -200,18 +200,27 @@ func Test_Spellout1(t *testing.T) {
 	var exp, res string
 
 	res, err = g.Spellout("12", "default")
+	if err != nil {
+		t.Error(err)
+	}
 	exp = "tolv"
 	if res != exp {
 		t.Errorf(fs, exp, res)
 	}
 
 	res, err = g.Spellout("3106", "default")
+	if err != nil {
+		t.Error(err)
+	}
 	exp = "tre tusen ett hundra sex"
 	if res != exp {
 		t.Errorf(fs, exp, res)
 	}
 
 	res, err = g.Spellout("31607106", "default")
+	if err != nil {
+		t.Error(err)
+	}
 	exp = "trettio-en miljoner sex hundra sju tusen ett hundra sex"
 	if res != exp {
 		t.Errorf(fs, exp, res)
@@ -272,27 +281,48 @@ func Test_Spellout2(t *testing.T) {
 	var exp, res string
 
 	res, err = g.Spellout("12", "default")
+	if err != nil {
+		t.Error(err)
+	}
 	exp = "tolv"
 	if res != exp {
 		t.Errorf(fs, exp, res)
 	}
 
 	res, err = g.Spellout("1803", "default")
+	if err != nil {
+		t.Error(err)
+	}
 	exp = "arton hundra tre"
 	if res != exp {
 		t.Errorf(fs, exp, res)
 	}
 
 	res, err = g.Spellout("1983", "default")
+	if err != nil {
+		t.Error(err)
+	}
 	exp = "nitton hundra åttio-tre"
 	if res != exp {
 		t.Errorf(fs, exp, res)
 	}
 
 	res, err = g.Spellout("2001", "default")
+	if err != nil {
+		t.Error(err)
+	}
 	exp = "två tusen ett"
 	if res != exp {
 		t.Errorf(fs, exp, res)
+	}
+
+	res, err = g.Spellout("-2001", "default")
+	exp = "No matching base rule for -2001"
+	if err == nil {
+		t.Errorf("Expected error, found %v", err)
+	}
+	if err.Error() != exp {
+		t.Errorf(fs, exp, err)
 	}
 
 }

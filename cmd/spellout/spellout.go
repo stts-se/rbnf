@@ -45,12 +45,12 @@ func main() {
 			{100, "<<", " ", "hundra", " ", "[>>]", 10},
 
 			{1000, "", " ", "ettusen", " ", "[>>]", 10},
-			{2000, "spellout-cardinal-reale", " ", "tusen", " ", "[>>]", 10},
+			{2000, "%spellout-cardinal-reale", " ", "tusen", " ", "[>>]", 10},
 
 			{1000000, "", " ", "en miljon", " ", "[>>]", 10},
-			{2000000, "spellout-cardinal-reale", " ", "miljoner", " ", "[>>]", 10},
+			{2000000, "%spellout-cardinal-reale", " ", "miljoner", " ", "[>>]", 10},
 			{1000000000, "", "", "en miljard", " ", "[>>]", 10},
-			{2000000000, "spellout-cardinal-reale", " ", "miljarder", " ", "[>>]", 10},
+			{2000000000, "%spellout-cardinal-reale", " ", "miljarder", " ", "[>>]", 10},
 		},
 	}
 
@@ -85,11 +85,11 @@ func main() {
 			{70, "", "", "sjuttio", "-", "[>>]", 10},
 			{80, "", "", "åttio", "-", "[>>]", 10},
 			{90, "", "", "nittio", "-", "[>>]", 10},
-			{100, "spellout-cardinal-neuter", " ", "hundra", " ", "[>>]", 10},
+			{100, "%spellout-cardinal-neuter", " ", "hundra", " ", "[>>]", 10},
 			{1000, "", " ", "ettusen", "-", "[>>]", 10},
-			{2000, "spellout-cardinal-reale", " ", "tusen", " ", "[>>]", 10},
+			{2000, "%spellout-cardinal-reale", " ", "tusen", " ", "[>>]", 10},
 			{1000000, "", " ", "en miljon", " ", "[>>]", 10},
-			{2000000, "spellout-cardinal-reale", " ", "miljoner", " ", "[>>]", 10},
+			{2000000, "%spellout-cardinal-reale", " ", "miljoner", " ", "[>>]", 10},
 		},
 	}
 
@@ -124,13 +124,13 @@ func main() {
 			{70, "", "", "sjuttio", "-", "[>>]", 10},
 			{80, "", "", "åttio", "-", "[>>]", 10},
 			{90, "", "", "nittio", "-", "[>>]", 10},
-			{100, "spellout-cardinal-neuter", "", "hundra", " ", "[>>]", 10},
+			{100, "%spellout-cardinal-neuter", "", "hundra", " ", "[>>]", 10},
 			{1000, "", "", "ettusen", " ", "[>>]", 10},
-			{2000, "spellout-cardinal-reale", "", "tusen", " ", "[>>]", 10},
+			{2000, "%spellout-cardinal-reale", "", "tusen", " ", "[>>]", 10},
 			{1000000, "", "", "en miljon", " ", "[>>]", 10},
-			{2000000, "spellout-cardinal-reale", " ", "miljoner", " ", "[>>]", 10},
+			{2000000, "%spellout-cardinal-reale", " ", "miljoner", " ", "[>>]", 10},
 			{1000000000, "", "", "en miljard", " ", "[>>]", 10},
-			{2000000000, "spellout-cardinal-reale", " ", "miljarder", " ", "[>>]", 10},
+			{2000000000, "%spellout-cardinal-reale", " ", "miljarder", " ", "[>>]", 10},
 		},
 	}
 
