@@ -103,7 +103,7 @@ func buildStringMatchRegexp(baseString string) *regexp.Regexp {
 	reString = noInitialX.ReplaceAllString(reString, "()$1") // add empty prefix group if needed
 	reString = noFinalX.ReplaceAllString(reString, "$1()")   // add empty suffix group if needed
 	reString = strings.ReplaceAll(reString, "x", "(.*)")     // regexp group for x sequences
-	//fmt.Printf("%v => /%v/\n", r.BaseString, reString)
+	//fmt.Printf("%v => /%v/\n", baseString, reString)
 	re := regexp.MustCompile("^" + reString + "$")
 	return re
 }
@@ -121,6 +121,8 @@ func (r BaseRule) Match(input string) (MatchResult, bool) {
 		left := n / divisor
 		return MatchResult{ForwardLeft: fmt.Sprintf("%d", left), ForwardRight: fmt.Sprintf("%d", right)}, true
 	}
+
+	// String rule
 	if r.stringMatchRegexp != emptyRegexp {
 		r.stringMatchRegexp = buildStringMatchRegexp(r.BaseString)
 	}
