@@ -90,6 +90,15 @@ type RuleSetGroup struct {
 	RuleSets map[string]RuleSet
 }
 
+func (g RuleSetGroup) FindRuleSet(ruleRef string) (RuleSet, bool) {
+	if !isRuleRef(ruleRef) {
+		return RuleSet{}, false
+	}
+	ruleName := strings.TrimPrefix(ruleRef, "%")
+	res, ok := g.RuleSets[ruleName]
+	return res, ok
+}
+
 func NewRuleSetGroup(name string, ruleSets []RuleSet) (RuleSetGroup, error) {
 	rsMap := make(map[string]RuleSet)
 	for _, rs := range ruleSets {
@@ -101,13 +110,13 @@ func NewRuleSetGroup(name string, ruleSets []RuleSet) (RuleSetGroup, error) {
 
 	for _, ruleSet := range res.RuleSets {
 		for _, rule := range ruleSet.Rules {
-			if isRuleName(rule.LeftSub) {
-				if _, ok := res.RuleSets[rule.LeftSub]; !ok {
+			if isRuleRef(rule.LeftSub) {
+				if _, ok := res.FindRuleSet(rule.LeftSub); !ok {
 					return res, fmt.Errorf("No such rule set: %s", rule.LeftSub)
 				}
 			}
-			if isRuleName(rule.RightSub) {
-				if _, ok := res.RuleSets[rule.RightSub]; !ok {
+			if isRuleRef(rule.RightSub) {
+				if _, ok := res.FindRuleSet(rule.RightSub); !ok {
 					return res, fmt.Errorf("No such rule set: %s", rule.RightSub)
 				}
 			}
@@ -161,7 +170,7 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) string {
 	} else if matchedRule.RightSub == ">>" {
 		remSpelled := g.spellout(match.ForwardRight, ruleSet)
 		right = remSpelled
-	} else if namedRuleSet, ok := g.RuleSets[matchedRule.RightSub]; ok {
+	} else if namedRuleSet, ok := g.FindRuleSet((matchedRule.RightSub); ok {
 		right = g.spellout(match.ForwardRight, namedRuleSet)
 	} else if matchedRule.RightSub != "" {
 		log.Fatalf("Unknown rule context: %s", matchedRule.RightSub)
@@ -169,7 +178,7 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) string {
 
 	if matchedRule.LeftSub == "<<" {
 		left = g.spellout(match.ForwardLeft, ruleSet)
-	} else if namedRuleSet, ok := g.RuleSets[matchedRule.LeftSub]; ok {
+	} else if namedRuleSet, ok := g.FindRuleSet(matchedRule.LeftSub); ok {
 		left = g.spellout(match.ForwardLeft, namedRuleSet)
 	} else if matchedRule.LeftSub != "" {
 		log.Fatalf("Unknown rule context: %s", matchedRule.LeftSub)
@@ -187,6 +196,6 @@ func exp(x, y int) int {
 	return res
 }
 
-func isRuleName(s string) bool {
-	return s != "" && !strings.Contains(s, "<") && !strings.Contains(s, ">")
+func isRuleRef(s string) bool {
+	return strings.HasPrefix(s, "%") // s != "" && !strings.Contains(s, "<") && !strings.Contains(s, ">")
 }
