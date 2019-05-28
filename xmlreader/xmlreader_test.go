@@ -65,4 +65,15 @@ func TestRulesFromXMLFile(t *testing.T) {
 		t.Errorf("Noooo!")
 	}
 
+	if w, g := "SpelloutRules", ruleSetGroups[0].Name; w != g {
+		t.Errorf("wanted '%s' got '%s'", w, g)
+	}
+
+	sor := ruleSetGroups[0]
+
+	fmt.Printf("%#v\n", sor)
+
+	if w, g := "spellout-numbering", sor.RuleSets["spellout-numbering"].Name; w != g {
+		t.Errorf("wanted '%s' got '%s'", w, g)
+	}
 }

@@ -27,6 +27,10 @@ func readXMLFile(fn string) (Ldml, error) {
 
 func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 	var res rbnf.RuleSet
+	for _, r := range rs.Rbnfrule {
+		fmt.Printf("RULE %#v\n", r)
+	}
+
 	return res, nil
 }
 
