@@ -49,3 +49,20 @@ func TestReadXMLFile(t *testing.T) {
 	}
 
 }
+
+func TestRulesFromXMLFile(t *testing.T) {
+
+	lang, ruleSetGroups, err := RulesFromXMLFile("sv.xml")
+	if err != nil {
+		t.Errorf("Pain! %v", err)
+	}
+
+	if w, g := "sv", lang; w != g {
+		t.Errorf("wanted '%s' got '%s'", w, g)
+	}
+
+	if len(ruleSetGroups) == 0 {
+		t.Errorf("Noooo!")
+	}
+
+}
