@@ -34,28 +34,35 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 		//fmt.Printf("RULE %#v\n", r)
 		rule := rbnf.BaseRule{}
 		baseNum, err := strconv.Atoi(r.Attrvalue)
-		if err != nil {
-
-			fmt.Fprintf(os.Stderr, "failed to convert rule. Skipping: %v : %v\n", r, err)
-			continue
-			//return res, fmt.Errorf("rule conversion failed : %v", err)
-		}
-
-		rule.Base = baseNum
-		// TODO test
-		if r.Attrradix != "" {
-			radix, err := strconv.Atoi(r.Attrradix)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "failed to convert radix : %v\n", err)
+		if err == nil { // numeric rule
+			rule.BaseInt = baseNum
+			// TODO test
+			if r.Attrradix != "" {
+				radix, err := strconv.Atoi(r.Attrradix)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "failed to convert radix : %v\n", err)
+				} else {
+					rule.Radix = radix
+				}
 			} else {
-				rule.Radix = radix
+				rule.Radix = 10 // Default radix
 			}
+		} else { // non-numeric rule
+			rule.BaseString = r.Attrvalue
 		}
 		// TODO parse string
+		// examples:
+		// två;
+		// trettio[­→→];
+		// ←%spellout-cardinal-reale← miljoner[ →→];
+		// minus →→;
+		// ←← komma →→;
+
 		//rule.LeftSub = "ls"   //r.String
 		//rule.RightSub = "rs"  //r.String
 		//rule.SpellOut = "apa" //r.String
 
+		fmt.Println(rule)
 		res.Rules = append(res.Rules, rule)
 	}
 

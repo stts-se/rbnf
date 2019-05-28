@@ -2,7 +2,8 @@ package rbnf
 
 import (
 	"fmt"
-	"sort"
+	"regexp"
+	// "sort"
 	"strconv"
 	"strings"
 )
@@ -13,13 +14,50 @@ type RuleSet struct {
 }
 
 type BaseRule struct {
-	Base         int
+	BaseInt      int
+	BaseString   string
 	LeftSub      string
 	LeftPadding  string
 	SpellOut     string
 	RightPadding string
 	RightSub     string
 	Radix        int
+
+	stringMatchRegexp *regexp.Regexp
+}
+
+func NewIntRule(baseInt int, leftSub, leftPadding, spellOut, rightPadding, rightSub string, radix int) BaseRule {
+	return BaseRule{
+		BaseInt:      baseInt,
+		LeftSub:      leftSub,
+		LeftPadding:  leftPadding,
+		SpellOut:     spellOut,
+		RightPadding: rightPadding,
+		RightSub:     rightSub,
+		Radix:        radix,
+	}
+}
+func NewStringRule(baseString string, leftSub, leftPadding, spellOut, rightPadding, rightSub string) BaseRule {
+	return BaseRule{
+		BaseString:        baseString,
+		LeftSub:           leftSub,
+		LeftPadding:       leftPadding,
+		SpellOut:          spellOut,
+		RightPadding:      rightPadding,
+		RightSub:          rightSub,
+		stringMatchRegexp: buildStringMatchRegexp(baseString),
+	}
+}
+
+func (r BaseRule) String() string {
+	if r.IsIntRule() {
+		return fmt.Sprintf("%d => '%s%s' <%s> '%s%s' [r:%d]", r.BaseInt, r.LeftSub, r.LeftPadding, r.SpellOut, r.RightPadding, r.RightSub, r.Radix)
+	}
+	return fmt.Sprintf("%s => '%s%s' <%s> '%s%s'", r.BaseString, r.LeftSub, r.LeftPadding, r.SpellOut, r.RightPadding, r.RightSub)
+}
+
+func (r BaseRule) IsIntRule() bool {
+	return r.BaseString == ""
 }
 
 func (r BaseRule) Divisor() int {
@@ -32,7 +70,7 @@ func (r BaseRule) Divisor() int {
 	//exponent : the highest exponent of the radix that is less than or equal to the base value
 	//divisor: radix^exponent
 	var exponent, divisor int
-	for i := 1; exp(r.Radix, i) <= r.Base; i++ {
+	for i := 1; exp(r.Radix, i) <= r.BaseInt; i++ {
 		exponent = i
 	}
 	if exponent >= 0 {
@@ -42,25 +80,58 @@ func (r BaseRule) Divisor() int {
 	}
 	return divisor
 }
-func (r BaseRule) Matches(input string) bool {
-	n, err := strconv.Atoi(input)
-	if err != nil {
-		return false
+
+func regexpEscape(s string) string {
+	res := s
+	chars := []string{`]`, `^`, `\`, `[`, `.`, `(`, `)`, `-`}
+	for _, ch := range chars {
+		res = strings.ReplaceAll(res, ch, fmt.Sprintf(`\%s`, ch))
 	}
-	return r.Base <= n
+	return res
 }
 
-func (r BaseRule) Match(input string) MatchResult {
-	n, err := strconv.Atoi(input)
-	if err != nil {
-		return MatchResult{}
+var nonXRE = regexp.MustCompile("([^x]+)")
+var noInitialX = regexp.MustCompile("^([^x])")
+var noFinalX = regexp.MustCompile("([^x])$")
+var emptyRegexp *regexp.Regexp
+
+// TODO: this is sooo ugly -- can it be done better?
+func buildStringMatchRegexp(baseString string) *regexp.Regexp {
+	reString := baseString
+	reString = regexpEscape(reString)                        // escape special chars in the BaseString
+	reString = nonXRE.ReplaceAllString(reString, "($1)")     // regexp group for non-x sequences
+	reString = noInitialX.ReplaceAllString(reString, "()$1") // add empty prefix group if needed
+	reString = noFinalX.ReplaceAllString(reString, "$1()")   // add empty suffix group if needed
+	reString = strings.ReplaceAll(reString, "x", "(.*)")     // regexp group for x sequences
+	//fmt.Printf("%v => /%v/\n", r.BaseString, reString)
+	re := regexp.MustCompile("^" + reString + "$")
+	return re
+}
+
+func (r BaseRule) Match(input string) (MatchResult, bool) {
+	if r.IsIntRule() {
+		n, err := strconv.Atoi(input)
+		if err != nil {
+			return MatchResult{}, false
+		}
+		divisor := r.Divisor()
+		// >> in normal rule: Divide the number by the rule's divisor and format the remainder
+		right := n % divisor
+		// << in normal rule: Divide the number by the rule's divisor and format the quotient
+		left := n / divisor
+		return MatchResult{ForwardLeft: fmt.Sprintf("%d", left), ForwardRight: fmt.Sprintf("%d", right)}, true
 	}
-	divisor := r.Divisor()
-	// >> in normal rule: Divide the number by the rule's divisor and format the remainder
-	right := n % divisor
-	// << in normal rule: Divide the number by the rule's divisor and format the quotient
-	left := n / divisor
-	return MatchResult{ForwardLeft: fmt.Sprintf("%d", left), ForwardRight: fmt.Sprintf("%d", right)}
+	if r.stringMatchRegexp != emptyRegexp {
+		r.stringMatchRegexp = buildStringMatchRegexp(r.BaseString)
+	}
+	m := r.stringMatchRegexp.FindStringSubmatch(input)
+	if m != nil && len(m) == 4 {
+		//fmt.Printf("%v => %#v\n", input, m)
+		left := m[1]
+		right := m[3]
+		return MatchResult{ForwardLeft: left, ForwardRight: right}, true
+	}
+	return MatchResult{}, false
 }
 
 type MatchResult struct {
@@ -98,14 +169,17 @@ func (g RuleSetGroup) FindRuleSet(ruleRef string) (RuleSet, bool) {
 func NewRuleSetGroup(name string, ruleSets []RuleSet) (RuleSetGroup, error) {
 	rsMap := make(map[string]RuleSet)
 	for _, rs := range ruleSets {
-		// sort each rule set in ascending order
-		sort.Slice(rs.Rules, func(i, j int) bool { return rs.Rules[i].Base < rs.Rules[j].Base })
+		// sort each rule set in ascending order?
+		//sort.Slice(rs.Rules, func(i, j int) bool { return rs.Rules[i].BaseInt < rs.Rules[j].BaseInt })
 		rsMap[rs.Name] = rs
 	}
 	res := RuleSetGroup{Name: name, RuleSets: rsMap}
 
 	for _, ruleSet := range res.RuleSets {
 		for _, rule := range ruleSet.Rules {
+			if rule.BaseInt != 0 && rule.BaseString != "" {
+				return res, fmt.Errorf("Rule must use either BaseInt or BaseString, not both: %v", rule)
+			}
 			if isRuleRef(rule.LeftSub) {
 				if _, ok := res.FindRuleSet(rule.LeftSub); !ok {
 					return res, fmt.Errorf("No such rule set: %s", rule.LeftSub)
@@ -125,11 +199,21 @@ func findMatchingRule(input string, ruleSet RuleSet) (BaseRule, bool) {
 	var res BaseRule
 	var found = false
 	for _, r := range ruleSet.Rules {
-		if r.Matches(input) {
-			res = r
-			found = true
+		if r.IsIntRule() {
+			n, err := strconv.Atoi(input)
+			if err != nil {
+				continue
+			}
+			if r.BaseInt <= n {
+				res = r
+				found = true
+			} else {
+				break
+			}
 		} else {
-			break
+			if _, matches := r.Match(input); matches {
+				return r, true
+			}
 		}
 	}
 	return res, found
@@ -150,12 +234,15 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) (string, error) {
 		return input, fmt.Errorf("No matching base rule for %s", input)
 	}
 
-	if fmt.Sprintf("%d", matchedRule.Base) == input {
-		// if n == 0 && matchedRule.Base == n {
+	if fmt.Sprintf("%d", matchedRule.BaseInt) == input {
+		// if n == 0 && matchedRule.BaseInt == n {
 		return matchedRule.SpellOut, nil
 	}
 
-	match := matchedRule.Match(input)
+	match, ok := matchedRule.Match(input)
+	if !ok {
+		return input, fmt.Errorf("Couldn't get match result for rule %v, input %s", matchedRule, input)
+	}
 
 	var left, right string
 	if matchedRule.RightSub == "[>>]" { // Text in brackets is omitted if the number being formatted is an even multiple of 10
