@@ -22,26 +22,6 @@ type BaseRule struct {
 	Radix        int
 }
 
-// type IntRule struct {
-// 	BaseNum      int
-// 	LeftSub      string
-// 	LeftPadding  string
-// 	SpellOut     string
-// 	RightPadding string
-// 	RightSub     string
-// 	Radix        int
-// }
-
-// type MatchRes struct {
-// 	Left   string
-// 	Middle string
-// 	Right  string
-// }
-
-// type BaseRule interface {
-// 	Match(input string) MatchRes
-// }
-
 type RuleSetGroup struct {
 	Name     string
 	RuleSets map[string]RuleSet
