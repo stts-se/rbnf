@@ -37,11 +37,24 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 		if err != nil {
 
 			fmt.Fprintf(os.Stderr, "failed to convert rule. Skipping: %v : %v\n", r, err)
-			//return res, fmt.Errorf("rule conversion failed : %v", err)
 			continue
+			//return res, fmt.Errorf("rule conversion failed : %v", err)
 		}
 
 		rule.Base = baseNum
+		// TODO test
+		if r.Attrradix != "" {
+			radix, err := strconv.Atoi(r.Attrradix)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "failed to convert radix : %v\n", err)
+			} else {
+				rule.Radix = radix
+			}
+		}
+		// TODO parse string
+		//rule.LeftSub = "ls"   //r.String
+		//rule.RightSub = "rs"  //r.String
+		//rule.SpellOut = "apa" //r.String
 
 		res.Rules = append(res.Rules, rule)
 	}
@@ -59,7 +72,9 @@ func convertGroup(g *RulesetGrouping) (string, []rbnf.RuleSet, error) {
 	for _, rs := range g.Ruleset {
 		rbntRuleSet, err := convertRuleSet(rs)
 		if err != nil {
-			return name, res, fmt.Errorf("failed to convert rule set : %v", err)
+			return rbntRuleSet.Name, res, fmt.Errorf("failed to convert rule set : %v", err)
+			//fmt.Fprintf(os.Stderr, "skipping rule set '%s' : %v\n", rbntRuleSet.Name, err)
+			//continue
 		}
 		res = append(res, rbntRuleSet)
 	}
@@ -82,10 +97,17 @@ func rulesFromLdml(ldml Ldml) ([]rbnf.RuleSetGroup, error) {
 		name, ruleSet, err := convertGroup(g)
 		if err != nil {
 			return res, fmt.Errorf("failed to convert rule group : %v", err)
+			//fmt.Fprintf(os.Stderr, "skipping rule group '%s' : %v", name, err)
+			//continue
 		}
 		group, err := rbnf.NewRuleSetGroup(name, ruleSet)
 		if err != nil {
+
+			fmt.Printf("%#v\n", group)
 			return res, fmt.Errorf("failed creating rbnf.NewRuleSetGroup instance : %v", err)
+
+			//fmt.Fprintf(os.Stderr, "skipping rules set group '%s' : %v\n", name, err)
+			//continue
 		}
 		rbnfGroups = append(rbnfGroups, group)
 	}
