@@ -1,6 +1,6 @@
 # rbnf
 
-Libraries and commands for spelling out numeric expansion, initially based on parts of the ICU project (http://userguide.icu-project.org/)
+Libraries and commands for spelling out numeric expansion, initially based on parts of the ICU project.
 
 Links:
 * http://userguide.icu-project.org/
