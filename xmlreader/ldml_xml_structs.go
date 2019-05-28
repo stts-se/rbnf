@@ -1,5 +1,9 @@
 package xmlreader
 
+import (
+	"encoding/xml"
+)
+
 // Structs generated from Unicode.org's  ICU/RBNF spellout XML rule file using Chidley, https://github.com/gnewton/chidley
 
 type Identity struct {
