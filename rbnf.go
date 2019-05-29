@@ -13,33 +13,47 @@ type RuleSet struct {
 	Rules []BaseRule
 }
 
+type Base struct {
+
+	// Int base
+	Int   int
+	Radix int // only used for Int base
+
+	// String base
+	String string
+}
+
+func (b Base) ToString() string {
+	if b.IsInt() {
+		return fmt.Sprintf("%d (%d)", b.Int, b.Radix)
+	}
+	return b.String
+}
+
 type BaseRule struct {
-	BaseInt      int
-	BaseString   string
+	Base         Base
 	LeftSub      string
 	LeftPadding  string
 	SpellOut     string
 	RightPadding string
 	RightSub     string
-	Radix        int
 
 	stringMatchRegexp *regexp.Regexp
 }
 
 func NewIntRule(baseInt int, leftSub, leftPadding, spellOut, rightPadding, rightSub string, radix int) BaseRule {
 	return BaseRule{
-		BaseInt:      baseInt,
+		Base:         Base{Int: baseInt, Radix: radix},
 		LeftSub:      leftSub,
 		LeftPadding:  leftPadding,
 		SpellOut:     spellOut,
 		RightPadding: rightPadding,
 		RightSub:     rightSub,
-		Radix:        radix,
 	}
 }
 func NewStringRule(baseString string, leftSub, leftPadding, spellOut, rightPadding, rightSub string) BaseRule {
 	return BaseRule{
-		BaseString:        baseString,
+		Base:              Base{String: baseString},
 		LeftSub:           leftSub,
 		LeftPadding:       leftPadding,
 		SpellOut:          spellOut,
@@ -50,17 +64,22 @@ func NewStringRule(baseString string, leftSub, leftPadding, spellOut, rightPaddi
 }
 
 func (r BaseRule) String() string {
-	if r.IsIntRule() {
-		return fmt.Sprintf("%d => '%s%s' <%s> '%s%s' [r:%d]", r.BaseInt, r.LeftSub, r.LeftPadding, r.SpellOut, r.RightPadding, r.RightSub, r.Radix)
+	if r.Base.IsInt() {
+		return fmt.Sprintf("%s => '%s%s' <%s> '%s%s'", r.Base.ToString(), r.LeftSub, r.LeftPadding, r.SpellOut, r.RightPadding, r.RightSub)
 	}
-	return fmt.Sprintf("%s => '%s%s' <%s> '%s%s'", r.BaseString, r.LeftSub, r.LeftPadding, r.SpellOut, r.RightPadding, r.RightSub)
+	return fmt.Sprintf("%s => '%s%s' <%s> '%s%s'", r.Base.ToString(), r.LeftSub, r.LeftPadding, r.SpellOut, r.RightPadding, r.RightSub)
 }
 
-func (r BaseRule) IsIntRule() bool {
-	return r.BaseString == ""
+func (b Base) IsInt() bool {
+	return b.String == ""
 }
 
-func (r BaseRule) Divisor() int {
+func (b Base) Divisor() int {
+
+	if !b.IsInt() {
+		panic("invalid call to Base.Divisor for String type Base")
+	}
+
 	/** http://icu-project.org/apiref/icu4c/classRuleBasedNumberFormat.html
 	To calculate the divisor, let [...] the exponent be the highest exponent of the radix that yields a result less than or equal to the base value.
 	If the exponent is positive or 0, the divisor is the radix raised to the power of the exponent; otherwise, the divisor is 1.
@@ -70,11 +89,11 @@ func (r BaseRule) Divisor() int {
 	//exponent : the highest exponent of the radix that is less than or equal to the base value
 	//divisor: radix^exponent
 	var exponent, divisor int
-	for i := 1; exp(r.Radix, i) <= r.BaseInt; i++ {
+	for i := 1; exp(b.Radix, i) <= b.Int; i++ {
 		exponent = i
 	}
 	if exponent >= 0 {
-		divisor = exp(r.Radix, exponent)
+		divisor = exp(b.Radix, exponent)
 	} else {
 		divisor = 1
 	}
@@ -109,12 +128,12 @@ func buildStringMatchRegexp(baseString string) *regexp.Regexp {
 }
 
 func (r BaseRule) Match(input string) (MatchResult, bool) {
-	if r.IsIntRule() {
+	if r.Base.IsInt() {
 		n, err := strconv.Atoi(input)
 		if err != nil {
 			return MatchResult{}, false
 		}
-		divisor := r.Divisor()
+		divisor := r.Base.Divisor()
 		// >> in normal rule: Divide the number by the rule's divisor and format the remainder
 		right := n % divisor
 		// << in normal rule: Divide the number by the rule's divisor and format the quotient
@@ -124,7 +143,7 @@ func (r BaseRule) Match(input string) (MatchResult, bool) {
 
 	// String rule
 	if r.stringMatchRegexp != emptyRegexp {
-		r.stringMatchRegexp = buildStringMatchRegexp(r.BaseString)
+		r.stringMatchRegexp = buildStringMatchRegexp(r.Base.String)
 	}
 	m := r.stringMatchRegexp.FindStringSubmatch(input)
 	if m != nil && len(m) == 4 {
@@ -179,7 +198,7 @@ func NewRuleSetGroup(name string, ruleSets []RuleSet) (RuleSetGroup, error) {
 
 	for _, ruleSet := range res.RuleSets {
 		for _, rule := range ruleSet.Rules {
-			if rule.BaseInt != 0 && rule.BaseString != "" {
+			if rule.Base.Int != 0 && rule.Base.String != "" {
 				return res, fmt.Errorf("Rule must use either BaseInt or BaseString, not both: %v", rule)
 			}
 			if isRuleRef(rule.LeftSub) {
@@ -201,12 +220,12 @@ func findMatchingRule(input string, ruleSet RuleSet) (BaseRule, bool) {
 	var res BaseRule
 	var found = false
 	for _, r := range ruleSet.Rules {
-		if r.IsIntRule() {
+		if r.Base.IsInt() {
 			n, err := strconv.Atoi(input)
 			if err != nil {
 				continue
 			}
-			if r.BaseInt <= n {
+			if r.Base.Int <= n {
 				res = r
 				found = true
 			} else {
@@ -236,8 +255,8 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) (string, error) {
 		return input, fmt.Errorf("No matching base rule for %s", input)
 	}
 
-	if fmt.Sprintf("%d", matchedRule.BaseInt) == input {
-		// if n == 0 && matchedRule.BaseInt == n {
+	if fmt.Sprintf("%d", matchedRule.Base.Int) == input {
+		// if n == 0 && matchedRule.Base.Int == n {
 		return matchedRule.SpellOut, nil
 	}
 

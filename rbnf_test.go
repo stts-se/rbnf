@@ -23,39 +23,39 @@ func Test_Divisor(t *testing.T) {
 	var r BaseRule
 
 	r = NewIntRule(10, "", "", "tio", "", "", 10)
-	if w, g := 10, r.Divisor(); w != g {
+	if w, g := 10, r.Base.Divisor(); w != g {
 		t.Errorf(fs, w, g)
 	}
 
 	r = NewIntRule(100, "", "", "hundra", "", "", 10)
-	if w, g := 100, r.Divisor(); w != g {
+	if w, g := 100, r.Base.Divisor(); w != g {
 		t.Errorf(fs, w, g)
 	}
 
 	r = NewIntRule(200, "", "", "hundra", "", "", 10)
-	if w, g := 100, r.Divisor(); w != g {
+	if w, g := 100, r.Base.Divisor(); w != g {
 		t.Errorf(fs, w, g)
 	}
 
 	r = NewIntRule(2000, "", "", "tusen", "", "", 10)
-	if w, g := 1000, r.Divisor(); w != g {
+	if w, g := 1000, r.Base.Divisor(); w != g {
 		t.Errorf(fs, w, g)
 	}
 
 	r = NewIntRule(2000, "", "", "tusen", "", ">", 10)
-	if w, g := 1000, r.Divisor(); w != g {
+	if w, g := 1000, r.Base.Divisor(); w != g {
 		t.Errorf(fs, w, g)
 	}
 
 	r = NewIntRule(2000, "", "", "tusen", "", ">>", 10)
-	if w, g := 1000, r.Divisor(); w != g {
+	if w, g := 1000, r.Base.Divisor(); w != g {
 		t.Errorf(fs, w, g)
 	}
 
 	// <rbnfrule value="1100" radix="100">←←­hundra[­→→];</rbnfrule>
 
 	r = NewIntRule(1100, "", "", "hundra", "", ">>", 100)
-	if w, g := 100, r.Divisor(); w != g {
+	if w, g := 100, r.Base.Divisor(); w != g {
 		t.Errorf(fs, w, g)
 	}
 

@@ -33,22 +33,23 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 	for _, r := range rs.Rbnfrule {
 		//fmt.Printf("RULE %#v\n", r)
 		rule := rbnf.BaseRule{}
+		rule.Base = rbnf.Base{}
 		baseNum, err := strconv.Atoi(r.Attrvalue)
 		if err == nil { // numeric rule
-			rule.BaseInt = baseNum
+			rule.Base.Int = baseNum
 			// TODO test
 			if r.Attrradix != "" {
 				radix, err := strconv.Atoi(r.Attrradix)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "failed to convert radix : %v\n", err)
 				} else {
-					rule.Radix = radix
+					rule.Base.Radix = radix
 				}
 			} else {
-				rule.Radix = 10 // Default radix
+				rule.Base.Radix = 10 // Default radix
 			}
 		} else { // non-numeric rule
-			rule.BaseString = r.Attrvalue
+			rule.Base.String = r.Attrvalue
 		}
 		// TODO parse string according to http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/RuleBasedNumberFormat.html
 		// examples:
