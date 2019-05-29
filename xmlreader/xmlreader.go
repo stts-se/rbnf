@@ -11,10 +11,6 @@ import (
 	"github.com/stts-se/rbnf"
 )
 
-func tmpRuleParse(s string, r *rbnf.BaseRule) {
-
-}
-
 func readXMLFile(fn string) (Ldml, error) {
 	res := Ldml{}
 
@@ -63,12 +59,14 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 		// minus →→;
 		// ←← komma →→;
 		// ←←­hundra[­→→];
+		// ←%spellout-cardinal-reale← miljon→%%ord-fem-teer→;
 
 		//rule.LeftSub = "ls"   //r.String
 		//rule.RightSub = "rs"  //r.String
 		//rule.SpellOut = "apa" //r.String
 
 		fmt.Println(rule)
+
 		res.Rules = append(res.Rules, rule)
 	}
 
