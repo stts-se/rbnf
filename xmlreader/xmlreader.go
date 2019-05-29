@@ -54,7 +54,7 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 		} else { // non-numeric rule
 			rule.BaseString = r.Attrvalue
 		}
-		// TODO parse string
+		// TODO parse string according to http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/RuleBasedNumberFormat.html
 		// examples:
 		// två;
 		// trettio[­→→];
