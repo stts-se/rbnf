@@ -9,14 +9,23 @@ import (
 	"unicode/utf8"
 )
 
+type result []item
+
+func (r result) String() string {
+	res := []string{}
+	for _, i := range r {
+		res = append(res, i.String())
+	}
+	return strings.Join(res, ", ")
+}
+
 type lexer struct {
-	name  string    // used only for error reports
-	input string    // the string being scanned
-	start int       // start position of this item
-	pos   int       // current position in the input
-	width int       // width of last rune read
-	items chan item // channel of scanned items
-	state stateFn
+	input  string // the string being scanned
+	start  int    // start position of this item
+	pos    int    // current position in the input
+	width  int    // width of last rune read
+	result []item // channel of scanned items
+	state  stateFn
 }
 
 type item struct {
@@ -26,15 +35,13 @@ type item struct {
 
 func (i item) String() string {
 	switch i.typ {
-	case itemEOF:
-		return "EOF"
 	case itemError:
 		return i.val
 	}
-	if len(i.val) > 10 {
-		return fmt.Sprintf("%s{%.10v...}", itemType2String(i.typ), i.val)
-	}
-	return fmt.Sprintf("%s{%v}", itemType2String(i.typ), i.val)
+	// if len(i.val) > 10 {
+	// 	return fmt.Sprintf("%s{%.10v...}", i.typ, i.val)
+	// }
+	return fmt.Sprintf("%s{%v}", i.typ, i.val)
 }
 
 //go:generate stringer -type=itemType
@@ -43,49 +50,56 @@ type itemType int
 
 const (
 	itemError itemType = iota
-	itemEOF
-	itemOptionalLeftSub
+	itemLeftBracket
 	itemLeftSub
 	itemRightSub
+	itemRightBracket
 	itemSpellout
-	itemPadding
+	itemDelim
 	itemVariable
 )
 
-func itemType2String(t itemType) string {
+const (
+	// rune constants
+	eof          = 25 // ASCII end of medium
+	leftArr      = '←'
+	rightArr     = '→'
+	leftBracket  = '['
+	rightBracket = ']'
+	endTag       = ';'
+
+	// string constants
+	delimChars = " -"
+	aToZ       = "abcdefghijklmnopqrstuvwxyz"
+	//leftSubChars  = "←%[]" + aToZ + delimChars
+	//rightSubChars = "→%[]" + aToZ + delimChars
+	spelloutChars = aToZ
+	ruleNameChars = aToZ + "-"
+	x             = 'x'
+)
+
+func (t itemType) String() string {
 	switch t {
 	case itemError:
 		return "error"
-	case itemEOF:
-		return "EOF"
 	case itemLeftSub:
 		return "leftsub"
-	case itemOptionalLeftSub:
-		return "optionalleftsub"
 	case itemRightSub:
 		return "rightsub"
+	case itemLeftBracket:
+		return "leftbracket"
+	case itemRightBracket:
+		return "rightbracket"
 	case itemSpellout:
 		return "spellout"
-	case itemPadding:
-		return "padding"
+	case itemDelim:
+		return "delim"
 	case itemVariable:
 		return "variable"
 	default:
-		panic(fmt.Sprintf("undefined string output for %v", t))
+		panic(fmt.Sprintf("undefined string output for %d", t))
 	}
 }
-
-const (
-	eof           = 25 // ASCII end of medium
-	leftArr       = '←'
-	rightArr      = '→'
-	leftBracket   = '['
-	rightBracket  = ']'
-	spelloutChars = "abcdefghijklmnopqrstuvxyz"
-	ruleNameChars = "abcdefghijklmnopqrstuvxyz-"
-	delimChars    = " -"
-	x             = 'x'
-)
 
 type stateFn func(*lexer) stateFn
 
@@ -106,17 +120,9 @@ func (l *lexer) errorf(format string, args ...interface{}) stateFn {
 			itemError,
 			fmt.Sprintf(format, args...),
 		}
-		l.items <- i
+		l.result = append(l.result, i)
 		return nil
 	}
-}
-
-func isSpace(r rune) bool {
-	return r == ' '
-}
-
-func isSpelloutChar(r rune) bool {
-	return strings.IndexRune(spelloutChars, r) >= 0
 }
 
 func (l *lexer) ignore() {
@@ -133,144 +139,205 @@ func (l *lexer) peek() rune {
 	return r
 }
 
-func (l *lexer) accept(valid string) bool {
-	if strings.IndexRune(valid, l.next()) >= 0 {
-		return true
-	}
-	l.back()
-	return false
-}
-
-func (l *lexer) acceptRun(valid string) {
+func (l *lexer) acceptRun(valid string) int {
+	n := 0
 	for strings.IndexRune(valid, l.next()) >= 0 {
+		n++
 	}
 	l.back()
+	return n
 }
 
-func leftSubFn(l *lexer) stateFn {
-	for {
-		fmt.Printf("%#v\n", l)
-		switch r := l.next(); {
-		case r == rightArr:
-
-		}
-		if strings.HasPrefix(l.input[l.pos:], "%") {
-			l.pos += len("%")
-			l.accept(ruleNameChars)
-		}
-		l.accept(delimChars)
-		if strings.HasPrefix(l.input[l.pos:], " ") {
-			l.pos += len(" ")
-			l.accept(" ")
-		}
-	}
-	return l.errorf("missing end tag for: %s", item{itemLeftSub, l.input[l.start:l.pos]})
-}
-
-func startLeftSubFn(l *lexer) stateFn {
-	l.pos += len(leftArr)
-	return leftSubFn
-}
-
-func startLeftOptionalSubFn(l *lexer) stateFn {
-	l.pos += len(leftBracket)
-	l.emit(itemOptionalLeftSub)
-	if strings.HasPrefix(l.input[l.pos:], leftArr) {
-		l.pos += len(rightArr)
-		return startLeftSubFn
-	}
-	return l.errorf("missing end tag for: %s", item{itemOptionalLeftSub, l.input[l.start:l.pos]})
+func (l *lexer) acceptPeek(valid string) bool {
+	return strings.IndexRune(valid, l.peek()) >= 0
 }
 
 func spelloutFn(l *lexer) stateFn {
-	l.accept(spelloutChars)
-	return l.errorf("jooo")
-}
-
-func initialState(l *lexer) stateFn {
-	if strings.HasPrefix(l.input[l.pos:], leftArr) {
-		return startLeftSubFn
+	if l.acceptRun(spelloutChars) > 0 {
+		l.emit(itemSpellout)
 	}
-	if strings.HasPrefix(l.input[l.pos:], leftBracket) {
-		return startLeftOptionalSubFn
+	r := l.peek()
+	if r == rightArr || r == leftBracket || l.acceptPeek(delimChars) {
+		return rightSubFn
 	}
-
-	switch r := l.next(); {
-	case r == eof || r == '\n':
-		break
+	switch l.peek() {
+	case endTag:
+		return nil
+	case eof:
+		return prematureEndOfInput
 	default:
-		return spelloutFn
+		return l.errorf("unknown input at expected %s: '%s'", itemSpellout, l.currentToEnd())
 	}
-	l.emit(itemEOF)
 	return nil
 }
 
-func lex(name, input string) *lexer {
+func leftSubFn(l *lexer) stateFn {
+	closingTag := leftArr
+
+	// opening tags
+	for {
+		r := l.peek()
+		if r == leftBracket {
+			l.next()
+			l.emit(itemLeftBracket)
+			closingTag = rightBracket
+			break
+		} else if r == leftArr {
+			l.next()
+			break
+		} else {
+			return l.errorf("unknown opening input at expected %s: '%s'", itemLeftSub, l.currentToEnd())
+		}
+	}
+
+	for {
+		r := l.peek()
+		if r == closingTag {
+			if r == leftArr {
+				l.next()
+				l.acceptRun(delimChars)
+				l.emit(itemLeftSub)
+				return spelloutFn
+			} else if r == rightBracket {
+				l.emit(itemLeftSub)
+				l.next()
+				l.emit(itemRightBracket)
+				return spelloutFn
+			}
+		} else if r == leftArr {
+			l.next()
+		} else if l.acceptPeek(delimChars) {
+			l.next()
+		} else if r == '%' {
+			l.next()
+			l.acceptRun(ruleNameChars)
+		} else {
+			return l.errorf("unknown input at expected %s: '%s'", itemLeftSub, l.currentToEnd())
+		}
+	}
+	panic("not reached")
+}
+
+func rightSubFn(l *lexer) stateFn {
+	closingTag := rightArr
+
+	// opening tags
+	for {
+		r := l.peek()
+		if r == leftBracket {
+			l.next()
+			l.emit(itemLeftBracket)
+			closingTag = rightBracket
+			break
+		} else if r == rightArr {
+			l.next()
+			break
+		} else if l.acceptPeek(delimChars) {
+			l.next()
+		} else {
+			return l.errorf("unknown opening input at expected %s: '%s'", itemRightSub, l.currentToEnd())
+		}
+	}
+
+	for {
+		r := l.peek()
+		if r == closingTag {
+			if r == rightArr {
+				l.next()
+				l.emit(itemRightSub)
+				return endFn
+			} else if r == rightBracket {
+				l.emit(itemRightSub)
+				l.next()
+				l.emit(itemRightBracket)
+				return endFn
+			}
+		} else if r == rightArr {
+			l.next()
+		} else if l.acceptPeek(delimChars) {
+			l.next()
+		} else if r == '%' {
+			l.next()
+			l.acceptRun(ruleNameChars)
+		} else {
+			return l.errorf("unknown input at expected %s: '%s'", itemLeftSub, l.currentToEnd())
+		}
+	}
+	panic("not reached")
+}
+
+func prematureEndOfInput(l *lexer) stateFn {
+	return l.errorf("premature end of input")
+}
+
+func endFn(l *lexer) stateFn {
+	switch r := l.peek(); {
+	case r == endTag:
+		l.next()
+		return nil
+	default:
+		return l.errorf("unknown input at expected %s: '%s'", "end", l.currentToEnd())
+	}
+}
+
+func initialState(l *lexer) stateFn {
+	switch r := l.peek(); {
+	case r == leftArr || r == leftBracket:
+		return leftSubFn
+	case r == endTag:
+		l.next()
+		return nil
+	case r == eof:
+		l.next()
+		return prematureEndOfInput
+	default:
+		return spelloutFn
+	}
+	return nil
+}
+
+func lex(input string) *lexer {
 	l := &lexer{
-		name:  name,
-		input: input,
-		state: initialState,
-		items: make(chan item, 10), // Two should be sufficient but it doesn't work (deadlock)
+		input:  input,
+		state:  initialState,
+		result: []item{},
 	}
 	return l
 }
 
+func (l *lexer) current() string {
+	return l.input[l.start:l.pos]
+}
+func (l *lexer) currentToEnd() string {
+	return l.input[l.pos:]
+}
 func (l *lexer) emit(t itemType) {
-	i := item{t, l.input[l.start:l.pos]}
-	fmt.Printf("emit: %s\n", i)
-	l.items <- i
+	i := item{t, l.current()}
+	//fmt.Printf("emit: %s\n", i)
+	l.result = append(l.result, i)
 	l.start = l.pos
 }
 
-func (l *lexer) nextItem() item {
-	for {
-		select {
-		case item := <-l.items:
-			return item
-		default:
-			l.state = l.state(l)
-		}
-	}
-	panic("not reached")
+func (l *lexer) debug(msg string) {
+	s := l.current()
+	fmt.Printf("lexer debug %s: '%s'\n", msg, s)
+	//fmt.Printf("lexer debug %s: '%#v'\n", msg, l)
 }
 
 func (l *lexer) run() {
 	for state := initialState; state != nil; {
 		state = state(l)
 	}
-	close(l.items)
 }
 
 func main() {
 	for _, s := range os.Args[1:] {
-		l := lex("test1", s)
+		fmt.Printf("input: '%s'\n", s)
+		l := lex(s)
 		l.run()
-		for {
-			i := l.nextItem()
-			fmt.Printf("nextItem: %s\n", i)
-			if i.typ == itemEOF {
-				break
-			}
-			if i.typ == itemError {
-				break
-			}
+		for _, i := range l.result {
+			fmt.Printf("item: %s\n", i)
 		}
+		fmt.Println()
 	}
 }
-
-// två;
-// trettio[­→→];
-// ←%spellout-cardinal-reale← miljoner[ →→];
-// tjugo→%%ord-fem-nde→;
-// minus →→;
-// ←← komma →→;
-// ←←­hundra[­→→];
-// ←%spellout-cardinal-reale← miljon→%%ord-fem-teer→;
-
-// made-up example
-// [←%left-dummy-rule←-]komma[-→%right-dummy-rule→];
-// [←%left-dummy-rule←]
-// -
-// komma
-// -
-// [→%right-dummy-rule→];
