@@ -1,4 +1,4 @@
-package main
+package lexer
 
 import (
 	"fmt"
@@ -25,7 +25,7 @@ import (
 var fs = "For input '%s', expected '%s', got '%s'"
 var fsindex = "For input '%s' item %d, expected '%s', got '%s'"
 
-func compare(input string, exp, got result) []error {
+func compare(input string, exp, got Result) []error {
 	res := []error{}
 	if len(exp) != len(got) {
 		res = append(res, fmt.Errorf(fs, input, exp, got))
@@ -42,34 +42,34 @@ func compare(input string, exp, got result) []error {
 
 func TestBasic(t *testing.T) {
 	var input string
-	var exp result
-	var l *lexer
-	var prematureEOIItem = item{itemError, "premature end of input"}
+	var exp Result
+	var l *Lexer
+	var prematureEOIItem = Item{itemError, "premature end of input"}
 
 	//
 	input = ""
-	exp = result{prematureEOIItem}
-	l = lex(input)
-	l.run()
-	for _, err := range compare(input, exp, l.result) {
+	exp = Result{prematureEOIItem}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result) {
 		t.Error(err)
 	}
 
 	//
 	input = "minus;"
-	exp = result{{itemSpellout, "minus"}}
-	l = lex(input)
-	l.run()
-	for _, err := range compare(input, exp, l.result) {
+	exp = Result{{itemSpellout, "minus"}}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result) {
 		t.Error(err)
 	}
 
 	//
 	input = "minus"
-	exp = result{{itemSpellout, "minus"}, prematureEOIItem}
-	l = lex(input)
-	l.run()
-	for _, err := range compare(input, exp, l.result) {
+	exp = Result{{itemSpellout, "minus"}, prematureEOIItem}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result) {
 		t.Error(err)
 	}
 
@@ -77,56 +77,56 @@ func TestBasic(t *testing.T) {
 
 func TestSub(t *testing.T) {
 	var input string
-	var exp result
-	var l *lexer
+	var exp Result
+	var l *Lexer
 
 	//
 	input = "←← komma;"
-	exp = result{
+	exp = Result{
 		{itemLeftSub, "←← "},
 		{itemSpellout, "komma"},
 	}
-	l = lex(input)
-	l.run()
-	for _, err := range compare(input, exp, l.result) {
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result) {
 		t.Error(err)
 	}
 
 	//
 	input = "komma →→;"
-	exp = result{
+	exp = Result{
 		{itemSpellout, "komma"},
 		{itemRightSub, " →→"},
 	}
-	l = lex(input)
-	l.run()
-	for _, err := range compare(input, exp, l.result) {
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result) {
 		t.Error(err)
 	}
 
 	//
 	input = "←← komma →→;"
-	exp = result{
+	exp = Result{
 		{itemLeftSub, "←← "},
 		{itemSpellout, "komma"},
 		{itemRightSub, " →→"},
 	}
-	l = lex(input)
-	l.run()
-	for _, err := range compare(input, exp, l.result) {
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result) {
 		t.Error(err)
 	}
 
 	//
 	input = "←%cardinal-neuter← komma →%cardinal-reale→;"
-	exp = result{
+	exp = Result{
 		{itemLeftSub, "←%cardinal-neuter← "},
 		{itemSpellout, "komma"},
 		{itemRightSub, " →%cardinal-reale→"},
 	}
-	l = lex(input)
-	l.run()
-	for _, err := range compare(input, exp, l.result) {
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result) {
 		t.Error(err)
 	}
 
@@ -134,51 +134,51 @@ func TestSub(t *testing.T) {
 
 func TestOptionalSub(t *testing.T) {
 	var input string
-	var exp result
-	var l *lexer
+	var exp Result
+	var l *Lexer
 
 	//
 	input = "[←← ]komma →→;"
-	exp = result{
+	exp = Result{
 		{itemLeftBracket, "["},
 		{itemLeftSub, "←← "},
 		{itemRightBracket, "]"},
 		{itemSpellout, "komma"},
 		{itemRightSub, " →→"},
 	}
-	l = lex(input)
-	l.run()
-	for _, err := range compare(input, exp, l.result) {
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result) {
 		t.Error(err)
 	}
 
 	//
 	input = "←← komma[ →→];"
-	exp = result{
+	exp = Result{
 		{itemLeftSub, "←← "},
 		{itemSpellout, "komma"},
 		{itemLeftBracket, "["},
 		{itemRightSub, " →→"},
 		{itemRightBracket, "]"},
 	}
-	l = lex(input)
-	l.run()
-	for _, err := range compare(input, exp, l.result) {
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result) {
 		t.Error(err)
 	}
 
 	//
 	input = "←← komma[ →%cardinal-reale→];"
-	exp = result{
+	exp = Result{
 		{itemLeftSub, "←← "},
 		{itemSpellout, "komma"},
 		{itemLeftBracket, "["},
 		{itemRightSub, " →%cardinal-reale→"},
 		{itemRightBracket, "]"},
 	}
-	l = lex(input)
-	l.run()
-	for _, err := range compare(input, exp, l.result) {
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result) {
 		t.Error(err)
 	}
 }

@@ -1,15 +1,15 @@
-package main
+package lexer
 
 import (
 	"fmt"
-	"os"
+	//"os"
 	"strings"
 	"unicode/utf8"
 )
 
-type result []item
+type Result []Item
 
-func (r result) String() string {
+func (r Result) String() string {
 	res := []string{}
 	for _, i := range r {
 		res = append(res, i.String())
@@ -17,21 +17,21 @@ func (r result) String() string {
 	return strings.Join(res, ", ")
 }
 
-type lexer struct {
+type Lexer struct {
 	input  string // the string being scanned
-	start  int    // start position of this item
+	start  int    // start position of this Item
 	pos    int    // current position in the input
 	width  int    // width of last rune read
-	result result // slice of scanned items
+	Result Result // slice of scanned Items
 	state  stateFn
 }
 
-type item struct {
-	typ itemType
+type Item struct {
+	typ ItemType
 	val string
 }
 
-func (i item) String() string {
+func (i Item) String() string {
 	switch i.typ {
 	case itemError:
 		return i.val
@@ -42,12 +42,12 @@ func (i item) String() string {
 	return fmt.Sprintf("%s{%v}", i.typ, i.val)
 }
 
-//go:generate stringer -type=itemType
+//go:generate stringer -type=ItemType
 
-type itemType int
+type ItemType int
 
 const (
-	itemError itemType = iota
+	itemError ItemType = iota
 	itemLeftBracket
 	itemLeftSub
 	itemRightSub
@@ -76,7 +76,7 @@ const (
 	x             = 'x'
 )
 
-func (t itemType) String() string {
+func (t ItemType) String() string {
 	switch t {
 	case itemError:
 		return "error"
@@ -99,9 +99,9 @@ func (t itemType) String() string {
 	}
 }
 
-type stateFn func(*lexer) stateFn
+type stateFn func(*Lexer) stateFn
 
-func (l *lexer) next() rune {
+func (l *Lexer) next() rune {
 	if l.pos >= len(l.input) {
 		l.width = 0
 		return eof
@@ -112,32 +112,32 @@ func (l *lexer) next() rune {
 	return r
 }
 
-func (l *lexer) errorf(format string, args ...interface{}) stateFn {
-	return func(lx *lexer) stateFn {
-		i := item{
+func (l *Lexer) errorf(format string, args ...interface{}) stateFn {
+	return func(lx *Lexer) stateFn {
+		i := Item{
 			itemError,
 			fmt.Sprintf(format, args...),
 		}
-		l.result = append(l.result, i)
+		l.Result = append(l.Result, i)
 		return nil
 	}
 }
 
-func (l *lexer) ignore() {
+func (l *Lexer) ignore() {
 	l.start = l.pos
 }
 
-func (l *lexer) back() {
+func (l *Lexer) back() {
 	l.pos -= l.width
 }
 
-func (l *lexer) peek() rune {
+func (l *Lexer) peek() rune {
 	r := l.next()
 	l.back()
 	return r
 }
 
-func (l *lexer) acceptRun(valid string) int {
+func (l *Lexer) acceptRun(valid string) int {
 	n := 0
 	for strings.IndexRune(valid, l.next()) >= 0 {
 		n++
@@ -146,11 +146,11 @@ func (l *lexer) acceptRun(valid string) int {
 	return n
 }
 
-func (l *lexer) acceptPeek(valid string) bool {
+func (l *Lexer) acceptPeek(valid string) bool {
 	return strings.IndexRune(valid, l.peek()) >= 0
 }
 
-func spelloutFn(l *lexer) stateFn {
+func spelloutFn(l *Lexer) stateFn {
 	if l.acceptRun(spelloutChars) > 0 {
 		l.emit(itemSpellout)
 	}
@@ -169,7 +169,7 @@ func spelloutFn(l *lexer) stateFn {
 	return nil
 }
 
-func leftSubFn(l *lexer) stateFn {
+func leftSubFn(l *Lexer) stateFn {
 	closingTag := leftArr
 
 	// opening tags
@@ -216,7 +216,7 @@ func leftSubFn(l *lexer) stateFn {
 	panic("not reached")
 }
 
-func rightSubFn(l *lexer) stateFn {
+func rightSubFn(l *Lexer) stateFn {
 	closingTag := rightArr
 
 	// opening tags
@@ -264,11 +264,11 @@ func rightSubFn(l *lexer) stateFn {
 	panic("not reached")
 }
 
-func prematureEndOfInput(l *lexer) stateFn {
+func prematureEndOfInput(l *Lexer) stateFn {
 	return l.errorf("premature end of input")
 }
 
-func endFn(l *lexer) stateFn {
+func endFn(l *Lexer) stateFn {
 	switch r := l.peek(); {
 	case r == endTag:
 		l.next()
@@ -278,7 +278,7 @@ func endFn(l *lexer) stateFn {
 	}
 }
 
-func initialState(l *lexer) stateFn {
+func initialState(l *Lexer) stateFn {
 	switch r := l.peek(); {
 	case r == leftArr || r == leftBracket:
 		return leftSubFn
@@ -294,48 +294,54 @@ func initialState(l *lexer) stateFn {
 	return nil
 }
 
-func lex(input string) *lexer {
-	l := &lexer{
+func Lex(input string) *Lexer {
+	l := &Lexer{
 		input:  input,
 		state:  initialState,
-		result: result{},
+		Result: Result{},
 	}
 	return l
 }
 
-func (l *lexer) current() string {
+func (l *Lexer) current() string {
 	return l.input[l.start:l.pos]
 }
-func (l *lexer) currentToEnd() string {
+func (l *Lexer) currentToEnd() string {
 	return l.input[l.pos:]
 }
-func (l *lexer) emit(t itemType) {
-	i := item{t, l.current()}
+func (l *Lexer) emit(t ItemType) {
+	i := Item{t, l.current()}
 	//fmt.Printf("emit: %s\n", i)
-	l.result = append(l.result, i)
+	l.Result = append(l.Result, i)
 	l.start = l.pos
 }
 
-func (l *lexer) debug(msg string) {
+func (l *Lexer) debug(msg string) {
 	s := l.current()
 	fmt.Printf("lexer debug %s: '%s'\n", msg, s)
 	//fmt.Printf("lexer debug %s: '%#v'\n", msg, l)
 }
 
-func (l *lexer) run() {
+func (l *Lexer) Run() error {
 	for state := initialState; state != nil; {
 		state = state(l)
 	}
+	for _, i := range l.Result {
+		if i.typ == itemError {
+			return fmt.Errorf("%v", i.val)
+		}
+	}
+	return nil
 }
 
-func main() {
-	for _, s := range os.Args[1:] {
-		fmt.Printf("input: '%s'\n", s)
-		l := lex(s)
-		l.run()
-		for _, i := range l.result {
-			fmt.Printf("item: %s\n", i)
-		}
-		fmt.Println()
-	}
-}
+// func main() {
+// 	for _, s := range os.Args[1:] {
+// 		fmt.Printf("input: '%s'\n", s)
+// 		l := Lex(s)
+// 		l.Run()
+// 		for _, i := range l.Result {
+// 			fmt.Printf("item: %s\n", i)
+// 		}
+// 		fmt.Println()
+// 	}
+// }

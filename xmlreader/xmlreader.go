@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/stts-se/rbnf"
+	"github.com/stts-se/rbnf/lexer"
 )
 
 func readXMLFile(fn string) (Ldml, error) {
@@ -51,6 +52,11 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 		} else { // non-numeric rule
 			rule.Base.String = r.Attrvalue
 		}
+		lex := lexer.Lex(r.String)
+		err = lex.Run()
+		if err != nil {
+			fmt.Printf("lex.Result: %s\n", lex.Result)
+		}
 		// TODO parse string according to http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/RuleBasedNumberFormat.html
 		// examples:
 		// två;
@@ -66,7 +72,7 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 		//rule.RightSub = "rs"  //r.String
 		//rule.SpellOut = "apa" //r.String
 
-		fmt.Println(rule)
+		//fmt.Println(rule)
 
 		res.Rules = append(res.Rules, rule)
 	}
