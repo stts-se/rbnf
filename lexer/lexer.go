@@ -83,7 +83,7 @@ const (
 	rightBracket  = ']'
 	spelloutChars = "abcdefghijklmnopqrstuvxyz"
 	ruleNameChars = "abcdefghijklmnopqrstuvxyz-"
-	delimChars    = "+-"
+	delimChars    = " -"
 	x             = 'x'
 )
 
