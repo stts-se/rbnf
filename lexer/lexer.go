@@ -22,7 +22,7 @@ type lexer struct {
 	start  int    // start position of this item
 	pos    int    // current position in the input
 	width  int    // width of last rune read
-	result []item // channel of scanned items
+	result result // channel of scanned items
 	state  stateFn
 }
 
@@ -298,7 +298,7 @@ func lex(input string) *lexer {
 	l := &lexer{
 		input:  input,
 		state:  initialState,
-		result: []item{},
+		result: result{},
 	}
 	return l
 }
