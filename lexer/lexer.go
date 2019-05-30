@@ -22,7 +22,7 @@ type lexer struct {
 	start  int    // start position of this item
 	pos    int    // current position in the input
 	width  int    // width of last rune read
-	result result // channel of scanned items
+	result result // slice of scanned items
 	state  stateFn
 }
 
