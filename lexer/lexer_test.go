@@ -44,7 +44,7 @@ func TestBasic(t *testing.T) {
 	var input string
 	var exp Result
 	var l *Lexer
-	var prematureEOIItem = Item{itemError, "premature end of input"}
+	var prematureEOIItem = Item{ItemError, "premature end of input"}
 
 	//
 	input = ""
@@ -57,7 +57,7 @@ func TestBasic(t *testing.T) {
 
 	//
 	input = "minus;"
-	exp = Result{{itemSpellout, "minus"}}
+	exp = Result{{ItemSpellout, "minus"}}
 	l = Lex(input)
 	l.Run()
 	for _, err := range compare(input, exp, l.Result) {
@@ -66,7 +66,7 @@ func TestBasic(t *testing.T) {
 
 	//
 	input = "minus"
-	exp = Result{{itemSpellout, "minus"}, prematureEOIItem}
+	exp = Result{{ItemSpellout, "minus"}, prematureEOIItem}
 	l = Lex(input)
 	l.Run()
 	for _, err := range compare(input, exp, l.Result) {
@@ -83,8 +83,8 @@ func TestSub(t *testing.T) {
 	//
 	input = "←← komma;"
 	exp = Result{
-		{itemLeftSub, "←← "},
-		{itemSpellout, "komma"},
+		{ItemLeftSub, "←← "},
+		{ItemSpellout, "komma"},
 	}
 	l = Lex(input)
 	l.Run()
@@ -95,8 +95,8 @@ func TestSub(t *testing.T) {
 	//
 	input = "komma →→;"
 	exp = Result{
-		{itemSpellout, "komma"},
-		{itemRightSub, " →→"},
+		{ItemSpellout, "komma"},
+		{ItemRightSub, " →→"},
 	}
 	l = Lex(input)
 	l.Run()
@@ -107,9 +107,9 @@ func TestSub(t *testing.T) {
 	//
 	input = "←← komma →→;"
 	exp = Result{
-		{itemLeftSub, "←← "},
-		{itemSpellout, "komma"},
-		{itemRightSub, " →→"},
+		{ItemLeftSub, "←← "},
+		{ItemSpellout, "komma"},
+		{ItemRightSub, " →→"},
 	}
 	l = Lex(input)
 	l.Run()
@@ -120,9 +120,9 @@ func TestSub(t *testing.T) {
 	//
 	input = "←%cardinal-neuter← komma →%cardinal-reale→;"
 	exp = Result{
-		{itemLeftSub, "←%cardinal-neuter← "},
-		{itemSpellout, "komma"},
-		{itemRightSub, " →%cardinal-reale→"},
+		{ItemLeftSub, "←%cardinal-neuter← "},
+		{ItemSpellout, "komma"},
+		{ItemRightSub, " →%cardinal-reale→"},
 	}
 	l = Lex(input)
 	l.Run()
@@ -140,11 +140,11 @@ func TestOptionalSub(t *testing.T) {
 	//
 	input = "[←← ]komma →→;"
 	exp = Result{
-		{itemLeftBracket, "["},
-		{itemLeftSub, "←← "},
-		{itemRightBracket, "]"},
-		{itemSpellout, "komma"},
-		{itemRightSub, " →→"},
+		{ItemLeftBracket, "["},
+		{ItemLeftSub, "←← "},
+		{ItemRightBracket, "]"},
+		{ItemSpellout, "komma"},
+		{ItemRightSub, " →→"},
 	}
 	l = Lex(input)
 	l.Run()
@@ -155,11 +155,11 @@ func TestOptionalSub(t *testing.T) {
 	//
 	input = "←← komma[ →→];"
 	exp = Result{
-		{itemLeftSub, "←← "},
-		{itemSpellout, "komma"},
-		{itemLeftBracket, "["},
-		{itemRightSub, " →→"},
-		{itemRightBracket, "]"},
+		{ItemLeftSub, "←← "},
+		{ItemSpellout, "komma"},
+		{ItemLeftBracket, "["},
+		{ItemRightSub, " →→"},
+		{ItemRightBracket, "]"},
 	}
 	l = Lex(input)
 	l.Run()
@@ -170,11 +170,11 @@ func TestOptionalSub(t *testing.T) {
 	//
 	input = "←← komma[ →%cardinal-reale→];"
 	exp = Result{
-		{itemLeftSub, "←← "},
-		{itemSpellout, "komma"},
-		{itemLeftBracket, "["},
-		{itemRightSub, " →%cardinal-reale→"},
-		{itemRightBracket, "]"},
+		{ItemLeftSub, "←← "},
+		{ItemSpellout, "komma"},
+		{ItemLeftBracket, "["},
+		{ItemRightSub, " →%cardinal-reale→"},
+		{ItemRightBracket, "]"},
 	}
 	l = Lex(input)
 	l.Run()

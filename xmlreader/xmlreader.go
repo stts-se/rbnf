@@ -54,8 +54,23 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 		}
 		lex := lexer.Lex(r.String)
 		err = lex.Run()
+
 		if err != nil {
-			fmt.Printf("lex.Result: %s\n", lex.Result)
+			fmt.Printf("FAIL lex.Result: %v ::: %#v\n", err, lex.Result.Errors())
+
+		} else {
+
+			fmt.Printf(">>>>: %#v\n", lex.Result)
+			for _, i := range lex.Result {
+				switch i.Typ {
+				case lexer.ItemError:
+					fmt.Println("buhu")
+				case lexer.ItemLeftSub:
+					//rule.LeftSub = i.Val
+				}
+
+				//rule.LeftSub
+			}
 		}
 		// TODO parse string according to http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/RuleBasedNumberFormat.html
 		// examples:

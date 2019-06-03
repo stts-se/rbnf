@@ -17,6 +17,16 @@ func (r Result) String() string {
 	return strings.Join(res, ", ")
 }
 
+func (r Result) Errors() []Item {
+	var res []Item
+	for _, i := range r {
+		if i.Typ == ItemError {
+			res = append(res, i)
+		}
+	}
+	return res
+}
+
 type Lexer struct {
 	input  string // the string being scanned
 	start  int    // start position of this Item
@@ -27,19 +37,19 @@ type Lexer struct {
 }
 
 type Item struct {
-	typ ItemType
-	val string
+	Typ ItemType
+	Val string
 }
 
 func (i Item) String() string {
-	switch i.typ {
-	case itemError:
-		return i.val
+	switch i.Typ {
+	case ItemError:
+		return i.Val
 	}
 	// if len(i.val) > 10 {
 	// 	return fmt.Sprintf("%s{%.10v...}", i.typ, i.val)
 	// }
-	return fmt.Sprintf("%s{%v}", i.typ, i.val)
+	return fmt.Sprintf("%s{%v}", i.Typ, i.Val)
 }
 
 //go:generate stringer -type=ItemType
@@ -47,14 +57,14 @@ func (i Item) String() string {
 type ItemType int
 
 const (
-	itemError ItemType = iota
-	itemLeftBracket
-	itemLeftSub
-	itemRightSub
-	itemRightBracket
-	itemSpellout
-	itemDelim
-	itemVariable
+	ItemError ItemType = iota
+	ItemLeftBracket
+	ItemLeftSub
+	ItemRightSub
+	ItemRightBracket
+	ItemSpellout
+	ItemDelim
+	ItemVariable
 )
 
 const (
@@ -78,21 +88,21 @@ const (
 
 func (t ItemType) String() string {
 	switch t {
-	case itemError:
+	case ItemError:
 		return "error"
-	case itemLeftSub:
+	case ItemLeftSub:
 		return "leftsub"
-	case itemRightSub:
+	case ItemRightSub:
 		return "rightsub"
-	case itemLeftBracket:
+	case ItemLeftBracket:
 		return "leftbracket"
-	case itemRightBracket:
+	case ItemRightBracket:
 		return "rightbracket"
-	case itemSpellout:
+	case ItemSpellout:
 		return "spellout"
-	case itemDelim:
+	case ItemDelim:
 		return "delim"
-	case itemVariable:
+	case ItemVariable:
 		return "variable"
 	default:
 		panic(fmt.Sprintf("undefined string output for %d", t))
@@ -115,7 +125,7 @@ func (l *Lexer) next() rune {
 func (l *Lexer) errorf(format string, args ...interface{}) stateFn {
 	return func(lx *Lexer) stateFn {
 		i := Item{
-			itemError,
+			ItemError,
 			fmt.Sprintf(format, args...),
 		}
 		l.Result = append(l.Result, i)
@@ -152,7 +162,7 @@ func (l *Lexer) acceptPeek(valid string) bool {
 
 func spelloutFn(l *Lexer) stateFn {
 	if l.acceptRun(spelloutChars) > 0 {
-		l.emit(itemSpellout)
+		l.emit(ItemSpellout)
 	}
 	r := l.peek()
 	if r == rightArr || r == leftBracket || l.acceptPeek(delimChars) {
@@ -164,7 +174,7 @@ func spelloutFn(l *Lexer) stateFn {
 	case eof:
 		return prematureEndOfInput
 	default:
-		return l.errorf("unknown input at expected %s: '%s'", itemSpellout, l.currentToEnd())
+		return l.errorf("unknown input at expected %s: '%s'", ItemSpellout, l.currentToEnd())
 	}
 	return nil
 }
@@ -177,14 +187,14 @@ func leftSubFn(l *Lexer) stateFn {
 		r := l.peek()
 		if r == leftBracket {
 			l.next()
-			l.emit(itemLeftBracket)
+			l.emit(ItemLeftBracket)
 			closingTag = rightBracket
 			break
 		} else if r == leftArr {
 			l.next()
 			break
 		} else {
-			return l.errorf("unknown opening input at expected %s: '%s'", itemLeftSub, l.currentToEnd())
+			return l.errorf("unknown opening input at expected %s: '%s'", ItemLeftSub, l.currentToEnd())
 		}
 	}
 
@@ -194,12 +204,12 @@ func leftSubFn(l *Lexer) stateFn {
 			if r == leftArr {
 				l.next()
 				l.acceptRun(delimChars)
-				l.emit(itemLeftSub)
+				l.emit(ItemLeftSub)
 				return spelloutFn
 			} else if r == rightBracket {
-				l.emit(itemLeftSub)
+				l.emit(ItemLeftSub)
 				l.next()
-				l.emit(itemRightBracket)
+				l.emit(ItemRightBracket)
 				return spelloutFn
 			}
 		} else if r == leftArr {
@@ -210,7 +220,7 @@ func leftSubFn(l *Lexer) stateFn {
 			l.next()
 			l.acceptRun(ruleNameChars)
 		} else {
-			return l.errorf("unknown input at expected %s: '%s'", itemLeftSub, l.currentToEnd())
+			return l.errorf("unknown input at expected %s: '%s'", ItemLeftSub, l.currentToEnd())
 		}
 	}
 	panic("not reached")
@@ -224,7 +234,7 @@ func rightSubFn(l *Lexer) stateFn {
 		r := l.peek()
 		if r == leftBracket {
 			l.next()
-			l.emit(itemLeftBracket)
+			l.emit(ItemLeftBracket)
 			closingTag = rightBracket
 			break
 		} else if r == rightArr {
@@ -233,7 +243,7 @@ func rightSubFn(l *Lexer) stateFn {
 		} else if l.acceptPeek(delimChars) {
 			l.next()
 		} else {
-			return l.errorf("unknown opening input at expected %s: '%s'", itemRightSub, l.currentToEnd())
+			return l.errorf("unknown opening input at expected %s: '%s'", ItemRightSub, l.currentToEnd())
 		}
 	}
 
@@ -242,12 +252,12 @@ func rightSubFn(l *Lexer) stateFn {
 		if r == closingTag {
 			if r == rightArr {
 				l.next()
-				l.emit(itemRightSub)
+				l.emit(ItemRightSub)
 				return endFn
 			} else if r == rightBracket {
-				l.emit(itemRightSub)
+				l.emit(ItemRightSub)
 				l.next()
-				l.emit(itemRightBracket)
+				l.emit(ItemRightBracket)
 				return endFn
 			}
 		} else if r == rightArr {
@@ -258,7 +268,7 @@ func rightSubFn(l *Lexer) stateFn {
 			l.next()
 			l.acceptRun(ruleNameChars)
 		} else {
-			return l.errorf("unknown input at expected %s: '%s'", itemLeftSub, l.currentToEnd())
+			return l.errorf("unknown input at expected %s: '%s'", ItemLeftSub, l.currentToEnd())
 		}
 	}
 	panic("not reached")
@@ -327,8 +337,8 @@ func (l *Lexer) Run() error {
 		state = state(l)
 	}
 	for _, i := range l.Result {
-		if i.typ == itemError {
-			return fmt.Errorf("%v", i.val)
+		if i.Typ == ItemError {
+			return fmt.Errorf("%v", i.Val)
 		}
 	}
 	return nil
