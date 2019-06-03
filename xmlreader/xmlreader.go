@@ -56,7 +56,7 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 		err = lex.Run()
 
 		if err != nil {
-			fmt.Printf("FAIL lex.Result: %v ::: %#v\n", err, lex.Result.Errors())
+			fmt.Printf("FAIL. INPUT: '%s' ERROR: %s\n", r.String, err)
 
 		} else {
 

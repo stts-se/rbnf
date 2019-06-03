@@ -6,3 +6,4 @@ Links:
 * http://userguide.icu-project.org/
 * http://icu-project.org/apiref/icu4c/classRuleBasedNumberFormat.html
 * https://github.com/unicode-org/cldr/tree/master/common/rbnf
+* https://godoc.org/golang.org/x/text/unicode/cldr and https://github.com/golang/text/tree/master/unicode/cldr -- golang implementation of parts of CLDR

@@ -168,12 +168,39 @@ func TestOptionalSub(t *testing.T) {
 	}
 
 	//
+	input = "komma[ →→];"
+	exp = Result{
+		{ItemSpellout, "komma"},
+		{ItemLeftBracket, "["},
+		{ItemRightSub, " →→"},
+		{ItemRightBracket, "]"},
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result) {
+		t.Error(err)
+	}
+
+	//
 	input = "←← komma[ →%cardinal-reale→];"
 	exp = Result{
 		{ItemLeftSub, "←← "},
 		{ItemSpellout, "komma"},
 		{ItemLeftBracket, "["},
 		{ItemRightSub, " →%cardinal-reale→"},
+		{ItemRightBracket, "]"},
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result) {
+		t.Error(err)
+	}
+
+	input = "en miljon[ →→];"
+	exp = Result{
+		{ItemSpellout, "en miljon"},
+		{ItemLeftBracket, "["},
+		{ItemRightSub, " →→"},
 		{ItemRightBracket, "]"},
 	}
 	l = Lex(input)

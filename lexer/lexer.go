@@ -4,6 +4,7 @@ import (
 	"fmt"
 	//"os"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -77,11 +78,11 @@ const (
 	endTag       = ';'
 
 	// string constants
-	delimChars = " -"
+	delimChars = " -\u00AD" // \u00AD = soft hyphen
 	aToZ       = "abcdefghijklmnopqrstuvwxyz"
 	//leftSubChars  = "←%[]" + aToZ + delimChars
 	//rightSubChars = "→%[]" + aToZ + delimChars
-	spelloutChars = aToZ
+	//spelloutChars = aToZ
 	ruleNameChars = aToZ + "-"
 	x             = 'x'
 )
@@ -147,7 +148,7 @@ func (l *Lexer) peek() rune {
 	return r
 }
 
-func (l *Lexer) acceptRun(valid string) int {
+func (l *Lexer) acceptRunString(valid string) int {
 	n := 0
 	for strings.IndexRune(valid, l.next()) >= 0 {
 		n++
@@ -156,16 +157,44 @@ func (l *Lexer) acceptRun(valid string) int {
 	return n
 }
 
-func (l *Lexer) acceptPeek(valid string) bool {
+func (l *Lexer) acceptRunFunc(f func(r rune) bool) int {
+	n := 0
+	for f(l.next()) {
+		n++
+	}
+	l.back()
+	return n
+}
+
+func (l *Lexer) acceptPeekString(valid string) bool {
 	return strings.IndexRune(valid, l.peek()) >= 0
 }
 
 func spelloutFn(l *Lexer) stateFn {
-	if l.acceptRun(spelloutChars) > 0 {
+	if l.acceptRunFunc(unicode.IsLetter) > 0 {
 		l.emit(ItemSpellout)
+		// for {
+		// 	r := l.peek()
+		// 	if strings.IndexRune(delimChars, r) >= 0 {
+		// 		l.next()
+		// 		if l.acceptRunFunc(unicode.IsLetter) > 0 {
+		// 			// continue looking
+		// 			//l.back()
+		// 			//l.emit(ItemSpellout)
+		// 			//break
+		// 		} else {
+		// 			l.back()
+		// 			break
+		// 		}
+		// 	} else {
+		// 		l.emit(ItemSpellout)
+		// 		break
+		// 	}
+		// }
 	}
+
 	r := l.peek()
-	if r == rightArr || r == leftBracket || l.acceptPeek(delimChars) {
+	if r == rightArr || r == leftBracket || l.acceptPeekString(delimChars) {
 		return rightSubFn
 	}
 	switch l.peek() {
@@ -203,7 +232,7 @@ func leftSubFn(l *Lexer) stateFn {
 		if r == closingTag {
 			if r == leftArr {
 				l.next()
-				l.acceptRun(delimChars)
+				l.acceptRunString(delimChars)
 				l.emit(ItemLeftSub)
 				return spelloutFn
 			} else if r == rightBracket {
@@ -214,11 +243,11 @@ func leftSubFn(l *Lexer) stateFn {
 			}
 		} else if r == leftArr {
 			l.next()
-		} else if l.acceptPeek(delimChars) {
+		} else if l.acceptPeekString(delimChars) {
 			l.next()
 		} else if r == '%' {
 			l.next()
-			l.acceptRun(ruleNameChars)
+			l.acceptRunString(ruleNameChars)
 		} else {
 			return l.errorf("unknown input at expected %s: '%s'", ItemLeftSub, l.currentToEnd())
 		}
@@ -240,7 +269,7 @@ func rightSubFn(l *Lexer) stateFn {
 		} else if r == rightArr {
 			l.next()
 			break
-		} else if l.acceptPeek(delimChars) {
+		} else if l.acceptPeekString(delimChars) {
 			l.next()
 		} else {
 			return l.errorf("unknown opening input at expected %s: '%s'", ItemRightSub, l.currentToEnd())
@@ -262,11 +291,11 @@ func rightSubFn(l *Lexer) stateFn {
 			}
 		} else if r == rightArr {
 			l.next()
-		} else if l.acceptPeek(delimChars) {
+		} else if l.acceptPeekString(delimChars) {
 			l.next()
 		} else if r == '%' {
 			l.next()
-			l.acceptRun(ruleNameChars)
+			l.acceptRunString(ruleNameChars)
 		} else {
 			return l.errorf("unknown input at expected %s: '%s'", ItemLeftSub, l.currentToEnd())
 		}
