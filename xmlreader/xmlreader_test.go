@@ -18,9 +18,9 @@ func TestStruct(t *testing.T) {
 }
 
 func TestUnmarshalXML(t *testing.T) {
-	// depends on file sv.xml in current dir
+	// depends on file sv.xml in test_data dir
 
-	bytes, err := ioutil.ReadFile("sv.xml")
+	bytes, err := ioutil.ReadFile("test_data/sv.xml")
 	if err != nil {
 		t.Errorf("Sorry! : %v", err)
 	}
@@ -35,9 +35,9 @@ func TestUnmarshalXML(t *testing.T) {
 }
 
 func TestReadXMLFile(t *testing.T) {
-	// depends on file sv.xml in current dir
+	// depends on file sv.xml in test_data dir
 
-	ldml, err := readXMLFile("sv.xml")
+	ldml, err := readXMLFile("test_data/sv.xml")
 	if err != nil {
 		t.Errorf("Sob! : %v", err)
 	}
@@ -52,7 +52,7 @@ func TestReadXMLFile(t *testing.T) {
 
 func TestRulesFromXMLFile(t *testing.T) {
 
-	lang, ruleSetGroups, err := RulesFromXMLFile("sv.xml")
+	lang, ruleSetGroups, err := RulesFromXMLFile("test_data/sv.xml")
 	if err != nil {
 		t.Errorf("Pain! %v", err)
 	}
