@@ -77,4 +77,15 @@ func TestRulesFromXMLFile(t *testing.T) {
 	if w, g := "spellout-numbering-t", sor.RuleSets["spellout-numbering-t"].Name; w != g {
 		t.Errorf("wanted '%s' got '%s'", w, g)
 	}
+
+	var s string
+
+	//
+	s = "10"
+	res, err := pack.Spellout(s, "SpelloutRules", "spellout-numbering")
+	if err != nil {
+		t.Errorf("P-P-Pure Pain! %v", err)
+	}
+	fmt.Println(res)
+
 }

@@ -65,9 +65,9 @@ func NewStringRule(baseString string, leftSub, leftPadding string, spellOut stri
 
 func (r BaseRule) String() string {
 	if r.Base.IsInt() {
-		return fmt.Sprintf("%s => '%s%s' <%s> '%s%s'", r.Base.ToString(), r.LeftSub, r.LeftPadding, strings.Join(r.SpellOut, ""), r.RightPadding, r.RightSub)
+		return fmt.Sprintf("%s => '%s%s%s%s%s'", r.Base.ToString(), r.LeftSub, r.LeftPadding, strings.Join(r.SpellOut, ""), r.RightPadding, r.RightSub)
 	}
-	return fmt.Sprintf("%s => '%s%s' <%s> '%s%s'", r.Base.ToString(), r.LeftSub, r.LeftPadding, strings.Join(r.SpellOut, ""), r.RightPadding, r.RightSub)
+	return fmt.Sprintf("%s => '%s%s%s%s%s'", r.Base.ToString(), r.LeftSub, r.LeftPadding, strings.Join(r.SpellOut, ""), r.RightPadding, r.RightSub)
 }
 
 func (b Base) IsInt() bool {
@@ -142,7 +142,7 @@ func (r BaseRule) Match(input string) (MatchResult, bool) {
 	}
 
 	// String rule
-	if r.stringMatchRegexp != emptyRegexp {
+	if r.stringMatchRegexp != emptyRegexp || r.stringMatchRegexp == nil {
 		r.stringMatchRegexp = buildStringMatchRegexp(r.Base.String)
 	}
 	m := r.stringMatchRegexp.FindStringSubmatch(input)
@@ -193,8 +193,10 @@ type RuleSetGroup struct {
 
 func (g RuleSetGroup) FindRuleSet(ruleRef string) (RuleSet, bool) {
 	ruleName := ruleRef
+	ruleName = strings.TrimPrefix(ruleName, "<")
 	ruleName = strings.TrimPrefix(ruleName, "%")
 	ruleName = strings.TrimPrefix(ruleName, "%")
+	ruleName = strings.TrimSuffix(ruleName, "<")
 	res, ok := g.RuleSets[ruleName]
 	return res, ok
 }
@@ -304,7 +306,7 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) (string, error) {
 	}
 
 	if fmt.Sprintf("%d", matchedRule.Base.Int) == input {
-		// if n == 0 && matchedRule.Base.Int == n {
+		//if n, err := strconv.Atoi(input); err != nil && n == 0 && matchedRule.Base.Int == n {
 		sp, err := g.expandSpellouts(matchedRule)
 		if err != nil {
 			return "", err
@@ -318,15 +320,23 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) (string, error) {
 	}
 
 	var left, right string
-	if matchedRule.RightSub == "[>>]" { // Text in brackets is omitted if the number being formatted is an even multiple of 10
-		//if n%10 != 0 {
-		if !strings.HasSuffix(input, "0") {
+	if matchedRule.RightSub == "[>>]" { // ??? Text in brackets is omitted if the number being formatted is an even multiple of 10
+		n, err := strconv.Atoi(input)
+		//fmt.Println(n)
+		omit := n%10 == 0
+		omit = false
+		if err != nil || !omit {
+			//if matchedRule.Base.IsInt() && matchedRule.Base.Int%10 != 0 {
+			//if n%10 != 0 {
+			///if !strings.HasSuffix(input, "0") {
 			right, err = g.spellout(match.ForwardRight, ruleSet)
 			if err != nil {
 				return "", err
 			}
+			//}
 		}
 	} else if matchedRule.RightSub == ">>" {
+		fmt.Printf("xx %#v\t%v\n", matchedRule, match.ForwardRight)
 		right, err = g.spellout(match.ForwardRight, ruleSet)
 		if err != nil {
 			return "", err
@@ -337,7 +347,7 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) (string, error) {
 			return "", err
 		}
 	} else if matchedRule.RightSub != "" {
-		return "", fmt.Errorf("Unknown rule context: %s", matchedRule.RightSub)
+		return "", fmt.Errorf("Unknown rule context: '%s'", matchedRule.RightSub)
 	}
 
 	if matchedRule.LeftSub == "<<" {
@@ -353,7 +363,7 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) (string, error) {
 		}
 
 	} else if matchedRule.LeftSub != "" {
-		return "", fmt.Errorf("Unknown rule context: %s", matchedRule.LeftSub)
+		return "", fmt.Errorf("Unknown rule context: '%s'", matchedRule.LeftSub)
 	}
 
 	spell, err := g.expandSpellouts(matchedRule)

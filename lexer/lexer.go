@@ -64,7 +64,8 @@ const (
 	ItemRightSub
 	ItemRightBracket
 	ItemSpellout
-	ItemDelim
+	ItemLeftDelim
+	ItemRightDelim
 	ItemVariable
 )
 
@@ -101,8 +102,10 @@ func (t ItemType) String() string {
 		return "rightbracket"
 	case ItemSpellout:
 		return "spellout"
-	case ItemDelim:
-		return "delim"
+	case ItemLeftDelim:
+		return "leftdelim"
+	case ItemRightDelim:
+		return "rightdelim"
 	case ItemVariable:
 		return "variable"
 	default:
@@ -277,11 +280,15 @@ func leftSubFn(l *Lexer) stateFn {
 		if r == closingTag {
 			if r == leftArr {
 				l.next()
-				l.acceptRunString(delimChars)
 				l.emit(ItemLeftSub)
+				if l.acceptRunString(delimChars) > 0 {
+					l.emit(ItemLeftDelim)
+				}
 				return spelloutFn
 			} else if r == rightBracket {
-				l.emit(ItemLeftSub)
+				if len(l.current()) > 0 {
+					l.emit(ItemLeftSub)
+				}
 				l.next()
 				l.emit(ItemRightBracket)
 				return spelloutFn
@@ -289,7 +296,10 @@ func leftSubFn(l *Lexer) stateFn {
 		} else if r == leftArr {
 			l.next()
 		} else if l.acceptPeekString(delimChars) {
-			l.next()
+			l.emit(ItemLeftSub)
+			if l.acceptRunString(delimChars) > 0 {
+				l.emit(ItemLeftDelim)
+			}
 		} else if r == '%' {
 			l.next()
 			l.acceptRunString(ruleNameChars)
@@ -316,6 +326,7 @@ func rightSubFn(l *Lexer) stateFn {
 			break
 		} else if l.acceptPeekString(delimChars) {
 			l.next()
+			l.emit(ItemRightDelim)
 		} else {
 			return l.errorf("unknown opening input at expected %s: '%s'", ItemRightSub, l.currentToEnd())
 		}
@@ -337,7 +348,10 @@ func rightSubFn(l *Lexer) stateFn {
 		} else if r == rightArr {
 			l.next()
 		} else if l.acceptPeekString(delimChars) {
-			l.next()
+			//l.next()
+			if l.acceptRunString(delimChars) > 0 {
+				l.emit(ItemRightDelim)
+			}
 		} else if r == '%' {
 			l.next()
 			l.acceptRunString(ruleNameChars)

@@ -74,6 +74,12 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 				case lexer.ItemError:
 					return res, fmt.Errorf("convertRuleSet encountered an error from lexer : %s", i.Val)
 
+				case lexer.ItemLeftDelim:
+					rule.LeftPadding = replaceChars(i.Val)
+
+				case lexer.ItemRightDelim:
+					rule.RightPadding = replaceChars(i.Val)
+
 				case lexer.ItemLeftSub:
 					rule.LeftSub = replaceChars(i.Val)
 
@@ -84,26 +90,9 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 					rule.SpellOut = append(rule.SpellOut, i.Val)
 
 				}
-
-				//rule.LeftSub
 			}
 		}
-		// TODO parse string according to http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/RuleBasedNumberFormat.html
-		// examples:
-		// två;
-		// trettio[­→→];
-		// ←%spellout-cardinal-reale← miljoner[ →→];
-		// tjugo→%%ord-fem-nde→;
-		// minus →→;
-		// ←← komma →→;
-		// ←←­hundra[­→→];
-		// ←%spellout-cardinal-reale← miljon→%%ord-fem-teer→;
-
-		//rule.LeftSub = "ls"   //r.String
-		//rule.RightSub = "rs"  //r.String
-		//rule.SpellOut = "apa" //r.String
-
-		//fmt.Printf("PARSED RULE\t%s\t%s\n", r.String, rule)
+		fmt.Printf("PARSED RULE\t%s\t%s\t%#v\n", r.String, rule, rule)
 
 		res.Rules = append(res.Rules, rule)
 	}
