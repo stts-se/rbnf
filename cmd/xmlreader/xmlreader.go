@@ -10,15 +10,25 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "USAGE: xmlreader <xmlfiles>\n")
+		fmt.Fprintf(os.Stderr, "USAGE: xmlreader <xmlfile> <input>\n")
 		os.Exit(1)
 	}
 
-	for _, f := range os.Args[1:] {
-		_, err := xmlreader.RulesFromXMLFile(f)
-		if err != nil {
-			log.Fatalf("Couldn't parse file %s : %v", f, err)
-		}
-		log.Printf("Parsed xml rule file %s", f)
+	f := os.Args[1]
+	rPackage, err := xmlreader.RulesFromXMLFile(f)
+	if err != nil {
+		log.Fatalf("Couldn't parse file %s : %v", f, err)
 	}
+	log.Printf("Parsed xml rule file %s", f)
+
+	if len(os.Args) > 2 {
+		for _, s := range os.Args[2:] {
+			res, err := rPackage.Spellout(s, "SpelloutRules", "spellout-numbering")
+			if err != nil {
+				log.Fatalf("Error for input string %s : %v", s, err)
+			}
+			fmt.Println(res)
+		}
+	}
+
 }
