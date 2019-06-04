@@ -28,6 +28,12 @@ func readXMLFile(fn string) (Ldml, error) {
 	return res, nil
 }
 
+func replaceChars(s string) string {
+	s = strings.Replace(s, "→", ">", -1)
+	s = strings.Replace(s, "←", "<", -1)
+	return s
+}
+
 func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 	var res rbnf.RuleSet
 	res.Name = rs.Attrtype
@@ -63,10 +69,19 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 			fmt.Printf(">>>>: %#v\n", lex.Result)
 			for _, i := range lex.Result {
 				switch i.Typ {
+				// "can't" happen
 				case lexer.ItemError:
-					fmt.Println("buhu")
+					return res, fmt.Errorf("convertRuleSet encountered an error from lexer : %s", i.Val)
+
 				case lexer.ItemLeftSub:
-					//rule.LeftSub = i.Val
+					rule.LeftSub = replaceChars(i.Val)
+
+				case lexer.ItemRightSub:
+					rule.RightSub = replaceChars(i.Val)
+
+				case lexer.ItemSpellout:
+					rule.SpellOut = i.Val
+
 				}
 
 				//rule.LeftSub
