@@ -236,6 +236,15 @@ func Test_Spellout1(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
+	res, err = g.Spellout("2000000", "default")
+	exp = "två miljoner"
+	if err != nil {
+		t.Error(err)
+	}
+	if res != exp {
+		t.Errorf(fs, exp, res)
+	}
+
 	res, err = g.Spellout("31607106", "default")
 	exp = "trettio-en miljoner sex hundra sju tusen ett hundra sex"
 	if err != nil {
