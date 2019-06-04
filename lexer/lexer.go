@@ -78,7 +78,7 @@ const (
 	endTag       = ';'
 
 	// string constants
-	delimChars = " -\u00AD\u2212" // \u00AD = soft hyphen; \u2212 = minus sign
+	delimChars = " -\u00AD" // \u00AD = soft hyphen
 	aToZ       = "abcdefghijklmnopqrstuvwxyz"
 	//leftSubChars  = "←%[]" + aToZ + delimChars
 	//rightSubChars = "→%[]" + aToZ + delimChars
@@ -200,53 +200,47 @@ func (l *Lexer) acceptPeekString(valid string) bool {
 }
 
 func spelloutFn(l *Lexer) stateFn {
-	var plainSpelloutFunc = func() {
+	var plainSpelloutFunc = func() bool {
 		var acceptFunc = func(r rune) bool {
 			return unicode.IsLetter(r) || r == '\''
 		}
 		if l.acceptRunFunc(acceptFunc) > 0 {
-			for {
-				r1, r2, _ := l.peek3()
-				if strings.IndexRune(delimChars, r1) >= 0 {
-					if acceptFunc(r2) {
-						l.acceptRunString(delimChars)
-						l.acceptRunFunc(unicode.IsLetter)
-					} else {
-						break
-					}
-				} else {
-					break
-				}
-			}
 			l.emit(ItemSpellout)
+			return true
 		}
+		return false
 	}
-	var ruleRefFunc = func() {
+	var ruleRefFunc = func() bool {
 		r, r2, r3 := l.peek3()
-		if r == ' ' && r2 == '=' && r3 == '%' {
-			l.next()
+		if strings.IndexRune(delimChars, r) >= 0 && r2 == '=' && r3 == '%' {
+			l.acceptRunString(delimChars)
 			l.emit(ItemSpellout)
+			r, r2, r3 = l.peek3()
 		}
-		r, r2, r3 = l.peek3()
 
 		if r == '=' && r2 == '%' && strings.IndexRune(ruleNameChars, r3) >= 0 {
 			l.next()
 			l.next()
-			if l.acceptRunString(ruleNameChars) > 0 {
-			}
+			l.acceptRunString(ruleNameChars)
 			if l.next() == '=' {
 				l.emit(ItemSpellout)
+				return true
 			}
 		}
+		return false
 	}
+	for {
+		if !(plainSpelloutFunc() || ruleRefFunc()) {
+			break
+		}
 
-	plainSpelloutFunc()
-	ruleRefFunc()
-	plainSpelloutFunc()
-
-	r := l.peek()
-	if r == rightArr || r == leftBracket || l.acceptPeekString(delimChars) {
-		return rightSubFn
+		r, r2, _ := l.peek3()
+		if r == rightArr || r == leftBracket || (l.acceptPeekString(delimChars) && r2 == rightArr) {
+			return rightSubFn
+		}
+		if l.acceptRunString(delimChars) > 0 {
+			l.emit(ItemSpellout)
+		}
 	}
 	switch l.peek() {
 	case endTag:

@@ -199,7 +199,9 @@ func TestOptionalSub(t *testing.T) {
 	//
 	input = "en miljon[ →→];"
 	exp = Result{
-		{ItemSpellout, "en miljon"},
+		{ItemSpellout, "en"},
+		{ItemSpellout, " "},
+		{ItemSpellout, "miljon"},
 		{ItemLeftBracket, "["},
 		{ItemRightSub, " →→"},
 		{ItemRightBracket, "]"},
@@ -223,17 +225,29 @@ func TestOptionalSub(t *testing.T) {
 	}
 
 	//
-	// input = "er =%spellout-cardinal-neuter= de;"
-	// exp = Result{
-	// 	{ItemSpellout, "er"},
-	// 	{ItemSpellout, " "},
-	// 	{ItemSpellout, "=%spellout-cardinal-neuter="},
-	// 	{ItemSpellout, " "},
-	// 	{ItemSpellout, "de"},
-	// }
-	// l = Lex(input)
-	// l.Run()
-	// for _, err := range compare(input, exp, l.Result) {
-	// 	t.Error(err)
-	// }
+	input = "er =%spellout-cardinal-neuter= de;"
+	exp = Result{
+		{ItemSpellout, "er"},
+		{ItemSpellout, " "},
+		{ItemSpellout, "=%spellout-cardinal-neuter="},
+		{ItemSpellout, " "},
+		{ItemSpellout, "de"},
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result) {
+		t.Error(err)
+	}
+
+	//
+	input = "­=%spellout-ordinal-feminine=;"
+	exp = Result{
+		{ItemSpellout, "­"},
+		{ItemSpellout, "=%spellout-ordinal-feminine="},
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result) {
+		t.Error(err)
+	}
 }
