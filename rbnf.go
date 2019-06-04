@@ -161,17 +161,27 @@ type MatchResult struct {
 }
 
 type RulePackage struct {
-	Language      string
-	RuleSetGroups map[string]RuleSetGroup
+	Language string
+	//RuleSetGroups map[string]RuleSetGroup
+	RuleSetGroups []RuleSetGroup
 }
 
 func (p RulePackage) Spellout(input string, groupName string, ruleSetName string) (string, error) {
-	if g, ok := p.RuleSetGroups[groupName]; ok {
-		res, err := g.Spellout(input, ruleSetName)
-		if err != nil {
-			return "", err
+	// if g, ok := p.RuleSetGroups[groupName]; ok {
+	// 	res, err := g.Spellout(input, ruleSetName)
+	// 	if err != nil {
+	// 		return "", err
+	// 	}
+	// 	return res, nil
+	// }
+	for _, g := range p.RuleSetGroups {
+		if g.Name == groupName {
+			res, err := g.Spellout(input, ruleSetName)
+			if err != nil {
+				return "", err
+			}
+			return res, nil
 		}
-		return res, nil
 	}
 	return "", fmt.Errorf("No such rule set group: %s", groupName)
 }

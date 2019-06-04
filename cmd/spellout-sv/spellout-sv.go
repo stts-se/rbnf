@@ -140,7 +140,7 @@ func main() {
 	}
 
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "USAGE: spellout <numerals>\n")
+		fmt.Fprintf(os.Stderr, "USAGE: spellout-sv <numerals>\n")
 		os.Exit(1)
 	}
 

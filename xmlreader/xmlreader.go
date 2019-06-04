@@ -67,7 +67,7 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 
 		} else {
 
-			fmt.Printf(">>>>: %#v\n", lex.Result)
+			//fmt.Printf(">>>>: %#v\n", lex.Result)
 			for _, i := range lex.Result {
 				switch i.Typ {
 				// "can't" happen
@@ -103,7 +103,7 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 		//rule.RightSub = "rs"  //r.String
 		//rule.SpellOut = "apa" //r.String
 
-		fmt.Printf("PARSED RULE\t%s\t%s\n", r.String, rule)
+		//fmt.Printf("PARSED RULE\t%s\t%s\n", r.String, rule)
 
 		res.Rules = append(res.Rules, rule)
 	}
@@ -168,20 +168,19 @@ func rulesFromLdml(ldml Ldml) ([]rbnf.RuleSetGroup, error) {
 	return res, nil
 }
 
-func RulesFromXMLFile(fn string) (string, []rbnf.RuleSetGroup, error) {
+func RulesFromXMLFile(fn string) (rbnf.RulePackage, error) {
 	var lang string
-	var res []rbnf.RuleSetGroup
 
 	ldml, err := readXMLFile(fn)
 	if err != nil {
-		return lang, res, fmt.Errorf("RulesFromXMLFile: %v", err)
+		return rbnf.RulePackage{}, fmt.Errorf("RulesFromXMLFile: %v", err)
 	}
 	lang = ldml.Identity.Language.Attrtype
 
-	res, err = rulesFromLdml(ldml)
+	groups, err := rulesFromLdml(ldml)
 	if err != nil {
-		return lang, res, fmt.Errorf("RulesFromXMLFile: %v", err)
+		return rbnf.RulePackage{}, fmt.Errorf("RulesFromXMLFile: %v", err)
 	}
 
-	return lang, res, nil
+	return rbnf.RulePackage{Language: lang, RuleSetGroups: groups}, nil
 }
