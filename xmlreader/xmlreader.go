@@ -81,7 +81,7 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 					rule.RightSub = replaceChars(i.Val)
 
 				case lexer.ItemSpellout:
-					rule.SpellOut = i.Val
+					rule.SpellOut = append(rule.SpellOut, i.Val)
 
 				}
 
@@ -103,7 +103,7 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 		//rule.RightSub = "rs"  //r.String
 		//rule.SpellOut = "apa" //r.String
 
-		//fmt.Println(rule)
+		fmt.Printf("PARSED RULE\t%s\t%s\n", r.String, rule)
 
 		res.Rules = append(res.Rules, rule)
 	}
