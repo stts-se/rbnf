@@ -78,7 +78,7 @@ const (
 	endTag       = ';'
 
 	// string constants
-	delimChars = " -\u00AD" // \u00AD = soft hyphen
+	delimChars = " -\u00AD\u2212" // \u00AD = soft hyphen; \u2212 = minus sign
 	aToZ       = "abcdefghijklmnopqrstuvwxyz"
 	//leftSubChars  = "←%[]" + aToZ + delimChars
 	//rightSubChars = "→%[]" + aToZ + delimChars
@@ -123,6 +123,10 @@ func (l *Lexer) next() rune {
 	return r
 }
 
+func (l *Lexer) next2() (rune, rune) {
+	return l.next(), l.next()
+}
+
 func (l *Lexer) errorf(format string, args ...interface{}) stateFn {
 	return func(lx *Lexer) stateFn {
 		i := Item{
@@ -140,12 +144,31 @@ func (l *Lexer) ignore() {
 
 func (l *Lexer) back() {
 	l.pos -= l.width
+	// todo: should set new width (cf next)
 }
 
 func (l *Lexer) peek() rune {
 	r := l.next()
 	l.back()
 	return r
+}
+
+func (l *Lexer) peek2() (rune, rune) {
+	posBefore := l.pos
+	var r1 = l.next()
+	var w1 = l.width
+	var r2 = rune(eof)
+	var w2 = 0
+	if r1 != eof {
+		r2 = l.next()
+		w2 = l.width
+	}
+	l.pos -= (w1 + w2)
+	posAfter := l.pos
+	if posAfter != posBefore {
+		panic(fmt.Sprintf("??? <%s> <%s> %d %d %#v", string(r1), string(r2), posBefore, posAfter, l))
+	}
+	return r1, r2
 }
 
 func (l *Lexer) acceptRunString(valid string) int {
@@ -172,25 +195,20 @@ func (l *Lexer) acceptPeekString(valid string) bool {
 
 func spelloutFn(l *Lexer) stateFn {
 	if l.acceptRunFunc(unicode.IsLetter) > 0 {
+		for {
+			r1, r2 := l.peek2()
+			if strings.IndexRune(delimChars, r1) >= 0 {
+				if unicode.IsLetter(r2) {
+					l.acceptRunString(delimChars)
+					l.acceptRunFunc(unicode.IsLetter)
+				} else {
+					break
+				}
+			} else {
+				break
+			}
+		}
 		l.emit(ItemSpellout)
-		// for {
-		// 	r := l.peek()
-		// 	if strings.IndexRune(delimChars, r) >= 0 {
-		// 		l.next()
-		// 		if l.acceptRunFunc(unicode.IsLetter) > 0 {
-		// 			// continue looking
-		// 			//l.back()
-		// 			//l.emit(ItemSpellout)
-		// 			//break
-		// 		} else {
-		// 			l.back()
-		// 			break
-		// 		}
-		// 	} else {
-		// 		l.emit(ItemSpellout)
-		// 		break
-		// 	}
-		// }
 	}
 
 	r := l.peek()

@@ -208,4 +208,14 @@ func TestOptionalSub(t *testing.T) {
 	for _, err := range compare(input, exp, l.Result) {
 		t.Error(err)
 	}
+	// input = "=%spellout-cardinal-neuter=de"
+	// exp = Result{
+	// 	{ItemSpellout, "=%spellout-cardinal-neuter="},
+	// 	{ItemRightSub, "de"},
+	// }
+	// l = Lex(input)
+	// l.Run()
+	// for _, err := range compare(input, exp, l.Result) {
+	// 	t.Error(err)
+	// }
 }
