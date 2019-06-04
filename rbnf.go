@@ -336,7 +336,7 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) (string, error) {
 			//}
 		}
 	} else if matchedRule.RightSub == ">>" {
-		fmt.Printf("xx %#v\t%v\n", matchedRule, match.ForwardRight)
+		//fmt.Printf("xx %#v\t%v\n", matchedRule, match.ForwardRight)
 		right, err = g.spellout(match.ForwardRight, ruleSet)
 		if err != nil {
 			return "", err
