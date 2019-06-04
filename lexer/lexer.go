@@ -153,22 +153,28 @@ func (l *Lexer) peek() rune {
 	return r
 }
 
-func (l *Lexer) peek2() (rune, rune) {
+func (l *Lexer) peek3() (rune, rune, rune) {
 	posBefore := l.pos
 	var r1 = l.next()
 	var w1 = l.width
 	var r2 = rune(eof)
 	var w2 = 0
+	var r3 = rune(eof)
+	var w3 = 0
 	if r1 != eof {
 		r2 = l.next()
 		w2 = l.width
+		if r2 != eof {
+			r3 = l.next()
+			w3 = l.width
+		}
 	}
-	l.pos -= (w1 + w2)
+	l.pos -= (w1 + w2 + w3)
 	posAfter := l.pos
 	if posAfter != posBefore {
 		panic(fmt.Sprintf("??? <%s> <%s> %d %d %#v", string(r1), string(r2), posBefore, posAfter, l))
 	}
-	return r1, r2
+	return r1, r2, r3
 }
 
 func (l *Lexer) acceptRunString(valid string) int {
@@ -194,22 +200,49 @@ func (l *Lexer) acceptPeekString(valid string) bool {
 }
 
 func spelloutFn(l *Lexer) stateFn {
-	if l.acceptRunFunc(unicode.IsLetter) > 0 {
-		for {
-			r1, r2 := l.peek2()
-			if strings.IndexRune(delimChars, r1) >= 0 {
-				if unicode.IsLetter(r2) {
-					l.acceptRunString(delimChars)
-					l.acceptRunFunc(unicode.IsLetter)
+	var plainSpelloutFunc = func() {
+		var acceptFunc = func(r rune) bool {
+			return unicode.IsLetter(r) || r == '\''
+		}
+		if l.acceptRunFunc(acceptFunc) > 0 {
+			for {
+				r1, r2, _ := l.peek3()
+				if strings.IndexRune(delimChars, r1) >= 0 {
+					if acceptFunc(r2) {
+						l.acceptRunString(delimChars)
+						l.acceptRunFunc(unicode.IsLetter)
+					} else {
+						break
+					}
 				} else {
 					break
 				}
-			} else {
-				break
+			}
+			l.emit(ItemSpellout)
+		}
+	}
+	var ruleRefFunc = func() {
+		r, r2, r3 := l.peek3()
+		if r == ' ' && r2 == '=' && r3 == '%' {
+			l.next()
+			l.emit(ItemSpellout)
+		}
+		r, r2, r3 = l.peek3()
+
+		if r == '=' && r2 == '%' && strings.IndexRune(ruleNameChars, r3) >= 0 {
+			l.next()
+			l.next()
+			if l.acceptRunString(ruleNameChars) > 0 {
+			}
+			if l.next() == '=' {
+				l.emit(ItemSpellout)
 			}
 		}
-		l.emit(ItemSpellout)
 	}
+
+	plainSpelloutFunc()
+	ruleRefFunc()
+	plainSpelloutFunc()
 
 	r := l.peek()
 	if r == rightArr || r == leftBracket || l.acceptPeekString(delimChars) {

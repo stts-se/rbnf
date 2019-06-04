@@ -196,6 +196,7 @@ func TestOptionalSub(t *testing.T) {
 		t.Error(err)
 	}
 
+	//
 	input = "en miljon[ →→];"
 	exp = Result{
 		{ItemSpellout, "en miljon"},
@@ -208,10 +209,27 @@ func TestOptionalSub(t *testing.T) {
 	for _, err := range compare(input, exp, l.Result) {
 		t.Error(err)
 	}
-	// input = "=%spellout-cardinal-neuter=de"
+
+	//
+	input = "=%spellout-cardinal-neuter=de;"
+	exp = Result{
+		{ItemSpellout, "=%spellout-cardinal-neuter="},
+		{ItemSpellout, "de"},
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result) {
+		t.Error(err)
+	}
+
+	//
+	// input = "er =%spellout-cardinal-neuter= de;"
 	// exp = Result{
+	// 	{ItemSpellout, "er"},
+	// 	{ItemSpellout, " "},
 	// 	{ItemSpellout, "=%spellout-cardinal-neuter="},
-	// 	{ItemRightSub, "de"},
+	// 	{ItemSpellout, " "},
+	// 	{ItemSpellout, "de"},
 	// }
 	// l = Lex(input)
 	// l.Run()
