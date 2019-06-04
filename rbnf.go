@@ -389,7 +389,7 @@ func isRuleRef(s string) bool {
 }
 
 func isSpelloutRuleRef(s string) bool {
-	res := strings.HasPrefix(s, "%=") && strings.HasSuffix(s, "=")
+	res := strings.HasPrefix(s, "=%") && strings.HasSuffix(s, "=")
 	//fmt.Printf("%v %v\n", s, res)
 	return res
 }

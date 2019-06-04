@@ -253,6 +253,21 @@ func TestOptionalSub(t *testing.T) {
 	}
 
 	//
+	input = "=%spellout-numbering= miljoner tusen;"
+	exp = Result{
+		{ItemSpellout, "=%spellout-numbering="},
+		{ItemSpellout, " "},
+		{ItemSpellout, "miljoner"},
+		{ItemSpellout, " "},
+		{ItemSpellout, "tusen"},
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result) {
+		t.Error(err)
+	}
+
+	//
 	input = "­=%spellout-ordinal-feminine=;"
 	exp = Result{
 		{ItemSpellout, "­"},
