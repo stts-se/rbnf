@@ -63,7 +63,7 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 		err = lex.Run()
 
 		if err != nil {
-			fmt.Printf("FAIL. INPUT: '%s' ERROR: %s\n", r.String, err)
+			fmt.Printf("[xmlreader] parse failed for '%s' : %s\n", r.String, err)
 
 		} else {
 
@@ -92,8 +92,7 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 				}
 			}
 		}
-		fmt.Printf("PARSED RULE\t%s\t%s\t%#v\n", r.String, rule, rule)
-
+		//fmt.Printf("PARSED RULE\t%s\t%s\t%#v\n", r.String, rule, rule)
 		res.Rules = append(res.Rules, rule)
 	}
 
