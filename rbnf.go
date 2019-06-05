@@ -2,6 +2,7 @@ package rbnf
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	// "sort"
 	"strconv"
@@ -164,9 +165,10 @@ type RulePackage struct {
 	Language string
 	//RuleSetGroups map[string]RuleSetGroup
 	RuleSetGroups []RuleSetGroup
+	Debug         bool
 }
 
-func (p RulePackage) Spellout(input string, groupName string, ruleSetName string) (string, error) {
+func (p RulePackage) Spellout(input string, groupName string, ruleSetName string, debug bool) (string, error) {
 	// if g, ok := p.RuleSetGroups[groupName]; ok {
 	// 	res, err := g.Spellout(input, ruleSetName)
 	// 	if err != nil {
@@ -176,7 +178,7 @@ func (p RulePackage) Spellout(input string, groupName string, ruleSetName string
 	// }
 	for _, g := range p.RuleSetGroups {
 		if g.Name == groupName {
-			res, err := g.Spellout(input, ruleSetName)
+			res, err := g.Spellout(input, ruleSetName, debug)
 			if err != nil {
 				return "", err
 			}
@@ -269,14 +271,14 @@ func findMatchingRule(input string, ruleSet RuleSet) (BaseRule, bool) {
 	return res, found
 }
 
-func (g RuleSetGroup) Spellout(input string, ruleSetName string) (string, error) {
+func (g RuleSetGroup) Spellout(input string, ruleSetName string, debug bool) (string, error) {
 	if rs, ok := g.FindRuleSet(ruleSetName); ok {
-		return g.spellout(input, rs)
+		return g.spellout(input, rs, debug)
 	}
 	return "", fmt.Errorf("No such rule set: %s", ruleSetName)
 }
 
-func (g RuleSetGroup) expandSpellouts(r BaseRule) (string, error) {
+func (g RuleSetGroup) expandSpellouts(r BaseRule, debug bool) (string, error) {
 	res := []string{}
 	for _, sp := range r.SpellOut {
 		if isSpelloutRuleRef(sp) {
@@ -284,7 +286,7 @@ func (g RuleSetGroup) expandSpellouts(r BaseRule) (string, error) {
 			if !ok {
 				return "", fmt.Errorf("No such rule set: %s", sp)
 			}
-			spelled, err := g.spellout(r.Base.ToString(), rs)
+			spelled, err := g.spellout(r.Base.ToString(), rs, debug)
 			if err != nil {
 				return "", nil
 			}
@@ -297,17 +299,20 @@ func (g RuleSetGroup) expandSpellouts(r BaseRule) (string, error) {
 	return strings.Join(res, ""), nil
 }
 
-func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) (string, error) {
+func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (string, error) {
 	var err error
 
 	matchedRule, ok := findMatchingRule(input, ruleSet)
 	if !ok {
 		return input, fmt.Errorf("No matching base rule for %s", input)
 	}
+	if debug {
+		fmt.Fprintf(os.Stderr, "[rbnf] Matched rule %#v\n", matchedRule)
+	}
 
 	if fmt.Sprintf("%d", matchedRule.Base.Int) == input {
 		//if n, err := strconv.Atoi(input); err != nil && n == 0 && matchedRule.Base.Int == n {
-		sp, err := g.expandSpellouts(matchedRule)
+		sp, err := g.expandSpellouts(matchedRule, debug)
 		if err != nil {
 			return "", err
 		}
@@ -329,7 +334,7 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) (string, error) {
 			//if matchedRule.Base.IsInt() && matchedRule.Base.Int%10 != 0 {
 			//if n%10 != 0 {
 			///if !strings.HasSuffix(input, "0") {
-			right, err = g.spellout(match.ForwardRight, ruleSet)
+			right, err = g.spellout(match.ForwardRight, ruleSet, debug)
 			if err != nil {
 				return "", err
 			}
@@ -337,12 +342,12 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) (string, error) {
 		}
 	} else if matchedRule.RightSub == ">>" {
 		//fmt.Printf("xx %#v\t%v\n", matchedRule, match.ForwardRight)
-		right, err = g.spellout(match.ForwardRight, ruleSet)
+		right, err = g.spellout(match.ForwardRight, ruleSet, debug)
 		if err != nil {
 			return "", err
 		}
 	} else if namedRuleSet, ok := g.FindRuleSet(matchedRule.RightSub); ok {
-		right, err = g.spellout(match.ForwardRight, namedRuleSet)
+		right, err = g.spellout(match.ForwardRight, namedRuleSet, debug)
 		if err != nil {
 			return "", err
 		}
@@ -351,13 +356,13 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) (string, error) {
 	}
 
 	if matchedRule.LeftSub == "<<" {
-		left, err = g.spellout(match.ForwardLeft, ruleSet)
+		left, err = g.spellout(match.ForwardLeft, ruleSet, debug)
 		if err != nil {
 			return "", err
 		}
 
 	} else if namedRuleSet, ok := g.FindRuleSet(matchedRule.LeftSub); ok {
-		left, err = g.spellout(match.ForwardLeft, namedRuleSet)
+		left, err = g.spellout(match.ForwardLeft, namedRuleSet, debug)
 		if err != nil {
 			return "", err
 		}
@@ -366,11 +371,17 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet) (string, error) {
 		return "", fmt.Errorf("Unknown rule context: '%s'", matchedRule.LeftSub)
 	}
 
-	spell, err := g.expandSpellouts(matchedRule)
+	spell, err := g.expandSpellouts(matchedRule, debug)
 	if err != nil {
 		return "", err
 	}
 	res := strings.TrimSpace(left + matchedRule.LeftPadding + spell + matchedRule.RightPadding + right)
+	if res == "" {
+		if debug {
+			fmt.Fprintf(os.Stderr, "[rbnf] Empty output for input string %s\n", input)
+		}
+		return input, nil
+	}
 	return res, nil
 }
 

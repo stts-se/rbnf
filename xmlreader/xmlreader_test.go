@@ -82,7 +82,7 @@ func TestRulesFromXMLFile(t *testing.T) {
 
 	//
 	s = "10"
-	res, err := pack.Spellout(s, "SpelloutRules", "spellout-numbering")
+	res, err := pack.Spellout(s, "SpelloutRules", "spellout-numbering", false)
 	if err != nil {
 		t.Errorf("P-P-Pure Pain! %v", err)
 	}

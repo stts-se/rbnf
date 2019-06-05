@@ -200,7 +200,7 @@ func Test_Spellout1(t *testing.T) {
 	// TEST
 	var exp, res string
 
-	res, err = g.Spellout("12", "default")
+	res, err = g.Spellout("12", "default", false)
 	exp = "tolv"
 	if err != nil {
 		t.Error(err)
@@ -209,7 +209,7 @@ func Test_Spellout1(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout("3106", "default")
+	res, err = g.Spellout("3106", "default", false)
 	exp = "tre tusen ett hundra sex"
 	if err != nil {
 		t.Error(err)
@@ -218,7 +218,7 @@ func Test_Spellout1(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout("725601", "default")
+	res, err = g.Spellout("725601", "default", false)
 	exp = "sju hundra tjugo-fem tusen sex hundra ett"
 	if err != nil {
 		t.Error(err)
@@ -227,7 +227,7 @@ func Test_Spellout1(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout("681", "default")
+	res, err = g.Spellout("681", "default", false)
 	exp = "sex hundra åttio-ett"
 	if err != nil {
 		t.Error(err)
@@ -236,7 +236,7 @@ func Test_Spellout1(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout("2000000", "default")
+	res, err = g.Spellout("2000000", "default", false)
 	exp = "två miljoner"
 	if err != nil {
 		t.Error(err)
@@ -245,7 +245,7 @@ func Test_Spellout1(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout("2510000", "default")
+	res, err = g.Spellout("2510000", "default", false)
 	exp = "två miljoner fem hundra tio tusen"
 	if err != nil {
 		t.Error(err)
@@ -254,7 +254,7 @@ func Test_Spellout1(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout("2500000", "default")
+	res, err = g.Spellout("2500000", "default", false)
 	exp = "två miljoner fem hundra tusen"
 	if err != nil {
 		t.Error(err)
@@ -263,7 +263,7 @@ func Test_Spellout1(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout("2001000", "default")
+	res, err = g.Spellout("2001000", "default", false)
 	exp = "två miljoner ettusen"
 	if err != nil {
 		t.Error(err)
@@ -272,7 +272,7 @@ func Test_Spellout1(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout("4123000", "default")
+	res, err = g.Spellout("4123000", "default", false)
 	exp = "fyra miljoner ett hundra tjugo-tre tusen"
 	if err != nil {
 		t.Error(err)
@@ -281,7 +281,7 @@ func Test_Spellout1(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout("31607106", "default")
+	res, err = g.Spellout("31607106", "default", false)
 	exp = "trettio-en miljoner sex hundra sju tusen ett hundra sex"
 	if err != nil {
 		t.Error(err)
@@ -344,7 +344,7 @@ func Test_Spellout2(t *testing.T) {
 	// TEST
 	var exp, res string
 
-	res, err = g.Spellout("12", "default")
+	res, err = g.Spellout("12", "default", false)
 	exp = "tolv"
 	if err != nil {
 		t.Error(err)
@@ -353,7 +353,7 @@ func Test_Spellout2(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout("1803", "default")
+	res, err = g.Spellout("1803", "default", false)
 	exp = "arton hundra tre"
 	if err != nil {
 		t.Error(err)
@@ -362,7 +362,7 @@ func Test_Spellout2(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout("1983", "default")
+	res, err = g.Spellout("1983", "default", false)
 	exp = "nitton hundra åttio-tre"
 	if err != nil {
 		t.Error(err)
@@ -371,7 +371,7 @@ func Test_Spellout2(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout("2001", "default")
+	res, err = g.Spellout("2001", "default", false)
 	exp = "två tusen ett"
 	if err != nil {
 		t.Error(err)
@@ -380,7 +380,7 @@ func Test_Spellout2(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout("-2001x", "default")
+	res, err = g.Spellout("-2001x", "default", false)
 	exp = "No matching base rule for"
 	if err == nil {
 		t.Errorf("Expected error, found %v", err)
@@ -389,7 +389,7 @@ func Test_Spellout2(t *testing.T) {
 		t.Errorf(fs, exp, err)
 	}
 
-	res, err = g.Spellout("-2001", "default")
+	res, err = g.Spellout("-2001", "default", false)
 	exp = "minus två tusen ett"
 	if err != nil {
 		t.Error(err)

@@ -23,6 +23,7 @@ func main() {
 	listRules := flags.Bool("l", false, "List rules and exit (rule groups and rule sets)")
 	ruleGroup := flags.String("g", "", "Use named `rule group` (default first group)")
 	ruleSet := flags.String("r", "", "Use named `rule set`")
+	debug := flags.Bool("d", false, "Debug")
 	help := flags.Bool("h", false, "Print usage and exit")
 	flags.Parse(os.Args[1:])
 	args := flags.Args()
@@ -47,6 +48,7 @@ func main() {
 	} else {
 		rPackage, err = xmlreader.RulesFromXMLFile(f)
 	}
+	rPackage.Debug = *debug
 	if err != nil {
 		log.Fatalf("Couldn't parse file %s : %v", f, err)
 	}
@@ -99,7 +101,7 @@ func main() {
 	}
 
 	var process = func(s string) {
-		res, err := rPackage.Spellout(s, *ruleGroup, *ruleSet)
+		res, err := rPackage.Spellout(s, *ruleGroup, *ruleSet, *debug)
 		if err != nil {
 			log.Fatalf("Couldn't spellout %s : %v", s, err)
 		}
