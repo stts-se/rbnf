@@ -31,6 +31,13 @@ func (b Base) ToString() string {
 	return b.String
 }
 
+func (b Base) Value() string {
+	if b.IsInt() {
+		return fmt.Sprintf("%d", b.Int)
+	}
+	return b.String
+}
+
 type BaseRule struct {
 	Base         Base
 	LeftSub      string
@@ -286,9 +293,9 @@ func (g RuleSetGroup) expandSpellouts(r BaseRule, debug bool) (string, error) {
 			if !ok {
 				return "", fmt.Errorf("No such rule set: %s", sp)
 			}
-			spelled, err := g.spellout(r.Base.ToString(), rs, debug)
+			spelled, err := g.spellout(r.Base.Value(), rs, debug)
 			if err != nil {
-				return "", nil
+				return "", fmt.Errorf("couldn't spellout %s using rule %s : %v", r.Base.Value(), sp, err)
 			}
 			res = append(res, spelled)
 		} else {
@@ -375,6 +382,12 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 	if err != nil {
 		return "", err
 	}
+	if spell == "" {
+		if debug {
+			fmt.Fprintf(os.Stderr, "[rbnf] Empty spellout expansion for matched rule %#v\n", matchedRule)
+		}
+	}
+
 	res := strings.TrimSpace(left + matchedRule.LeftPadding + spell + matchedRule.RightPadding + right)
 	if res == "" {
 		if debug {

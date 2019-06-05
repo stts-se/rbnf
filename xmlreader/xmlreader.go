@@ -14,7 +14,7 @@ import (
 	"github.com/stts-se/rbnf/lexer"
 )
 
-const verb = true
+const verb = false
 
 func readXMLFile(fn string) (Ldml, error) {
 	res := Ldml{}

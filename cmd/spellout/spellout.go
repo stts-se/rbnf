@@ -52,7 +52,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Couldn't parse file %s : %v", f, err)
 	}
-	log.Printf("Parsed xml rule file %s", f)
+	log.Printf("Parsed rule file %s", f)
 
 	if *syntaxCheck && *ruleSet == "" {
 		os.Exit(0)
