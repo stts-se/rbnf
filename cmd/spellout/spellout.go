@@ -7,7 +7,9 @@ import (
 	"log"
 	"os"
 	"path"
+	"strings"
 
+	"github.com/stts-se/rbnf"
 	"github.com/stts-se/rbnf/xmlreader"
 )
 
@@ -25,7 +27,7 @@ func main() {
 	args := flags.Args()
 
 	flags.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s <options> <xmlfile> <input>\n", cmd)
+		fmt.Fprintf(os.Stderr, "Usage: %s <options> <xml file/url> <input>\n", cmd)
 		fmt.Fprintf(os.Stderr, "  if no input argument is specified, input will be read from stdin\n")
 		fmt.Fprintf(os.Stderr, "Options:\n")
 		flags.PrintDefaults()
@@ -36,8 +38,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	var rPackage rbnf.RulePackage
+	var err error
 	f := args[0]
-	rPackage, err := xmlreader.RulesFromXMLFile(f)
+	if strings.HasPrefix(f, "http") {
+		rPackage, err = xmlreader.RulesFromXMLURL(f)
+	} else {
+		rPackage, err = xmlreader.RulesFromXMLFile(f)
+	}
 	if err != nil {
 		log.Fatalf("Couldn't parse file %s : %v", f, err)
 	}
@@ -71,23 +79,23 @@ func main() {
 		os.Exit(0)
 	}
 
+	var process = func(s string) {
+		res, err := rPackage.Spellout(s, *ruleGroup, *ruleSet)
+		if err != nil {
+			log.Fatalf("Couldn't spellout %s : %v", s, err)
+		}
+		fmt.Printf("%s\t%s\n", s, res)
+	}
+
 	if len(args) == 1 {
 		s := bufio.NewScanner(os.Stdin)
 		for s.Scan() {
-			s := s.Text()
-			res, err := rPackage.Spellout(s, *ruleGroup, *ruleSet)
-			if err != nil {
-				log.Fatalf("Couldn't spellout %s : %v", s, err)
-			}
-			fmt.Println(res)
+			process(s.Text())
+
 		}
 	} else { //if len(args) > 1 {
 		for _, s := range args[1:] {
-			res, err := rPackage.Spellout(s, *ruleGroup, *ruleSet)
-			if err != nil {
-				log.Fatalf("Couldn't spellout %s : %v", s, err)
-			}
-			fmt.Println(res)
+			process(s)
 		}
 	}
 

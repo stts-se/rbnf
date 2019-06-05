@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -16,6 +17,28 @@ func readXMLFile(fn string) (Ldml, error) {
 	res := Ldml{}
 
 	bytes, err := ioutil.ReadFile(fn)
+	if err != nil {
+		return res, fmt.Errorf("failed to read XML file : %v", err)
+	}
+
+	err = xml.Unmarshal(bytes, &res)
+	if err != nil {
+		return res, fmt.Errorf("failed to peocess XML file : %v", err)
+	}
+
+	return res, nil
+}
+
+func readXMLURL(url string) (Ldml, error) {
+	res := Ldml{}
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return res, fmt.Errorf("failed to read URL : %v", err)
+	}
+	defer resp.Body.Close()
+
+	bytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return res, fmt.Errorf("failed to read XML file : %v", err)
 	}
@@ -160,6 +183,23 @@ func RulesFromXMLFile(fn string) (rbnf.RulePackage, error) {
 	var lang string
 
 	ldml, err := readXMLFile(fn)
+	if err != nil {
+		return rbnf.RulePackage{}, fmt.Errorf("RulesFromXMLFile: %v", err)
+	}
+	lang = ldml.Identity.Language.Attrtype
+
+	groups, err := rulesFromLdml(ldml)
+	if err != nil {
+		return rbnf.RulePackage{}, fmt.Errorf("RulesFromXMLFile: %v", err)
+	}
+
+	return rbnf.RulePackage{Language: lang, RuleSetGroups: groups}, nil
+}
+
+func RulesFromXMLURL(url string) (rbnf.RulePackage, error) {
+	var lang string
+
+	ldml, err := readXMLURL(url)
 	if err != nil {
 		return rbnf.RulePackage{}, fmt.Errorf("RulesFromXMLFile: %v", err)
 	}
