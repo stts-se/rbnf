@@ -79,8 +79,8 @@ const (
 	endTag       = ';'
 
 	// string constants
-	delimChars = " -\u00ADy" // \u00AD = soft hyphen
 	aToZ       = "abcdefghijklmnopqrstuvwxyz"
+	delimChars = " -\u00ADy" // \u00AD = soft hyphen
 	//leftSubChars  = "←%[]" + aToZ + delimChars
 	//rightSubChars = "→%[]" + aToZ + delimChars
 	//spelloutChars = aToZ
