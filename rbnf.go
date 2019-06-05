@@ -367,7 +367,16 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 		if err != nil {
 			return "", err
 		}
-
+		// } else if matchedRule.LeftSub == "[>>]" {
+		// 	left, err = g.spellout(match.ForwardRight, ruleSet, debug)
+		// 	if err != nil {
+		// 		return "", err
+		// 	}
+		// } else if matchedRule.LeftSub == ">>" {
+		// 	left, err = g.spellout(match.ForwardRight, ruleSet, debug)
+		// 	if err != nil {
+		// 		return "", err
+		// 	}
 	} else if namedRuleSet, ok := g.FindRuleSet(matchedRule.LeftSub); ok {
 		left, err = g.spellout(match.ForwardLeft, namedRuleSet, debug)
 		if err != nil {
