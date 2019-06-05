@@ -14,6 +14,8 @@ import (
 	"github.com/stts-se/rbnf/lexer"
 )
 
+const verb = false
+
 func readXMLFile(fn string) (Ldml, error) {
 	res := Ldml{}
 
@@ -91,7 +93,9 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 		err = lex.Run()
 
 		if err != nil {
-			log.Printf("[xmlreader] parse failed for '%s' : %s", r.String, err)
+			if verb {
+				log.Printf("[xmlreader] parse failed for '%s' : %s", r.String, err)
+			}
 
 		} else {
 
