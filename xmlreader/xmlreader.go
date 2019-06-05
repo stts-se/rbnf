@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -23,7 +24,7 @@ func readXMLFile(fn string) (Ldml, error) {
 
 	err = xml.Unmarshal(bytes, &res)
 	if err != nil {
-		return res, fmt.Errorf("failed to peocess XML file : %v", err)
+		return res, fmt.Errorf("failed to process XML file : %v", err)
 	}
 
 	return res, nil
@@ -36,6 +37,9 @@ func readXMLURL(url string) (Ldml, error) {
 	if err != nil {
 		return res, fmt.Errorf("failed to read URL : %v", err)
 	}
+	if resp.StatusCode != http.StatusOK {
+		return res, fmt.Errorf("failed to read URL : %v", resp.Status)
+	}
 	defer resp.Body.Close()
 
 	bytes, err := ioutil.ReadAll(resp.Body)
@@ -45,7 +49,7 @@ func readXMLURL(url string) (Ldml, error) {
 
 	err = xml.Unmarshal(bytes, &res)
 	if err != nil {
-		return res, fmt.Errorf("failed to peocess XML file : %v", err)
+		return res, fmt.Errorf("failed to process XML file : %v", err)
 	}
 
 	return res, nil
@@ -55,6 +59,7 @@ func replaceChars(s string) string {
 	s = strings.Replace(s, "→", ">", -1)
 	s = strings.Replace(s, "←", "<", -1)
 	s = strings.Replace(s, "−", "-", -1)
+	s = strings.Replace(s, "\u00ad", "", -1) // soft hyphen
 	return s
 }
 
@@ -86,7 +91,7 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 		err = lex.Run()
 
 		if err != nil {
-			fmt.Printf("[xmlreader] parse failed for '%s' : %s\n", r.String, err)
+			log.Printf("[xmlreader] parse failed for '%s' : %s", r.String, err)
 
 		} else {
 
@@ -201,13 +206,13 @@ func RulesFromXMLURL(url string) (rbnf.RulePackage, error) {
 
 	ldml, err := readXMLURL(url)
 	if err != nil {
-		return rbnf.RulePackage{}, fmt.Errorf("RulesFromXMLFile: %v", err)
+		return rbnf.RulePackage{}, fmt.Errorf("RulesFromXMLURL: %v", err)
 	}
 	lang = ldml.Identity.Language.Attrtype
 
 	groups, err := rulesFromLdml(ldml)
 	if err != nil {
-		return rbnf.RulePackage{}, fmt.Errorf("RulesFromXMLFile: %v", err)
+		return rbnf.RulePackage{}, fmt.Errorf("RulesFromXMLURL: %v", err)
 	}
 
 	return rbnf.RulePackage{Language: lang, RuleSetGroups: groups}, nil

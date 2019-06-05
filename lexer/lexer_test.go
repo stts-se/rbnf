@@ -279,3 +279,25 @@ func TestOptionalSub(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestSpanish(t *testing.T) {
+	var input string
+	var exp Result
+	var l *Lexer
+
+	//
+	input = "sesenta[ y →→];"
+	exp = Result{
+		{ItemSpellout, "sesenta"},
+		{ItemLeftBracket, "["},
+		{ItemRightDelim, " y "},
+		{ItemRightSub, "→→"},
+		{ItemRightBracket, "]"},
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result) {
+		t.Error(err)
+	}
+
+}

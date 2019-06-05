@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"sort"
 	"strings"
 
 	"github.com/stts-se/rbnf"
@@ -20,8 +21,8 @@ func main() {
 	var flags = flag.NewFlagSet(cmd, flag.ExitOnError)
 	syntaxCheck := flags.Bool("s", false, "Check rule file syntax and exit")
 	listRules := flags.Bool("l", false, "List rules and exit (rule groups and rule sets)")
-	ruleGroup := flags.String("g", "SpelloutRules", "Use named `rule group`")
-	ruleSet := flags.String("r", "spellout-numbering", "Use named `rule set`")
+	ruleGroup := flags.String("g", "", "Use named `rule group` (default first group)")
+	ruleSet := flags.String("r", "", "Use named `rule set`")
 	help := flags.Bool("h", false, "Print usage and exit")
 	flags.Parse(os.Args[1:])
 	args := flags.Args()
@@ -35,7 +36,7 @@ func main() {
 
 	if *help || len(args) < 1 {
 		flags.Usage()
-		os.Exit(1)
+		os.Exit(2)
 	}
 
 	var rPackage rbnf.RulePackage
@@ -51,7 +52,35 @@ func main() {
 	}
 	log.Printf("Parsed xml rule file %s", f)
 
+	if *syntaxCheck && *ruleSet == "" {
+		os.Exit(0)
+	}
+
+	if *listRules {
+		for _, g := range rPackage.RuleSetGroups {
+			fmt.Printf("%s\n", g.Name)
+			rs := []rbnf.RuleSet{}
+			for _, s := range g.RuleSets {
+				rs = append(rs, s)
+			}
+			sort.Slice(rs, func(i, j int) bool { return rs[i].Name < rs[j].Name })
+			for _, s := range rs {
+				fmt.Printf(" - %s (%d)\n", s.Name, len(s.Rules))
+			}
+		}
+		os.Exit(0)
+	}
+
+	// validate specified rule group and rule set
+	if *ruleSet == "" {
+		fmt.Fprintf(os.Stderr, "flag -r (rule set) is required\n")
+		flags.Usage()
+		os.Exit(1)
+	}
 	foundRuleGroupAndRuleSet := false
+	if *ruleGroup == "" {
+		ruleGroup = &rPackage.RuleSetGroups[0].Name
+	}
 	for _, g := range rPackage.RuleSetGroups {
 		if g.Name == *ruleGroup {
 			for _, s := range g.RuleSets {
@@ -66,16 +95,6 @@ func main() {
 	}
 
 	if *syntaxCheck {
-		os.Exit(0)
-	}
-
-	if *listRules {
-		for _, g := range rPackage.RuleSetGroups {
-			fmt.Printf("%s\n", g.Name)
-			for _, s := range g.RuleSets {
-				fmt.Printf(" - %s (%d)\n", s.Name, len(s.Rules))
-			}
-		}
 		os.Exit(0)
 	}
 
