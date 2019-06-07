@@ -140,4 +140,22 @@ func TestRulesFromXMLFile(t *testing.T) {
 		t.Errorf("wanted %s, got %s", expect, res)
 	}
 
+	input = "20117500"
+	expect = "tjugo miljoner etthundrasjuttontusen femhundra"
+	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
+	if err != nil {
+		t.Errorf("Stradivarius: %s! %v", input, err)
+	} else if res != expect {
+		t.Errorf("wanted %s, got %s", expect, res)
+	}
+
+	input = "10117500"
+	expect = "tio miljoner etthundrasjuttontusen femhundra"
+	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
+	if err != nil {
+		t.Errorf("Filtsocka: %s! %v", input, err)
+	} else if res != expect {
+		t.Errorf("wanted %s, got %s", expect, res)
+	}
+
 }
