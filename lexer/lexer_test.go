@@ -51,25 +51,25 @@ func TestBasic(t *testing.T) {
 	exp = Result{prematureEOIItem}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result) {
-		t.Error(err)
-	}
-
-	//
-	input = "minus;"
-	exp = Result{{ItemSpellout, "minus"}}
-	l = Lex(input)
-	l.Run()
-	for _, err := range compare(input, exp, l.Result) {
+	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "minus"
-	exp = Result{{ItemSpellout, "minus"}, prematureEOIItem}
+	exp = Result{{ItemSub, "minus"}, prematureEOIItem}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result) {
+	for _, err := range compare(input, exp, l.Result()) {
+		t.Error(err)
+	}
+
+	//
+	input = "minus;"
+	exp = Result{{ItemSub, "minus"}}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
@@ -83,56 +83,56 @@ func TestSub(t *testing.T) {
 	//
 	input = "←← komma;"
 	exp = Result{
-		{ItemLeftSub, "←←"},
-		{ItemLeftDelim, " "},
-		{ItemSpellout, "komma"},
+		{ItemSub, "←←"},
+		{ItemSub, " "},
+		{ItemSub, "komma"},
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result) {
+	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "komma →→;"
 	exp = Result{
-		{ItemSpellout, "komma"},
-		{ItemRightDelim, " "},
-		{ItemRightSub, "→→"},
+		{ItemSub, "komma"},
+		{ItemSub, " "},
+		{ItemSub, "→→"},
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result) {
+	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "←← komma →→;"
 	exp = Result{
-		{ItemLeftSub, "←←"},
-		{ItemLeftDelim, " "},
-		{ItemSpellout, "komma"},
-		{ItemRightDelim, " "},
-		{ItemRightSub, "→→"},
+		{ItemSub, "←←"},
+		{ItemSub, " "},
+		{ItemSub, "komma"},
+		{ItemSub, " "},
+		{ItemSub, "→→"},
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result) {
+	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "←%cardinal-neuter← komma →%cardinal-reale→;"
 	exp = Result{
-		{ItemLeftSub, "←%cardinal-neuter←"},
-		{ItemLeftDelim, " "},
-		{ItemSpellout, "komma"},
-		{ItemRightDelim, " "},
-		{ItemRightSub, "→%cardinal-reale→"},
+		{ItemSub, "←%cardinal-neuter←"},
+		{ItemSub, " "},
+		{ItemSub, "komma"},
+		{ItemSub, " "},
+		{ItemSub, "→%cardinal-reale→"},
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result) {
+	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
@@ -147,135 +147,135 @@ func TestOptionalSub(t *testing.T) {
 	input = "[←← ]komma →→;"
 	exp = Result{
 		{ItemLeftBracket, "["},
-		{ItemLeftSub, "←←"},
-		{ItemLeftDelim, " "},
+		{ItemSub, "←←"},
+		{ItemSub, " "},
 		{ItemRightBracket, "]"},
-		{ItemSpellout, "komma"},
-		{ItemRightDelim, " "},
-		{ItemRightSub, "→→"},
+		{ItemSub, "komma"},
+		{ItemSub, " "},
+		{ItemSub, "→→"},
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result) {
+	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "←← komma[ →→];"
 	exp = Result{
-		{ItemLeftSub, "←←"},
-		{ItemLeftDelim, " "},
-		{ItemSpellout, "komma"},
+		{ItemSub, "←←"},
+		{ItemSub, " "},
+		{ItemSub, "komma"},
 		{ItemLeftBracket, "["},
-		{ItemRightDelim, " "},
-		{ItemRightSub, "→→"},
+		{ItemSub, " "},
+		{ItemSub, "→→"},
 		{ItemRightBracket, "]"},
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result) {
+	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "komma[ →→];"
 	exp = Result{
-		{ItemSpellout, "komma"},
+		{ItemSub, "komma"},
 		{ItemLeftBracket, "["},
-		{ItemRightDelim, " "},
-		{ItemRightSub, "→→"},
+		{ItemSub, " "},
+		{ItemSub, "→→"},
 		{ItemRightBracket, "]"},
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result) {
+	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "←← komma[ →%cardinal-reale→];"
 	exp = Result{
-		{ItemLeftSub, "←←"},
-		{ItemLeftDelim, " "},
-		{ItemSpellout, "komma"},
+		{ItemSub, "←←"},
+		{ItemSub, " "},
+		{ItemSub, "komma"},
 		{ItemLeftBracket, "["},
-		{ItemRightDelim, " "},
-		{ItemRightSub, "→%cardinal-reale→"},
+		{ItemSub, " "},
+		{ItemSub, "→%cardinal-reale→"},
 		{ItemRightBracket, "]"},
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result) {
+	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "en miljon[→→];"
 	exp = Result{
-		{ItemSpellout, "en"},
-		{ItemSpellout, " "},
-		{ItemSpellout, "miljon"},
+		{ItemSub, "en"},
+		{ItemSub, " "},
+		{ItemSub, "miljon"},
 		{ItemLeftBracket, "["},
-		{ItemRightSub, "→→"},
+		{ItemSub, "→→"},
 		{ItemRightBracket, "]"},
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result) {
+	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "=%spellout-cardinal-neuter=de;"
 	exp = Result{
-		{ItemSpellout, "=%spellout-cardinal-neuter="},
-		{ItemSpellout, "de"},
+		{ItemSub, "=%spellout-cardinal-neuter="},
+		{ItemSub, "de"},
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result) {
+	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "er =%spellout-cardinal-neuter= de;"
 	exp = Result{
-		{ItemSpellout, "er"},
-		{ItemSpellout, " "},
-		{ItemSpellout, "=%spellout-cardinal-neuter="},
-		{ItemSpellout, " "},
-		{ItemSpellout, "de"},
+		{ItemSub, "er"},
+		{ItemSub, " "},
+		{ItemSub, "=%spellout-cardinal-neuter="},
+		{ItemSub, " "},
+		{ItemSub, "de"},
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result) {
+	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "=%spellout-numbering= miljoner tusen;"
 	exp = Result{
-		{ItemSpellout, "=%spellout-numbering="},
-		{ItemSpellout, " "},
-		{ItemSpellout, "miljoner"},
-		{ItemSpellout, " "},
-		{ItemSpellout, "tusen"},
+		{ItemSub, "=%spellout-numbering="},
+		{ItemSub, " "},
+		{ItemSub, "miljoner"},
+		{ItemSub, " "},
+		{ItemSub, "tusen"},
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result) {
+	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "­=%spellout-ordinal-feminine=;"
 	exp = Result{
-		{ItemSpellout, "­"},
-		{ItemSpellout, "=%spellout-ordinal-feminine="},
+		{ItemSub, "­"},
+		{ItemSub, "=%spellout-ordinal-feminine="},
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result) {
+	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
 }
@@ -288,15 +288,17 @@ func TestSpanishAndGerman(t *testing.T) {
 	//
 	input = "sesenta[ y →→];"
 	exp = Result{
-		{ItemSpellout, "sesenta"},
+		{ItemSub, "sesenta"},
 		{ItemLeftBracket, "["},
-		{ItemRightDelim, " y "},
-		{ItemRightSub, "→→"},
+		{ItemSub, " "},
+		{ItemSub, "y"},
+		{ItemSub, " "},
+		{ItemSub, "→→"},
 		{ItemRightBracket, "]"},
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result) {
+	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
@@ -304,14 +306,16 @@ func TestSpanishAndGerman(t *testing.T) {
 	input = "[→%spellout-cardinal-masculine→­und­]fünfzig;"
 	exp = Result{
 		{ItemLeftBracket, "["},
-		{ItemLeftSub, "→%spellout-cardinal-masculine→"},
-		{ItemLeftDelim, "­und­"},
+		{ItemSub, "→%spellout-cardinal-masculine→"},
+		{ItemSub, "­"},
+		{ItemSub, "und"},
+		{ItemSub, "­"},
 		{ItemRightBracket, "]"},
-		{ItemSpellout, "fünfzig"},
+		{ItemSub, "fünfzig"},
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result) {
+	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
 }

@@ -100,27 +100,23 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 		} else {
 
 			//fmt.Printf(">>>>: %#v\n", lex.Result)
-			for _, i := range lex.Result {
+			for _, i := range lex.Result() {
 				switch i.Typ {
 				// "can't" happen
 				case lexer.ItemError:
 					return res, fmt.Errorf("convertRuleSet encountered an error from lexer : %s", i.Val)
 
-				case lexer.ItemLeftDelim:
-					rule.LeftPadding = replaceChars(i.Val)
+				case lexer.ItemSub:
+					rule.Subs = append(rule.Subs, replaceChars(i.Val))
 
-				case lexer.ItemRightDelim:
-					rule.RightPadding = replaceChars(i.Val)
+				case lexer.ItemLeftBracket:
+					//rule.Subs = append(rule.Subs, i.Val)
 
-				case lexer.ItemLeftSub:
-					rule.LeftSub = replaceChars(i.Val)
+				case lexer.ItemRightBracket:
+					//rule.Subs = append(rule.Subs, i.Val)
 
-				case lexer.ItemRightSub:
-					rule.RightSub = replaceChars(i.Val)
-
-				case lexer.ItemSpellout:
-					rule.SpellOut = append(rule.SpellOut, i.Val)
-
+				default:
+					return res, fmt.Errorf("Unknown item type: %v", i.Typ)
 				}
 			}
 		}

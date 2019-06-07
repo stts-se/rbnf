@@ -2,7 +2,6 @@ package lexer
 
 import (
 	"fmt"
-	//"os"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -33,7 +32,7 @@ type Lexer struct {
 	start  int    // start position of this Item
 	pos    int    // current position in the input
 	width  int    // width of last rune read
-	Result Result // slice of scanned Items
+	result Result // slice of scanned Items
 	state  stateFn
 }
 
@@ -47,9 +46,6 @@ func (i Item) String() string {
 	case ItemError:
 		return i.Val
 	}
-	// if len(i.val) > 10 {
-	// 	return fmt.Sprintf("%s{%.10v...}", i.typ, i.val)
-	// }
 	return fmt.Sprintf("%s{%v}", i.Typ, i.Val)
 }
 
@@ -59,14 +55,9 @@ type ItemType int
 
 const (
 	ItemError ItemType = iota
+	ItemSub
 	ItemLeftBracket
-	ItemLeftSub
-	ItemRightSub
 	ItemRightBracket
-	ItemSpellout
-	ItemLeftDelim
-	ItemRightDelim
-	ItemVariable
 )
 
 const (
@@ -79,35 +70,24 @@ const (
 	endTag       = ';'
 
 	// string constants
-	aToZ       = "abcdefghijklmnopqrstuvwxyz"
-	delimChars = " -\u00ADy" // \u00AD = soft hyphen
-	//leftSubChars  = "←%[]" + aToZ + delimChars
-	//rightSubChars = "→%[]" + aToZ + delimChars
-	//spelloutChars = aToZ
-	ruleNameChars = aToZ + "-"
-	x             = 'x'
+	rulePointer             = "←→="
+	aToZ                    = "abcdefghijklmnopqrstuvwxyz"
+	delimChars              = " -\u00AD" // \u00AD = soft hyphen
+	delimCharsNotInRuleName = " \u00AD"  // \u00AD = soft hyphen
+	ruleNameChars           = aToZ + "-"
+	x                       = 'x'
 )
 
 func (t ItemType) String() string {
 	switch t {
 	case ItemError:
 		return "error"
-	case ItemLeftSub:
-		return "leftsub"
-	case ItemRightSub:
-		return "rightsub"
+	case ItemSub:
+		return "sub"
 	case ItemLeftBracket:
 		return "leftbracket"
 	case ItemRightBracket:
 		return "rightbracket"
-	case ItemSpellout:
-		return "spellout"
-	case ItemLeftDelim:
-		return "leftdelim"
-	case ItemRightDelim:
-		return "rightdelim"
-	case ItemVariable:
-		return "variable"
 	default:
 		panic(fmt.Sprintf("undefined string output for %d", t))
 	}
@@ -136,7 +116,7 @@ func (l *Lexer) errorf(format string, args ...interface{}) stateFn {
 			ItemError,
 			fmt.Sprintf(format, args...),
 		}
-		l.Result = append(l.Result, i)
+		l.result = append(l.result, i)
 		return nil
 	}
 }
@@ -202,162 +182,90 @@ func (l *Lexer) acceptPeekString(valid string) bool {
 	return strings.IndexRune(valid, l.peek()) >= 0
 }
 
-func spelloutFn(l *Lexer) stateFn {
-	var plainSpelloutFunc = func() bool {
-		var acceptFunc = func(r rune) bool {
-			return unicode.IsLetter(r) || r == '\''
-		}
-		if l.acceptRunFunc(acceptFunc) > 0 {
-			l.emit(ItemSpellout)
-			return true
-		}
-		return false
-	}
-	var ruleRefFunc = func() bool {
-		r, r2, r3 := l.peek3()
-		if strings.IndexRune(delimChars, r) >= 0 && r2 == '=' && r3 == '%' {
-			l.acceptRunString(delimChars)
-			l.emit(ItemSpellout)
-			r, r2, r3 = l.peek3()
-		}
-
-		if r == '=' && r2 == '%' && strings.IndexRune(ruleNameChars, r3) >= 0 {
-			l.next()
-			l.next()
-			l.acceptRunString(ruleNameChars)
-			if l.next() == '=' {
-				l.emit(ItemSpellout)
-				return true
-			}
-		}
-		return false
-	}
-	for {
-		if !(plainSpelloutFunc() || ruleRefFunc()) {
-			break
-		}
-
-		r, r2, _ := l.peek3()
-		if r == rightArr || r == leftBracket || (l.acceptPeekString(delimChars) && r2 == rightArr) {
-			return rightSubFn
-		}
-		if l.acceptRunString(delimChars) > 0 {
-			l.emit(ItemSpellout)
-		}
-	}
-	switch l.peek() {
-	case endTag:
-		return nil
-	case eof:
-		return prematureEndOfInput
-	default:
-		return l.errorf("unknown input at expected %s: '%s'", ItemSpellout, l.currentToEnd())
-	}
-	return nil
-}
-
-func leftSubFn(l *Lexer) stateFn {
-	closingTag := leftArr
+func subFn(l *Lexer) stateFn {
+	var closingFunc func(r rune) (bool, bool) // first bool: we're at a closing tag; 2nd bool: include current rune before emitting
 
 	// opening tags
 	for {
 		r := l.peek()
-		if r == leftBracket {
+		//fmt.Println("opening with", string(r))
+		if r == eof {
+			l.next()
+			return prematureEndOfInput
+			break
+		} else if r == endTag {
+			l.next()
+			return nil
+		} else if r == leftBracket {
 			l.next()
 			l.emit(ItemLeftBracket)
-			closingTag = rightBracket
-			break
-		} else if r == leftArr {
+			return subFn
+		} else if r == rightBracket {
 			l.next()
-			break
-		} else {
-			return l.errorf("unknown opening input at expected %s: '%s'", ItemLeftSub, l.currentToEnd())
-		}
-	}
-
-	for {
-		r := l.peek()
-		if r == closingTag {
-			if r == leftArr {
-				l.next()
-				l.emit(ItemLeftSub)
-				if l.acceptRunString(delimChars) > 0 {
-					l.emit(ItemLeftDelim)
+			l.emit(ItemRightBracket)
+			return subFn
+		} else if r == rightArr || r == leftArr || r == '=' {
+			l.next()
+			closingFunc = func(rx rune) (bool, bool) {
+				if rx == r {
+					return true, true
 				}
-				return spelloutFn
-			} else if r == rightBracket {
-				if len(l.current()) > 0 {
-					l.emit(ItemLeftSub)
+				if strings.IndexRune(l.current(), '%') >= 0 {
+					if strings.IndexRune(delimCharsNotInRuleName, rx) >= 0 {
+						return true, false
+					}
+					return false, false
 				}
-				l.next()
-				l.emit(ItemRightBracket)
-				return spelloutFn
+				if strings.IndexRune(delimChars, rx) >= 0 {
+					return true, false
+				}
+				return false, false
 			}
-		} else if r == leftArr {
-			l.next()
-		} else if l.acceptPeekString(delimChars) {
-			l.emit(ItemLeftSub)
-			if l.acceptRunString(delimChars) > 0 {
-				l.emit(ItemLeftDelim)
-			}
-		} else if r == '%' {
-			l.next()
-			l.acceptRunString(ruleNameChars)
-		} else {
-			return l.errorf("unknown input at expected %s: '%s'", ItemLeftSub, l.currentToEnd())
-		}
-	}
-	panic("not reached")
-}
-
-func rightSubFn(l *Lexer) stateFn {
-	closingTag := rightArr
-
-	// opening tags
-	for {
-		r := l.peek()
-		if r == leftBracket {
-			l.next()
-			l.emit(ItemLeftBracket)
-			closingTag = rightBracket
-			break
-		} else if r == rightArr {
-			l.next()
 			break
 		} else if l.acceptPeekString(delimChars) {
+			closingFunc = func(rx rune) (bool, bool) {
+				return strings.IndexRune(delimChars, rx) < 0, false
+			}
 			l.next()
-			l.emit(ItemRightDelim)
+			break
+		} else if unicode.IsLetter(r) || r == '\'' {
+			closingFunc = func(rx rune) (bool, bool) {
+				return !(unicode.IsLetter(rx) || r == '\''), false
+			}
+			l.next()
+			break
 		} else {
-			return l.errorf("unknown opening input at expected %s: '%s'", ItemRightSub, l.currentToEnd())
+			return l.errorf("unknown opening input at expected %s: '%s'", ItemSub, l.currentToEnd())
 		}
 	}
 
 	for {
 		r := l.peek()
-		if r == closingTag {
-			if r == rightArr {
+		// fmt.Printf("input: '%s' acc result: '%s'\n", l.input, l.Result)
+		// fmt.Println("inside tags", r, string(r))
+		if doClose, includeClosingRune := closingFunc(r); doClose {
+			// fmt.Printf("%v '%v' | doClose %v, includeClosingRune %v\n", r, string(r), doClose, includeClosingRune)
+			if includeClosingRune {
 				l.next()
-				l.emit(ItemRightSub)
-				return endFn
-			} else if r == rightBracket {
-				l.emit(ItemRightSub)
+			}
+			l.emit(ItemSub)
+			if r == eof {
 				l.next()
-				l.emit(ItemRightBracket)
-				return endFn
+				return prematureEndOfInput
 			}
-		} else if r == rightArr {
-			l.next()
-		} else if l.acceptPeekString(delimChars) {
-			//l.next()
-			if l.acceptRunString(delimChars) > 0 {
-				l.emit(ItemRightDelim)
+			if r == endTag {
+				l.next()
+				return nil
 			}
-		} else if r == '%' {
-			l.next()
-			l.acceptRunString(ruleNameChars)
-		} else {
-			return l.errorf("unknown input at expected %s: '%s'", ItemLeftSub, l.currentToEnd())
+			return subFn
+
 		}
+		if r == eof {
+			l.next()
+			return prematureEndOfInput
+		}
+		l.next()
+		//return l.errorf("unknown input at expected %s: '%s'", ItemSub, l.currentToEnd())
 	}
 	panic("not reached")
 }
@@ -378,8 +286,6 @@ func endFn(l *Lexer) stateFn {
 
 func initialState(l *Lexer) stateFn {
 	switch r := l.peek(); {
-	case r == leftArr || r == leftBracket:
-		return leftSubFn
 	case r == endTag:
 		l.next()
 		return nil
@@ -387,7 +293,7 @@ func initialState(l *Lexer) stateFn {
 		l.next()
 		return prematureEndOfInput
 	default:
-		return spelloutFn
+		return subFn
 	}
 	return nil
 }
@@ -396,9 +302,18 @@ func Lex(input string) *Lexer {
 	l := &Lexer{
 		input:  input,
 		state:  initialState,
-		Result: Result{},
+		result: Result{},
 	}
 	return l
+}
+
+func (l *Lexer) Result() Result {
+	res := []Item{}
+	// TODO: Post-process brackets for optional content
+	for _, item := range l.result {
+		res = append(res, item)
+	}
+	return res
 }
 
 func (l *Lexer) current() string {
@@ -410,7 +325,7 @@ func (l *Lexer) currentToEnd() string {
 func (l *Lexer) emit(t ItemType) {
 	i := Item{t, l.current()}
 	//fmt.Printf("emit: %s\n", i)
-	l.Result = append(l.Result, i)
+	l.result = append(l.result, i)
 	l.start = l.pos
 }
 
@@ -421,25 +336,14 @@ func (l *Lexer) debug(msg string) {
 }
 
 func (l *Lexer) Run() error {
+	//fmt.Printf("Lexer input: '%s'\n", l.input)
 	for state := initialState; state != nil; {
 		state = state(l)
 	}
-	for _, i := range l.Result {
+	for _, i := range l.Result() {
 		if i.Typ == ItemError {
 			return fmt.Errorf("%v", i.Val)
 		}
 	}
 	return nil
 }
-
-// func main() {
-// 	for _, s := range os.Args[1:] {
-// 		fmt.Printf("input: '%s'\n", s)
-// 		l := Lex(s)
-// 		l.Run()
-// 		for _, i := range l.Result {
-// 			fmt.Printf("item: %s\n", i)
-// 		}
-// 		fmt.Println()
-// 	}
-// }

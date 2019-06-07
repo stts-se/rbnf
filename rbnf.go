@@ -39,43 +39,27 @@ func (b Base) Value() string {
 }
 
 type BaseRule struct {
-	Base         Base
-	LeftSub      string
-	LeftPadding  string
-	SpellOut     []string
-	RightPadding string
-	RightSub     string
-
+	Base              Base
+	Subs              []string
 	stringMatchRegexp *regexp.Regexp
 }
 
-func NewIntRule(baseInt int, leftSub, leftPadding string, spellOut string, rightPadding, rightSub string, radix int) BaseRule {
+func NewIntRule(baseInt int, radix int, subs ...string) BaseRule {
 	return BaseRule{
-		Base:         Base{Int: baseInt, Radix: radix},
-		LeftSub:      leftSub,
-		LeftPadding:  leftPadding,
-		SpellOut:     []string{spellOut},
-		RightPadding: rightPadding,
-		RightSub:     rightSub,
+		Base: Base{Int: baseInt, Radix: radix},
+		Subs: subs,
 	}
 }
-func NewStringRule(baseString string, leftSub, leftPadding string, spellOut string, rightPadding, rightSub string) BaseRule {
+func NewStringRule(baseString string, subs ...string) BaseRule {
 	return BaseRule{
 		Base:              Base{String: baseString},
-		LeftSub:           leftSub,
-		LeftPadding:       leftPadding,
-		SpellOut:          []string{spellOut},
-		RightPadding:      rightPadding,
-		RightSub:          rightSub,
+		Subs:              subs,
 		stringMatchRegexp: buildStringMatchRegexp(baseString),
 	}
 }
 
 func (r BaseRule) String() string {
-	if r.Base.IsInt() {
-		return fmt.Sprintf("%s => '%s%s%s%s%s'", r.Base.ToString(), r.LeftSub, r.LeftPadding, strings.Join(r.SpellOut, ""), r.RightPadding, r.RightSub)
-	}
-	return fmt.Sprintf("%s => '%s%s%s%s%s'", r.Base.ToString(), r.LeftSub, r.LeftPadding, strings.Join(r.SpellOut, ""), r.RightPadding, r.RightSub)
+	return fmt.Sprintf("%v => '%s'", r.Base.ToString(), strings.Join(r.Subs, ""))
 }
 
 func (b Base) IsInt() bool {
@@ -232,20 +216,15 @@ func NewRuleSetGroup(name string, ruleSets []RuleSet) (RuleSetGroup, error) {
 			if rule.Base.Int != 0 && rule.Base.String != "" {
 				return res, fmt.Errorf("Rule must use either BaseInt or BaseString, not both: %v", rule)
 			}
-			if isRuleRef(rule.LeftSub) {
-				if _, ok := res.FindRuleSet(rule.LeftSub); !ok {
-					return res, fmt.Errorf("No such rule set: %s", rule.LeftSub)
+			for _, sub := range rule.Subs {
+				if isRuleRef(sub) {
+					if _, ok := res.FindRuleSet(sub); !ok {
+						return res, fmt.Errorf("No such rule set (1): %s", sub)
+					}
 				}
-			}
-			if isRuleRef(rule.RightSub) {
-				if _, ok := res.FindRuleSet(rule.RightSub); !ok {
-					return res, fmt.Errorf("No such rule set: %s", rule.RightSub)
-				}
-			}
-			for _, sp := range rule.SpellOut {
-				if isSpelloutRuleRef(sp) {
-					if _, ok := res.FindSpelloutRuleSet(sp); !ok {
-						return res, fmt.Errorf("No such rule set: %s", sp)
+				if isSpelloutRuleRef(sub) {
+					if _, ok := res.FindSpelloutRuleSet(sub); !ok {
+						return res, fmt.Errorf("No such rule set (2): %s", sub)
 					}
 				}
 			}
@@ -285,30 +264,7 @@ func (g RuleSetGroup) Spellout(input string, ruleSetName string, debug bool) (st
 	return "", fmt.Errorf("No such rule set: %s", ruleSetName)
 }
 
-func (g RuleSetGroup) expandSpellouts(r BaseRule, debug bool) (string, error) {
-	res := []string{}
-	for _, sp := range r.SpellOut {
-		if isSpelloutRuleRef(sp) {
-			rs, ok := g.FindSpelloutRuleSet(sp)
-			if !ok {
-				return "", fmt.Errorf("No such rule set: %s", sp)
-			}
-			spelled, err := g.spellout(r.Base.Value(), rs, debug)
-			if err != nil {
-				return "", fmt.Errorf("couldn't spellout %s using rule %s : %v", r.Base.Value(), sp, err)
-			}
-			res = append(res, spelled)
-		} else {
-			res = append(res, sp)
-		}
-	}
-	// TODO: Call rule defs too
-	return strings.Join(res, ""), nil
-}
-
 func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (string, error) {
-	var err error
-
 	matchedRule, ok := findMatchingRule(input, ruleSet)
 	if !ok {
 		return input, fmt.Errorf("No matching base rule for %s", input)
@@ -317,87 +273,71 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 		fmt.Fprintf(os.Stderr, "[rbnf] Matched rule %#v\n", matchedRule)
 	}
 
-	if fmt.Sprintf("%d", matchedRule.Base.Int) == input {
-		//if n, err := strconv.Atoi(input); err != nil && n == 0 && matchedRule.Base.Int == n {
-		sp, err := g.expandSpellouts(matchedRule, debug)
-		if err != nil {
-			return "", err
+	if matchedRule.Base.IsInt() {
+		n, err := strconv.Atoi(input)
+		if err == nil && n == 0 && matchedRule.Base.Int == n {
+			return "", nil
 		}
-		return sp, nil
 	}
 
 	match, ok := matchedRule.Match(input)
 	if !ok {
 		return input, fmt.Errorf("Couldn't get match result for rule %v, input %s", matchedRule, input)
 	}
+	if debug {
+		fmt.Fprintf(os.Stderr, "[rbnf] match: %#v\n", match)
+	}
 
-	var left, right string
-	if matchedRule.RightSub == "[>>]" { // ??? Text in brackets is omitted if the number being formatted is an even multiple of 10
-		n, err := strconv.Atoi(input)
-		//fmt.Println(n)
-		omit := n%10 == 0
-		omit = false
-		if err != nil || !omit {
-			//if matchedRule.Base.IsInt() && matchedRule.Base.Int%10 != 0 {
-			//if n%10 != 0 {
-			///if !strings.HasSuffix(input, "0") {
-			right, err = g.spellout(match.ForwardRight, ruleSet, debug)
+	var subs = []string{}
+	for _, sub := range matchedRule.Subs {
+
+		// ??? Text in brackets is omitted if the number being formatted is an even multiple of 10
+		optional := strings.HasPrefix(sub, "[") && strings.HasSuffix(sub, "]")
+		if optional {
+			sub = strings.TrimPrefix(sub, "[")
+			sub = strings.TrimSuffix(sub, "]")
+			//inputInt, err := strconv.Atoi(input)
+			//omit := err == nil && inputInt%matchedRule.Base.Radix == 0
+			omit := match.ForwardRight == "0"
+			if omit {
+				continue
+			}
+		}
+
+		if debug {
+			fmt.Fprintf(os.Stderr, "[rbnf] accumulated subs: %#v\n", subs)
+		}
+		if namedRuleSet, ok := g.FindRuleSet(sub); ok {
+			spelled, err := g.spellout(match.ForwardLeft, namedRuleSet, debug)
 			if err != nil {
 				return "", err
 			}
-			//}
-		}
-	} else if matchedRule.RightSub == ">>" {
-		//fmt.Printf("xx %#v\t%v\n", matchedRule, match.ForwardRight)
-		right, err = g.spellout(match.ForwardRight, ruleSet, debug)
-		if err != nil {
-			return "", err
-		}
-	} else if namedRuleSet, ok := g.FindRuleSet(matchedRule.RightSub); ok {
-		right, err = g.spellout(match.ForwardRight, namedRuleSet, debug)
-		if err != nil {
-			return "", err
-		}
-	} else if matchedRule.RightSub != "" {
-		return "", fmt.Errorf("Unknown rule context: '%s'", matchedRule.RightSub)
-	}
-
-	if matchedRule.LeftSub == "<<" {
-		left, err = g.spellout(match.ForwardLeft, ruleSet, debug)
-		if err != nil {
-			return "", err
-		}
-		// } else if matchedRule.LeftSub == "[>>]" {
-		// 	left, err = g.spellout(match.ForwardRight, ruleSet, debug)
-		// 	if err != nil {
-		// 		return "", err
-		// 	}
-		// } else if matchedRule.LeftSub == ">>" {
-		// 	left, err = g.spellout(match.ForwardRight, ruleSet, debug)
-		// 	if err != nil {
-		// 		return "", err
-		// 	}
-	} else if namedRuleSet, ok := g.FindRuleSet(matchedRule.LeftSub); ok {
-		left, err = g.spellout(match.ForwardLeft, namedRuleSet, debug)
-		if err != nil {
-			return "", err
-		}
-
-	} else if matchedRule.LeftSub != "" {
-		return "", fmt.Errorf("Unknown rule context: '%s'", matchedRule.LeftSub)
-	}
-
-	spell, err := g.expandSpellouts(matchedRule, debug)
-	if err != nil {
-		return "", err
-	}
-	if spell == "" {
-		if debug {
-			fmt.Fprintf(os.Stderr, "[rbnf] Empty spellout expansion for matched rule %#v\n", matchedRule)
+			subs = append(subs, spelled)
+		} else if namedRuleSet, ok := g.FindSpelloutRuleSet(sub); ok {
+			spelled, err := g.spellout(matchedRule.Base.Value(), namedRuleSet, debug)
+			if err != nil {
+				return "", err
+			}
+			subs = append(subs, spelled)
+		} else if sub == ">>" {
+			//fmt.Printf("xx %#v\t%v\n", matchedRule, match.ForwardRight)
+			spelled, err := g.spellout(match.ForwardRight, ruleSet, debug)
+			if err != nil {
+				return "", err
+			}
+			subs = append(subs, spelled)
+		} else if sub == "<<" {
+			spelled, err := g.spellout(match.ForwardLeft, ruleSet, debug)
+			if err != nil {
+				return "", err
+			}
+			subs = append(subs, spelled)
+		} else if sub != "" {
+			subs = append(subs, sub)
 		}
 	}
 
-	res := strings.TrimSpace(left + matchedRule.LeftPadding + spell + matchedRule.RightPadding + right)
+	res := strings.TrimSpace(strings.Join(subs, ""))
 	if res == "" {
 		if debug {
 			fmt.Fprintf(os.Stderr, "[rbnf] Empty output for input string %s\n", input)
@@ -416,8 +356,7 @@ func exp(x, y int) int {
 }
 
 func isRuleRef(s string) bool {
-	res := strings.HasPrefix(s, "%") || (s != "" && !strings.Contains(s, "<") && !strings.Contains(s, ">"))
-	//fmt.Printf("%v %v\n", s, res)
+	res := strings.HasPrefix(s, "%") // || (s != "" && !strings.Contains(s, "<") && !strings.Contains(s, ">"))
 	return res
 }
 
