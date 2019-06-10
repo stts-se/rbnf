@@ -17,7 +17,7 @@ func TestStruct(t *testing.T) {
 	_ = ldml.Identity
 }
 
-func TestUnmarshalXML(t *testing.T) {
+func TestUnmarshalXMLSV(t *testing.T) {
 	// depends on file sv.xml in test_data dir
 
 	bytes, err := ioutil.ReadFile("test_data/sv.xml")
@@ -34,7 +34,7 @@ func TestUnmarshalXML(t *testing.T) {
 	//fmt.Printf("%#v\n", ldml.Rbnf.RulesetGrouping[0])
 }
 
-func TestReadXMLFile(t *testing.T) {
+func TestReadXMLFileSV(t *testing.T) {
 	// depends on file sv.xml in test_data dir
 
 	ldml, err := readXMLFile("test_data/sv.xml")
@@ -50,7 +50,7 @@ func TestReadXMLFile(t *testing.T) {
 
 }
 
-func TestRulesFromXMLFile(t *testing.T) {
+func TestRulesFromXMLFileSV(t *testing.T) {
 
 	pack, err := RulesFromXMLFile("test_data/sv.xml")
 	if err != nil {
@@ -154,6 +154,50 @@ func TestRulesFromXMLFile(t *testing.T) {
 	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
 	if err != nil {
 		t.Errorf("Filtsocka: %s! %v", input, err)
+	} else if res != expect {
+		t.Errorf("wanted %s, got %s", expect, res)
+	}
+
+}
+
+func TestRulesFromXMLFileDE(t *testing.T) {
+
+	pack, err := RulesFromXMLFile("test_data/de.xml")
+	if err != nil {
+		t.Errorf("Pain! %v", err)
+	}
+
+	if w, g := "de", pack.Language; w != g {
+		t.Errorf("wanted '%s' got '%s'", w, g)
+	}
+
+	ruleSetGroups := pack.RuleSetGroups
+	if len(ruleSetGroups) == 0 {
+		t.Errorf("Noooo!")
+	}
+
+	if w, g := "SpelloutRules", ruleSetGroups[0].Name; w != g {
+		t.Errorf("wanted '%s' got '%s'", w, g)
+	}
+
+	var input, expect, res string
+
+	//
+	input = "2748"
+	expect = "zweitausendsiebenhundertachtundvierzig"
+	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
+	if err != nil {
+		t.Errorf("P-P-Pure Pain! %v", err)
+	} else if res != expect {
+		t.Errorf("wanted %s, got %s", expect, res)
+	}
+
+	//
+	input = "13000"
+	expect = "dreizehntausend"
+	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
+	if err != nil {
+		t.Errorf("P-P-Pure Pain! %v", err)
 	} else if res != expect {
 		t.Errorf("wanted %s, got %s", expect, res)
 	}
