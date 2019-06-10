@@ -273,12 +273,12 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 		fmt.Fprintf(os.Stderr, "[rbnf] Matched rule %#v\n", matchedRule)
 	}
 
-	if matchedRule.Base.IsInt() {
-		n, err := strconv.Atoi(input)
-		if err == nil && n == 0 && matchedRule.Base.Int == n {
-			return "", nil
-		}
-	}
+	// if matchedRule.Base.IsInt() {
+	// 	n, err := strconv.Atoi(input)
+	// 	if err == nil && n == 0 && matchedRule.Base.Int == n {
+	// 		return "", nil
+	// 	}
+	// }
 
 	match, ok := matchedRule.Match(input)
 	if !ok {

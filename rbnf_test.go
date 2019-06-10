@@ -326,6 +326,14 @@ func Test_Spellout1(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
+	res, err = g.Spellout("0", "default", false)
+	exp = "noll"
+	if err != nil {
+		t.Error(err)
+	}
+	if res != exp {
+		t.Errorf(fs, exp, res)
+	}
 }
 
 func Test_Spellout2(t *testing.T) {
