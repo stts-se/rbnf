@@ -146,10 +146,8 @@ func TestOptionalSub(t *testing.T) {
 	//
 	input = "[←← ]komma →→;"
 	exp = Result{
-		{ItemLeftBracket, "["},
-		{ItemSub, "←←"},
-		{ItemSub, " "},
-		{ItemRightBracket, "]"},
+		{ItemSub, "[←←]"},
+		{ItemSub, "[ ]"},
 		{ItemSub, "komma"},
 		{ItemSub, " "},
 		{ItemSub, "→→"},
@@ -166,10 +164,8 @@ func TestOptionalSub(t *testing.T) {
 		{ItemSub, "←←"},
 		{ItemSub, " "},
 		{ItemSub, "komma"},
-		{ItemLeftBracket, "["},
-		{ItemSub, " "},
-		{ItemSub, "→→"},
-		{ItemRightBracket, "]"},
+		{ItemSub, "[ ]"},
+		{ItemSub, "[→→]"},
 	}
 	l = Lex(input)
 	l.Run()
@@ -181,10 +177,8 @@ func TestOptionalSub(t *testing.T) {
 	input = "komma[ →→];"
 	exp = Result{
 		{ItemSub, "komma"},
-		{ItemLeftBracket, "["},
-		{ItemSub, " "},
-		{ItemSub, "→→"},
-		{ItemRightBracket, "]"},
+		{ItemSub, "[ ]"},
+		{ItemSub, "[→→]"},
 	}
 	l = Lex(input)
 	l.Run()
@@ -198,10 +192,8 @@ func TestOptionalSub(t *testing.T) {
 		{ItemSub, "←←"},
 		{ItemSub, " "},
 		{ItemSub, "komma"},
-		{ItemLeftBracket, "["},
-		{ItemSub, " "},
-		{ItemSub, "→%cardinal-reale→"},
-		{ItemRightBracket, "]"},
+		{ItemSub, "[ ]"},
+		{ItemSub, "[→%cardinal-reale→]"},
 	}
 	l = Lex(input)
 	l.Run()
@@ -215,9 +207,7 @@ func TestOptionalSub(t *testing.T) {
 		{ItemSub, "en"},
 		{ItemSub, " "},
 		{ItemSub, "miljon"},
-		{ItemLeftBracket, "["},
-		{ItemSub, "→→"},
-		{ItemRightBracket, "]"},
+		{ItemSub, "[→→]"},
 	}
 	l = Lex(input)
 	l.Run()
@@ -278,6 +268,20 @@ func TestOptionalSub(t *testing.T) {
 	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
+
+	//
+	input = "tjugo[­→→];"
+	exp = Result{
+		{ItemSub, "tjugo"},
+		{ItemSub, "[­]"},
+		{ItemSub, "[→→]"},
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result()) {
+		t.Error(err)
+	}
+
 }
 
 func TestSpanishAndGerman(t *testing.T) {
@@ -289,12 +293,10 @@ func TestSpanishAndGerman(t *testing.T) {
 	input = "sesenta[ y →→];"
 	exp = Result{
 		{ItemSub, "sesenta"},
-		{ItemLeftBracket, "["},
-		{ItemSub, " "},
-		{ItemSub, "y"},
-		{ItemSub, " "},
-		{ItemSub, "→→"},
-		{ItemRightBracket, "]"},
+		{ItemSub, "[ ]"},
+		{ItemSub, "[y]"},
+		{ItemSub, "[ ]"},
+		{ItemSub, "[→→]"},
 	}
 	l = Lex(input)
 	l.Run()
@@ -305,12 +307,10 @@ func TestSpanishAndGerman(t *testing.T) {
 	//
 	input = "[→%spellout-cardinal-masculine→­und­]fünfzig;"
 	exp = Result{
-		{ItemLeftBracket, "["},
-		{ItemSub, "→%spellout-cardinal-masculine→"},
-		{ItemSub, "­"},
-		{ItemSub, "und"},
-		{ItemSub, "­"},
-		{ItemRightBracket, "]"},
+		{ItemSub, "[→%spellout-cardinal-masculine→]"},
+		{ItemSub, "[­]"},
+		{ItemSub, "[und]"},
+		{ItemSub, "[­]"},
 		{ItemSub, "fünfzig"},
 	}
 	l = Lex(input)

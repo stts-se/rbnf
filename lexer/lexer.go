@@ -309,9 +309,19 @@ func Lex(input string) *Lexer {
 
 func (l *Lexer) Result() Result {
 	res := []Item{}
-	// TODO: Post-process brackets for optional content
+	// Post-process brackets for optional content
+	openBracket := false
 	for _, item := range l.result {
-		res = append(res, item)
+		if item.Typ == ItemLeftBracket {
+			openBracket = true
+		} else if item.Typ == ItemRightBracket {
+			openBracket = false
+		} else if openBracket {
+			item.Val = "[" + item.Val + "]"
+			res = append(res, item)
+		} else {
+			res = append(res, item)
+		}
 	}
 	return res
 }

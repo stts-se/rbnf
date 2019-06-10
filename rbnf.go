@@ -289,23 +289,35 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 	}
 
 	var subs = []string{}
-	for _, sub := range matchedRule.Subs {
-
-		// ??? Text in brackets is omitted if the number being formatted is an even multiple of 10
+	for _, sub0 := range matchedRule.Subs {
+		sub := sub0
+		if debug {
+			fmt.Fprintf(os.Stderr, "[rbnf] input %v\n", input)
+			fmt.Fprintf(os.Stderr, "[rbnf] this sub: %#v\n", sub)
+			fmt.Fprintf(os.Stderr, "[rbnf.optional] matchedRule %v\n", matchedRule)
+		}
+		// http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/RuleBasedNumberFormat.html
+		// Omit the optional text if the number is an even multiple of the rule's divisor
 		optional := strings.HasPrefix(sub, "[") && strings.HasSuffix(sub, "]")
 		if optional {
-			sub = strings.TrimPrefix(sub, "[")
-			sub = strings.TrimSuffix(sub, "]")
-			//inputInt, err := strconv.Atoi(input)
-			//omit := err == nil && inputInt%matchedRule.Base.Radix == 0
-			omit := match.ForwardRight == "0"
-			if omit {
-				continue
+			sub = strings.TrimPrefix(strings.TrimSuffix(sub, "]"), "[")
+			if inputInt, err := strconv.Atoi(input); err == nil && matchedRule.Base.IsInt() {
+				if debug {
+					fmt.Fprintf(os.Stderr, "[rbnf.optional] matchedRule divisor %v\n", matchedRule.Base.Divisor())
+				}
+				omit := inputInt%matchedRule.Base.Divisor() == 0
+				if debug {
+					fmt.Fprintf(os.Stderr, "[rbnf.optional] omit %v\n", omit)
+				}
+				if omit {
+					continue
+				}
 			}
 		}
 
 		if debug {
 			fmt.Fprintf(os.Stderr, "[rbnf] accumulated subs: %#v\n", subs)
+			fmt.Fprintf(os.Stderr, "[rbnf] this sub after optional omit: %#v\n", sub)
 		}
 		if namedRuleSet, ok := g.FindRuleSet(sub); ok {
 			spelled, err := g.spellout(match.ForwardLeft, namedRuleSet, debug)
@@ -314,13 +326,12 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 			}
 			subs = append(subs, spelled)
 		} else if namedRuleSet, ok := g.FindSpelloutRuleSet(sub); ok {
-			spelled, err := g.spellout(matchedRule.Base.Value(), namedRuleSet, debug)
+			spelled, err := g.spellout(input, namedRuleSet, debug)
 			if err != nil {
 				return "", err
 			}
 			subs = append(subs, spelled)
 		} else if sub == ">>" {
-			//fmt.Printf("xx %#v\t%v\n", matchedRule, match.ForwardRight)
 			spelled, err := g.spellout(match.ForwardRight, ruleSet, debug)
 			if err != nil {
 				return "", err
