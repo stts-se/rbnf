@@ -90,12 +90,12 @@ func Test_Spellout1(t *testing.T) {
 			NewIntRule(100, 10, "<<", " ", "hundra", "[ ]", "[>>]"),
 
 			NewIntRule(1000, 10, " ", "ettusen", "[ ]", "[>>]"),
-			NewIntRule(2000, 10, ">%spellout-cardinal-reale>", " ", "tusen", "[ ]", "[>>]"),
+			NewIntRule(2000, 10, "<%spellout-cardinal-reale<", " ", "tusen", "[ ]", "[>>]"),
 
 			NewIntRule(1000000, 10, " ", "en miljon", "[ ]", "[>>]"),
-			NewIntRule(2000000, 10, ">%spellout-cardinal-reale>", " ", "miljoner", "[ ]", "[>>]"),
+			NewIntRule(2000000, 10, "<%spellout-cardinal-reale<", " ", "miljoner", "[ ]", "[>>]"),
 			NewIntRule(1000000000, 10, "en miljard", "[ ]", "[>>]"),
-			NewIntRule(2000000000, 10, ">%spellout-cardinal-reale>", " ", "miljarder", "[ ]", "[>>]"),
+			NewIntRule(2000000000, 10, "<%spellout-cardinal-reale<", " ", "miljarder", "[ ]", "[>>]"),
 		},
 	}
 
@@ -130,11 +130,11 @@ func Test_Spellout1(t *testing.T) {
 			NewIntRule(70, 10, "sjuttio", "[-]", "[>>]"),
 			NewIntRule(80, 10, "åttio", "[-]", "[>>]"),
 			NewIntRule(90, 10, "nittio", "[-]", "[>>]"),
-			NewIntRule(100, 10, ">%spellout-cardinal-neuter>", " ", "hundra", "[ ]", "[>>]"),
+			NewIntRule(100, 10, "<%spellout-cardinal-neuter<", " ", "hundra", "[ ]", "[>>]"),
 			NewIntRule(1000, 10, " ", "ettusen", "[-]", "[>>]"),
-			NewIntRule(2000, 10, ">%spellout-cardinal-reale>", " ", "tusen", "[ ]", "[>>]"),
+			NewIntRule(2000, 10, "<%spellout-cardinal-reale<", " ", "tusen", "[ ]", "[>>]"),
 			NewIntRule(1000000, 10, " ", "en miljon", "[ ]", "[>>]"),
-			NewIntRule(2000000, 10, ">%spellout-cardinal-reale>", " ", "miljoner", "[ ]", "[>>]"),
+			NewIntRule(2000000, 10, "<%spellout-cardinal-reale<", " ", "miljoner", "[ ]", "[>>]"),
 		},
 	}
 
@@ -169,22 +169,28 @@ func Test_Spellout1(t *testing.T) {
 			NewIntRule(70, 10, "sjuttio", "[-]", "[>>]"),
 			NewIntRule(80, 10, "åttio", "[-]", "[>>]"),
 			NewIntRule(90, 10, "nittio", "[-]", "[>>]"),
-			NewIntRule(100, 10, ">%spellout-cardinal-neuter>", "hundra", "[ ]", "[>>]"),
+			NewIntRule(100, 10, "<%spellout-cardinal-neuter<", "hundra", "[ ]", "[>>]"),
 			NewIntRule(1000, 10, "ettusen", "[ ]", "[>>]"),
-			NewIntRule(2000, 10, ">%spellout-cardinal-reale>", "tusen", "[ ]", "[>>]"),
+			NewIntRule(2000, 10, "<%spellout-cardinal-reale<", "tusen", "[ ]", "[>>]"),
 			NewIntRule(1000000, 10, "en miljon", "[ ]", "[>>]"),
-			NewIntRule(2000000, 10, ">%spellout-cardinal-reale>", " ", "miljoner", "[ ]", "[>>]"),
+			NewIntRule(2000000, 10, "<%spellout-cardinal-reale<", " ", "miljoner", "[ ]", "[>>]"),
 			NewIntRule(1000000000, 10, "en miljard", "[ ]", "[>>]"),
-			NewIntRule(2000000000, 10, ">%spellout-cardinal-reale>", " ", "miljarder", "[ ]", "[>>]"),
+			NewIntRule(2000000000, 10, "<%spellout-cardinal-reale<", " ", "miljarder", "[ ]", "[>>]"),
 		},
 	}
-
+	spelloutCardinalNeuter2 := RuleSet{
+		Name: "spellout-cardinal-neuter-2",
+		Rules: []BaseRule{
+			NewIntRule(0, 10, "=%spellout-cardinal-neuter="),
+		},
+	}
 	g, err := NewRuleSetGroup(
 		"spellout-cardinal",
 		[]RuleSet{
 			defaultRules,
 			spelloutCardinalReale,
 			spelloutCardinalNeuter,
+			spelloutCardinalNeuter2,
 		})
 	if err != nil {
 		t.Errorf("Couldn't create rule set group : %v", err)
@@ -437,6 +443,76 @@ func Test_Spellout2(t *testing.T) {
 
 }
 
+func Test_SpelloutOperationEqSign(t *testing.T) {
+	defaultRules := RuleSet{
+		Name: "default",
+		Rules: []BaseRule{
+			NewStringRule("-x", "minus", " ", ">>"),
+			NewStringRule("x.x", "<<", " ", "komma", " ", ">>"),
+			NewIntRule(0, 10, "noll"),
+			NewIntRule(1, 10, "ett"),
+			NewIntRule(2, 10, "två"),
+			NewIntRule(3, 10, "tre"),
+			NewIntRule(4, 10, "fyra"),
+			NewIntRule(5, 10, "fem"),
+			NewIntRule(6, 10, "sex"),
+			NewIntRule(7, 10, "sju"),
+			NewIntRule(8, 10, "åtta"),
+			NewIntRule(9, 10, "nio"),
+			NewIntRule(10, 10, "tio"),
+			NewIntRule(11, 10, "elva"),
+			NewIntRule(12, 10, "tolv"),
+			NewIntRule(13, 10, "tretton"),
+			NewIntRule(14, 10, "fjorton"),
+			NewIntRule(15, 10, "femton"),
+			NewIntRule(16, 10, "sexton"),
+			NewIntRule(17, 10, "sjutton"),
+			NewIntRule(18, 10, "arton"),
+			NewIntRule(19, 10, "nitton"),
+			NewIntRule(20, 10, "tjugo", "[-]", "[>>]"),
+			NewIntRule(30, 10, "trettio", "[-]", "[>>]"),
+			NewIntRule(40, 10, "fyrtio", "[-]", "[>>]"),
+			NewIntRule(50, 10, "femtio", "[-]", "[>>]"),
+			NewIntRule(60, 10, "sextio", "[-]", "[>>]"),
+			NewIntRule(70, 10, "sjuttio", "[-]", "[>>]"),
+			NewIntRule(80, 10, "åttio", "[-]", "[>>]"),
+			NewIntRule(90, 10, "nittio", "[-]", "[>>]"),
+			NewIntRule(100, 10, "<<", "hundra", "[ ]", "[>>]"),
+			NewIntRule(1100, 100, "<<", " ", "hundra", "[ ]", "[>>]"),
+			NewIntRule(2000, 10, "<<", " ", "tusen", "[ ]", "[>>]"),
+		},
+	}
+	rules2 := RuleSet{
+		Name: "rules2",
+		Rules: []BaseRule{
+			NewIntRule(0, 10, "=%default="),
+		},
+	}
+
+	g, err := NewRuleSetGroup(
+		"years",
+		[]RuleSet{
+			defaultRules,
+			rules2,
+		})
+	if err != nil {
+		t.Errorf("Couldn't create rule set group : %v", err)
+	}
+
+	// TEST
+	var exp, res string
+
+	res, err = g.Spellout("12", "rules2", false)
+	exp = "tolv"
+	if err != nil {
+		t.Error(err)
+	}
+	if res != exp {
+		t.Errorf(fs, exp, res)
+	}
+
+}
+
 func Test_StringMatch(t *testing.T) {
 	var r BaseRule
 	var exp, res MatchResult
@@ -554,7 +630,7 @@ func Test_SpelloutDE(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
-	res, err = g.Spellout("45", "spellout-numbering", true)
+	res, err = g.Spellout("45", "spellout-numbering", false)
 	exp = "fünf-und-vierzig"
 	if err != nil {
 		t.Error(err)

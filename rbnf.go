@@ -94,9 +94,9 @@ func (sub Sub) IsRuleRef() bool {
 	return sub.RuleRef != "" && strings.HasPrefix(sub.RuleRef, "%")
 }
 
-func (sub Sub) IsSpelloutRuleRef() bool {
-	return sub.RuleRef != "" && sub.Operation == "==" && strings.HasPrefix(sub.RuleRef, "%")
-}
+// func (sub Sub) IsSpelloutRuleRef() bool {
+// 	return sub.RuleRef != "" && sub.Operation == "==" && strings.HasPrefix(sub.RuleRef, "%")
+// }
 
 func (sub Sub) Validate() error {
 	if sub.Orth != "" && sub.RuleRef != "" {
@@ -268,13 +268,13 @@ func (g RuleSetGroup) FindRuleSet(ruleRef string) (RuleSet, bool) {
 	return res, ok
 }
 
-func (g RuleSetGroup) FindSpelloutRuleSet(ruleRef string) (RuleSet, bool) {
-	ruleName := ruleRef
-	ruleName = strings.TrimPrefix(ruleName, "%")
-	ruleName = strings.TrimPrefix(ruleName, "%")
-	res, ok := g.RuleSets[ruleName]
-	return res, ok
-}
+// func (g RuleSetGroup) FindSpelloutRuleSet(ruleRef string) (RuleSet, bool) {
+// 	ruleName := ruleRef
+// 	ruleName = strings.TrimPrefix(ruleName, "%")
+// 	ruleName = strings.TrimPrefix(ruleName, "%")
+// 	res, ok := g.RuleSets[ruleName]
+// 	return res, ok
+// }
 
 func NewRuleSetGroup(name string, ruleSets []RuleSet) (RuleSetGroup, error) {
 	rsMap := make(map[string]RuleSet)
@@ -291,11 +291,11 @@ func NewRuleSetGroup(name string, ruleSets []RuleSet) (RuleSetGroup, error) {
 				return res, fmt.Errorf("Rule must use either BaseInt or BaseString, not both: %v", rule)
 			}
 			for _, sub := range rule.Subs {
-				if sub.IsSpelloutRuleRef() {
-					if _, ok := res.FindSpelloutRuleSet(sub.RuleRef); !ok {
-						return res, fmt.Errorf("No such rule set: %s", sub)
-					}
-				}
+				// if sub.IsSpelloutRuleRef() {
+				// 	if _, ok := res.FindSpelloutRuleSet(sub.RuleRef); !ok {
+				// 		return res, fmt.Errorf("No such rule set: %s", sub)
+				// 	}
+				// }
 				if sub.IsRuleRef() {
 					if _, ok := res.FindRuleSet(sub.RuleRef); !ok {
 						return res, fmt.Errorf("No such rule set: %s", sub)
@@ -344,30 +344,22 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 		return input, fmt.Errorf("No matching base rule for %s", input)
 	}
 	if debug {
-		fmt.Fprintf(os.Stderr, "[rbnf] Matched rule %#v\n", matchedRule)
+		fmt.Fprintf(os.Stderr, "[rbnf] Input %v\n", input)
+		fmt.Fprintf(os.Stderr, "[rbnf] Matched rule %#v (from rule set %s)\n", matchedRule, ruleSet.Name)
 	}
-
-	// if matchedRule.Base.IsInt() {
-	// 	n, err := strconv.Atoi(input)
-	// 	if err == nil && n == 0 && matchedRule.Base.Int == n {
-	// 		return "", nil
-	// 	}
-	// }
 
 	match, ok := matchedRule.Match(input)
 	if !ok {
 		return input, fmt.Errorf("Couldn't get match result for rule %v, input %s", matchedRule, input)
 	}
 	if debug {
-		fmt.Fprintf(os.Stderr, "[rbnf] match: %#v\n", match)
+		fmt.Fprintf(os.Stderr, "[rbnf] Match result: %#v\n", match)
 	}
 
 	var subs = []string{}
 	for _, sub := range matchedRule.Subs {
 		if debug {
-			fmt.Fprintf(os.Stderr, "[rbnf] input %v\n", input)
-			fmt.Fprintf(os.Stderr, "[rbnf] this sub: %#v\n", sub)
-			fmt.Fprintf(os.Stderr, "[rbnf.optional] matchedRule %v\n", matchedRule)
+			fmt.Fprintf(os.Stderr, "[rbnf] Current sub: %#v\n", sub)
 		}
 		// http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/RuleBasedNumberFormat.html
 		// Omit the optional text if the number is an even multiple of the rule's divisor
@@ -378,7 +370,7 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 				}
 				omit := inputInt%matchedRule.Base.Divisor() == 0
 				if debug {
-					fmt.Fprintf(os.Stderr, "[rbnf.optional] omit %v\n", omit)
+					fmt.Fprintf(os.Stderr, "[rbnf.optional] Omit %v\n", omit)
 				}
 				if omit {
 					continue
@@ -387,21 +379,37 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 		}
 
 		if debug {
-			fmt.Fprintf(os.Stderr, "[rbnf] accumulated subs: %#v\n", subs)
-			fmt.Fprintf(os.Stderr, "[rbnf] this sub after optional omit: %#v\n", sub)
+			fmt.Fprintf(os.Stderr, "[rbnf] Accumulated subs: %#v\n", subs)
 		}
-		if namedRuleSet, ok := g.FindSpelloutRuleSet(sub.RuleRef); ok && sub.IsSpelloutRuleRef() {
-			spelled, err := g.spellout(input, namedRuleSet, debug)
-			if err != nil {
-				return "", err
+		// if namedRuleSet, ok := g.FindSpelloutRuleSet(sub.RuleRef); ok && sub.IsSpelloutRuleRef() {
+		// 	spelled, err := g.spellout(input, namedRuleSet, debug)
+		// 	if err != nil {
+		// 		return "", err
+		// 	}
+		// 	subs = append(subs, spelled)
+		// } else
+		if namedRuleSet, ok := g.FindRuleSet(sub.RuleRef); ok && sub.IsRuleRef() {
+			if sub.Operation == ">>" {
+				spelled, err := g.spellout(match.ForwardRight, namedRuleSet, debug)
+				if err != nil {
+					return "", err
+				}
+				subs = append(subs, spelled)
+			} else if sub.Operation == "<<" {
+				spelled, err := g.spellout(match.ForwardLeft, namedRuleSet, debug)
+				if err != nil {
+					return "", err
+				}
+				subs = append(subs, spelled)
+			} else if sub.Operation == "==" {
+				spelled, err := g.spellout(input, namedRuleSet, debug)
+				if err != nil {
+					return "", err
+				}
+				subs = append(subs, spelled)
+			} else {
+				return input, fmt.Errorf("unknown operation for sub %#v : %s", sub, sub.Operation)
 			}
-			subs = append(subs, spelled)
-		} else if namedRuleSet, ok := g.FindRuleSet(sub.RuleRef); ok && sub.IsRuleRef() {
-			spelled, err := g.spellout(match.ForwardLeft, namedRuleSet, debug)
-			if err != nil {
-				return "", err
-			}
-			subs = append(subs, spelled)
 		} else if sub.Operation == ">>" {
 			spelled, err := g.spellout(match.ForwardRight, ruleSet, debug)
 			if err != nil {
