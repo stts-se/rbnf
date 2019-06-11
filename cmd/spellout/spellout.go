@@ -122,7 +122,6 @@ func main() {
 		}
 	}
 
-	fmt.Fprintf(os.Stderr, "[%s log] No of spelled numerals: %v\n", cmd, nSpelled)
-	fmt.Fprintf(os.Stderr, "[%s log] No of regexp builds: %v\n", cmd, rbnf.NoOfRegexpBuilds)
+	fmt.Fprintf(os.Stderr, "[%s] No of spelled numerals: %v\n", cmd, nSpelled)
 
 }
