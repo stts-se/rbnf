@@ -111,10 +111,6 @@ func (sub Sub) IsRuleRef() bool {
 	return sub.RuleRef != "" && strings.HasPrefix(sub.RuleRef, "%")
 }
 
-// func (sub Sub) IsSpelloutRuleRef() bool {
-// 	return sub.RuleRef != "" && sub.Operation == "==" && strings.HasPrefix(sub.RuleRef, "%")
-// }
-
 func (sub Sub) Validate() error {
 	if sub.Orth != "" && sub.RuleRef != "" {
 		return fmt.Errorf("Orth and RuleRef cannot both be instantiated")
@@ -288,14 +284,6 @@ func (g RuleSetGroup) FindRuleSet(ruleRef string) (RuleSet, bool) {
 	return res, ok
 }
 
-// func (g RuleSetGroup) FindSpelloutRuleSet(ruleRef string) (RuleSet, bool) {
-// 	ruleName := ruleRef
-// 	ruleName = strings.TrimPrefix(ruleName, "%")
-// 	ruleName = strings.TrimPrefix(ruleName, "%")
-// 	res, ok := g.RuleSets[ruleName]
-// 	return res, ok
-// }
-
 func NewRuleSetGroup(name string, ruleSets []RuleSet) (RuleSetGroup, error) {
 	rsMap := make(map[string]RuleSet)
 	for _, rs := range ruleSets {
@@ -311,11 +299,6 @@ func NewRuleSetGroup(name string, ruleSets []RuleSet) (RuleSetGroup, error) {
 				return res, fmt.Errorf("Rule must use either BaseInt or BaseString, not both: %v", rule)
 			}
 			for _, sub := range rule.Subs {
-				// if sub.IsSpelloutRuleRef() {
-				// 	if _, ok := res.FindSpelloutRuleSet(sub.RuleRef); !ok {
-				// 		return res, fmt.Errorf("No such rule set: %s", sub)
-				// 	}
-				// }
 				if sub.IsRuleRef() {
 					if _, ok := res.FindRuleSet(sub.RuleRef); !ok {
 						return res, fmt.Errorf("No such rule set: %s", sub)
@@ -401,7 +384,7 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 		if debug {
 			fmt.Fprintf(os.Stderr, "[rbnf] Accumulated subs: %#v\n", subs)
 		}
-		if namedRuleSet, ok := g.FindRuleSet(sub.RuleRef); ok && sub.IsRuleRef() {
+		if namedRuleSet, ok := g.FindRuleSet(sub.RuleRef); ok {
 			if sub.Operation == ">>" {
 				spelled, err := g.spellout(match.ForwardRight, namedRuleSet, debug)
 				if err != nil {
@@ -423,6 +406,8 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 			} else {
 				return input, fmt.Errorf("unknown operation for sub %#v : %s", sub, sub.Operation)
 			}
+		} else if sub.IsRuleRef() {
+			return input, fmt.Errorf("unknown rule set ref %s in rule sub %s", sub.RuleRef, sub)
 		} else if sub.Operation == ">>" {
 			spelled, err := g.spellout(match.ForwardRight, ruleSet, debug)
 			if err != nil {
