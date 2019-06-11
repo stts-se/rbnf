@@ -6,5 +6,5 @@ Links:
 * http://userguide.icu-project.org/
 * http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/RuleBasedNumberFormat.html
 * http://icu-project.org/apiref/icu4c/classRuleBasedNumberFormat.html
-* https://github.com/unicode-org/cldr/tree/master/common/rbnf
+* Rule files (xml): https://github.com/unicode-org/cldr/tree/master/common/rbnf
 * Go implementation of parts of CLDR: https://godoc.org/golang.org/x/text/unicode/cldr and https://github.com/golang/text/tree/master/unicode/cldr 
