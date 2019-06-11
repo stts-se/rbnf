@@ -47,8 +47,6 @@ func Test_Divisor(t *testing.T) {
 		t.Errorf(fs, w, g)
 	}
 
-	// <rbnfrule value="1100" radix="100">←←­hundra[­→→];</rbnfrule>
-
 	r = NewIntRule(1100, 100, "hundra", ">>")
 	if w, g := 100, r.Base.Divisor(); w != g {
 		t.Errorf(fs, w, g)
@@ -488,4 +486,81 @@ func Test_StringMatch(t *testing.T) {
 	if exp != res {
 		t.Errorf(fs, exp, res)
 	}
+}
+
+func Test_SpelloutDE(t *testing.T) {
+	defaultRules := RuleSet{
+		Name: "spellout-numbering",
+		Rules: []BaseRule{
+			NewStringRule("-x", "minus", " ", ">>"),
+			NewStringRule("x.x", "<<", " ", "komma", " ", ">>"),
+			NewIntRule(0, 10, "null"),
+			NewIntRule(1, 10, "eins"),
+			NewIntRule(2, 10, "zwei"),
+			NewIntRule(3, 10, "drei"),
+			NewIntRule(4, 10, "vier"),
+			NewIntRule(5, 10, "fünf"),
+			NewIntRule(6, 10, "sechs"),
+			NewIntRule(7, 10, "sieben"),
+			NewIntRule(8, 10, "acht"),
+			NewIntRule(9, 10, "neun"),
+			NewIntRule(10, 10, "zehn"),
+			NewIntRule(11, 10, "elf"),
+			NewIntRule(12, 10, "zwölf"),
+			NewIntRule(13, 10, ">>zehn"),
+			NewIntRule(16, 10, "sechzehn"),
+			NewIntRule(17, 10, "siebzehn"),
+			NewIntRule(18, 10, ">>zehn"),
+			NewIntRule(20, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "zwanzig"),
+			NewIntRule(30, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "dreißig"),
+			NewIntRule(40, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "vierzig"),
+			NewIntRule(50, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "fünfzig"),
+			NewIntRule(60, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "sechzig"),
+			NewIntRule(70, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "siebzig"),
+			NewIntRule(80, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "achtzig"),
+			NewIntRule(90, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "neunzig"),
+		},
+	}
+	spelloutCardinalMasculine := RuleSet{
+		Name: "spellout-cardinal-masculine",
+		Rules: []BaseRule{
+			NewStringRule("-x", "minus", " ", ">>"),
+			NewStringRule("x.x", "<<", " ", "komma", " ", ">>"),
+			NewIntRule(0, 10, "null"),
+			NewIntRule(1, 10, "ein"),
+			NewIntRule(2, 10, "=%spellout-numbering="),
+		},
+	}
+
+	g, err := NewRuleSetGroup(
+		"default",
+		[]RuleSet{
+			defaultRules,
+			spelloutCardinalMasculine,
+		})
+	if err != nil {
+		t.Errorf("Couldn't create rule set group : %v", err)
+	}
+
+	// TEST
+	var exp, res string
+
+	res, err = g.Spellout("12", "spellout-numbering", false)
+	exp = "zwölf"
+	if err != nil {
+		t.Error(err)
+	}
+	if res != exp {
+		t.Errorf(fs, exp, res)
+	}
+
+	res, err = g.Spellout("45", "spellout-numbering", true)
+	exp = "fünf-und-vierzig"
+	if err != nil {
+		t.Error(err)
+	}
+	if res != exp {
+		t.Errorf(fs, exp, res)
+	}
+
 }

@@ -138,7 +138,7 @@ func NewStringRule(baseString string, subs ...string) BaseRule {
 	}
 }
 
-func (r BaseRule) String() string {
+func (r *BaseRule) String() string {
 	subs := []string{}
 	for _, sub := range r.Subs {
 		subs = append(subs, sub.String())
@@ -203,7 +203,7 @@ func buildStringMatchRegexp(baseString string) *regexp.Regexp {
 	return re
 }
 
-func (r BaseRule) Match(input string) (MatchResult, bool) {
+func (r *BaseRule) Match(input string) (MatchResult, bool) {
 	if r.Base.IsInt() {
 		n, err := strconv.Atoi(input)
 		if err != nil {
