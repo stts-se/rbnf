@@ -208,6 +208,7 @@ func regexpEscape(s string) string {
 var nonXRE = regexp.MustCompile("([^x]+)")
 var noInitialX = regexp.MustCompile("^([^x])")
 var noFinalX = regexp.MustCompile("([^x])$")
+var NoOfRegexpBuilds = 0
 
 // TODO: this is sooo ugly -- can it be done better?
 func buildStringMatchRegexp(baseString string) *Regexp {
@@ -219,6 +220,7 @@ func buildStringMatchRegexp(baseString string) *Regexp {
 	reString = strings.ReplaceAll(reString, "x", "(.*)")     // regexp group for x sequences
 	//fmt.Printf("%v => /%v/\n", baseString, reString)
 	re := regexp.MustCompile("^" + reString + "$")
+	NoOfRegexpBuilds++
 	return &Regexp{initialised: true, re: re}
 }
 

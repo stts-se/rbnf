@@ -100,8 +100,10 @@ func main() {
 		os.Exit(0)
 	}
 
+	var nSpelled = 0
 	var process = func(s string) {
 		res, err := rPackage.Spellout(s, *ruleGroup, *ruleSet, *debug)
+		nSpelled++
 		if err != nil {
 			log.Fatalf("Couldn't spellout %s : %v", s, err)
 		}
@@ -119,5 +121,8 @@ func main() {
 			process(s)
 		}
 	}
+
+	fmt.Fprintf(os.Stderr, "[%s log] No of spelled numerals: %v\n", cmd, nSpelled)
+	fmt.Fprintf(os.Stderr, "[%s log] No of regexp builds: %v\n", cmd, rbnf.NoOfRegexpBuilds)
 
 }
