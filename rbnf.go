@@ -401,13 +401,6 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 		if debug {
 			fmt.Fprintf(os.Stderr, "[rbnf] Accumulated subs: %#v\n", subs)
 		}
-		// if namedRuleSet, ok := g.FindSpelloutRuleSet(sub.RuleRef); ok && sub.IsSpelloutRuleRef() {
-		// 	spelled, err := g.spellout(input, namedRuleSet, debug)
-		// 	if err != nil {
-		// 		return "", err
-		// 	}
-		// 	subs = append(subs, spelled)
-		// } else
 		if namedRuleSet, ok := g.FindRuleSet(sub.RuleRef); ok && sub.IsRuleRef() {
 			if sub.Operation == ">>" {
 				spelled, err := g.spellout(match.ForwardRight, namedRuleSet, debug)

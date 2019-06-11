@@ -122,6 +122,6 @@ func main() {
 		}
 	}
 
-	fmt.Fprintf(os.Stderr, "[%s] No of spelled numerals: %v\n", cmd, nSpelled)
+	///fmt.Fprintf(os.Stderr, "[%s] No of spelled numerals: %v\n", cmd, nSpelled)
 
 }
