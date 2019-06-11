@@ -107,7 +107,7 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 					return res, fmt.Errorf("convertRuleSet encountered an error from lexer : %s", i.Val)
 
 				case lexer.ItemSub:
-					rule.Subs = append(rule.Subs, replaceChars(i.Val))
+					rule.Subs = append(rule.Subs, rbnf.ParseSub(replaceChars(i.Val)))
 
 				case lexer.ItemLeftBracket:
 					//rule.Subs = append(rule.Subs, i.Val)
@@ -168,7 +168,7 @@ func rulesFromLdml(ldml Ldml) ([]rbnf.RuleSetGroup, error) {
 		group, err := rbnf.NewRuleSetGroup(name, ruleSet)
 		if err != nil {
 
-			fmt.Printf("%#v\n", group)
+			//fmt.Printf("%#v\n", group)
 			return res, fmt.Errorf("failed creating rbnf.NewRuleSetGroup instance : %v", err)
 
 			//fmt.Fprintf(os.Stderr, "skipping rules set group '%s' : %v\n", name, err)

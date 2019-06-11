@@ -183,6 +183,16 @@ func TestRulesFromXMLFileDE(t *testing.T) {
 	var input, expect, res string
 
 	//
+	input = "48"
+	expect = "achtundvierzig"
+	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
+	if err != nil {
+		t.Errorf("P-P-Pure Pain! %v", err)
+	} else if res != expect {
+		t.Errorf("wanted %s, got %s", expect, res)
+	}
+
+	//
 	input = "2748"
 	expect = "zweitausendsiebenhundertachtundvierzig"
 	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)

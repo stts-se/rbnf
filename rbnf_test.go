@@ -42,11 +42,6 @@ func Test_Divisor(t *testing.T) {
 		t.Errorf(fs, w, g)
 	}
 
-	r = NewIntRule(2000, 10, "tusen", ">")
-	if w, g := 1000, r.Base.Divisor(); w != g {
-		t.Errorf(fs, w, g)
-	}
-
 	r = NewIntRule(2000, 10, "tusen", ">>")
 	if w, g := 1000, r.Base.Divisor(); w != g {
 		t.Errorf(fs, w, g)
@@ -97,12 +92,12 @@ func Test_Spellout1(t *testing.T) {
 			NewIntRule(100, 10, "<<", " ", "hundra", "[ ]", "[>>]"),
 
 			NewIntRule(1000, 10, " ", "ettusen", "[ ]", "[>>]"),
-			NewIntRule(2000, 10, "%spellout-cardinal-reale", " ", "tusen", "[ ]", "[>>]"),
+			NewIntRule(2000, 10, ">%spellout-cardinal-reale>", " ", "tusen", "[ ]", "[>>]"),
 
 			NewIntRule(1000000, 10, " ", "en miljon", "[ ]", "[>>]"),
-			NewIntRule(2000000, 10, "%spellout-cardinal-reale", " ", "miljoner", "[ ]", "[>>]"),
+			NewIntRule(2000000, 10, ">%spellout-cardinal-reale>", " ", "miljoner", "[ ]", "[>>]"),
 			NewIntRule(1000000000, 10, "en miljard", "[ ]", "[>>]"),
-			NewIntRule(2000000000, 10, "%spellout-cardinal-reale", " ", "miljarder", "[ ]", "[>>]"),
+			NewIntRule(2000000000, 10, ">%spellout-cardinal-reale>", " ", "miljarder", "[ ]", "[>>]"),
 		},
 	}
 
@@ -137,11 +132,11 @@ func Test_Spellout1(t *testing.T) {
 			NewIntRule(70, 10, "sjuttio", "[-]", "[>>]"),
 			NewIntRule(80, 10, "åttio", "[-]", "[>>]"),
 			NewIntRule(90, 10, "nittio", "[-]", "[>>]"),
-			NewIntRule(100, 10, "%spellout-cardinal-neuter", " ", "hundra", "[ ]", "[>>]"),
+			NewIntRule(100, 10, ">%spellout-cardinal-neuter>", " ", "hundra", "[ ]", "[>>]"),
 			NewIntRule(1000, 10, " ", "ettusen", "[-]", "[>>]"),
-			NewIntRule(2000, 10, "%spellout-cardinal-reale", " ", "tusen", "[ ]", "[>>]"),
+			NewIntRule(2000, 10, ">%spellout-cardinal-reale>", " ", "tusen", "[ ]", "[>>]"),
 			NewIntRule(1000000, 10, " ", "en miljon", "[ ]", "[>>]"),
-			NewIntRule(2000000, 10, "%spellout-cardinal-reale", " ", "miljoner", "[ ]", "[>>]"),
+			NewIntRule(2000000, 10, ">%spellout-cardinal-reale>", " ", "miljoner", "[ ]", "[>>]"),
 		},
 	}
 
@@ -176,13 +171,13 @@ func Test_Spellout1(t *testing.T) {
 			NewIntRule(70, 10, "sjuttio", "[-]", "[>>]"),
 			NewIntRule(80, 10, "åttio", "[-]", "[>>]"),
 			NewIntRule(90, 10, "nittio", "[-]", "[>>]"),
-			NewIntRule(100, 10, "%spellout-cardinal-neuter", "hundra", "[ ]", "[>>]"),
+			NewIntRule(100, 10, ">%spellout-cardinal-neuter>", "hundra", "[ ]", "[>>]"),
 			NewIntRule(1000, 10, "ettusen", "[ ]", "[>>]"),
-			NewIntRule(2000, 10, "%spellout-cardinal-reale", "tusen", "[ ]", "[>>]"),
+			NewIntRule(2000, 10, ">%spellout-cardinal-reale>", "tusen", "[ ]", "[>>]"),
 			NewIntRule(1000000, 10, "en miljon", "[ ]", "[>>]"),
-			NewIntRule(2000000, 10, "%spellout-cardinal-reale", " ", "miljoner", "[ ]", "[>>]"),
+			NewIntRule(2000000, 10, ">%spellout-cardinal-reale>", " ", "miljoner", "[ ]", "[>>]"),
 			NewIntRule(1000000000, 10, "en miljard", "[ ]", "[>>]"),
-			NewIntRule(2000000000, 10, "%spellout-cardinal-reale", " ", "miljarder", "[ ]", "[>>]"),
+			NewIntRule(2000000000, 10, ">%spellout-cardinal-reale>", " ", "miljarder", "[ ]", "[>>]"),
 		},
 	}
 

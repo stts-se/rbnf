@@ -38,28 +38,112 @@ func (b Base) Value() string {
 	return b.String
 }
 
+type Sub struct {
+	Optional  bool
+	Orth      string
+	RuleRef   string
+	Operation string
+}
+
+func ParseSub(sub string) Sub {
+	input := sub
+	res := Sub{}
+	if len([]rune(sub)) == 0 {
+		return res
+	}
+	if strings.HasPrefix(sub, "[") && strings.HasSuffix(sub, "]") {
+		res.Optional = true
+		sub = strings.TrimPrefix(strings.TrimSuffix(sub, "]"), "[")
+	}
+	if len([]rune(sub)) == 0 {
+		return res
+	}
+	firstChar := string([]rune(sub)[0])
+	if (firstChar == ">" || firstChar == "<" || firstChar == "=") && strings.HasSuffix(sub, firstChar) {
+		res.Operation = firstChar + firstChar
+		ruleRef := strings.TrimPrefix(strings.TrimSuffix(sub, firstChar), firstChar)
+		res.RuleRef = ruleRef
+	} else {
+		res.Orth = sub
+	}
+	if res.String() != input {
+		s := fmt.Sprintf("wtf! %s != %s (%#v)", input, res.String(), res)
+		panic(s)
+	}
+	return res
+}
+
+func (sub Sub) String() string {
+	res := ""
+	if sub.Orth != "" {
+		res = sub.Orth
+	} else if sub.RuleRef != "" {
+		res = sub.RuleRef
+	}
+	if sub.Operation != "" {
+		op := []rune(sub.Operation)[0]
+		res = fmt.Sprintf("%s%s%s", string(op), res, string(op))
+	}
+	if sub.Optional {
+		res = "[" + res + "]"
+	}
+	return res
+}
+
+func (sub Sub) IsRuleRef() bool {
+	return sub.RuleRef != "" && strings.HasPrefix(sub.RuleRef, "%")
+}
+
+func (sub Sub) IsSpelloutRuleRef() bool {
+	return sub.RuleRef != "" && sub.Operation == "==" && strings.HasPrefix(sub.RuleRef, "%")
+}
+
+func (sub Sub) Validate() error {
+	if sub.Orth != "" && sub.RuleRef != "" {
+		return fmt.Errorf("Orth and RuleRef cannot both be instantiated")
+	}
+	if sub.Orth != "" && sub.Operation != "" {
+		return fmt.Errorf("Orth and Operation cannot both be instantiated")
+	}
+	return nil
+}
+
 type BaseRule struct {
 	Base              Base
-	Subs              []string
+	Subs              []Sub
 	stringMatchRegexp *regexp.Regexp
 }
 
 func NewIntRule(baseInt int, radix int, subs ...string) BaseRule {
+	subSubs := []Sub{}
+	for _, s := range subs {
+		sub := ParseSub(s)
+		subSubs = append(subSubs, sub)
+	}
 	return BaseRule{
 		Base: Base{Int: baseInt, Radix: radix},
-		Subs: subs,
+		Subs: subSubs,
 	}
 }
 func NewStringRule(baseString string, subs ...string) BaseRule {
+	subSubs := []Sub{}
+	for _, s := range subs {
+		sub := ParseSub(s)
+		subSubs = append(subSubs, sub)
+	}
 	return BaseRule{
 		Base:              Base{String: baseString},
-		Subs:              subs,
+		Subs:              subSubs,
 		stringMatchRegexp: buildStringMatchRegexp(baseString),
 	}
 }
 
 func (r BaseRule) String() string {
-	return fmt.Sprintf("%v => '%s'", r.Base.ToString(), strings.Join(r.Subs, ""))
+	subs := []string{}
+	for _, sub := range r.Subs {
+		subs = append(subs, sub.String())
+	}
+	return fmt.Sprintf("%v => '%s'", r.Base.ToString(), strings.Join(subs, ""))
 }
 
 func (b Base) IsInt() bool {
@@ -153,20 +237,12 @@ type MatchResult struct {
 }
 
 type RulePackage struct {
-	Language string
-	//RuleSetGroups map[string]RuleSetGroup
+	Language      string
 	RuleSetGroups []RuleSetGroup
 	Debug         bool
 }
 
 func (p RulePackage) Spellout(input string, groupName string, ruleSetName string, debug bool) (string, error) {
-	// if g, ok := p.RuleSetGroups[groupName]; ok {
-	// 	res, err := g.Spellout(input, ruleSetName)
-	// 	if err != nil {
-	// 		return "", err
-	// 	}
-	// 	return res, nil
-	// }
 	for _, g := range p.RuleSetGroups {
 		if g.Name == groupName {
 			res, err := g.Spellout(input, ruleSetName, debug)
@@ -186,18 +262,16 @@ type RuleSetGroup struct {
 
 func (g RuleSetGroup) FindRuleSet(ruleRef string) (RuleSet, bool) {
 	ruleName := ruleRef
-	ruleName = strings.TrimPrefix(ruleName, "<")
 	ruleName = strings.TrimPrefix(ruleName, "%")
 	ruleName = strings.TrimPrefix(ruleName, "%")
-	ruleName = strings.TrimSuffix(ruleName, "<")
 	res, ok := g.RuleSets[ruleName]
 	return res, ok
 }
 
 func (g RuleSetGroup) FindSpelloutRuleSet(ruleRef string) (RuleSet, bool) {
 	ruleName := ruleRef
-	ruleName = strings.TrimPrefix(ruleName, "=%")
-	ruleName = strings.TrimSuffix(ruleName, "=")
+	ruleName = strings.TrimPrefix(ruleName, "%")
+	ruleName = strings.TrimPrefix(ruleName, "%")
 	res, ok := g.RuleSets[ruleName]
 	return res, ok
 }
@@ -217,14 +291,14 @@ func NewRuleSetGroup(name string, ruleSets []RuleSet) (RuleSetGroup, error) {
 				return res, fmt.Errorf("Rule must use either BaseInt or BaseString, not both: %v", rule)
 			}
 			for _, sub := range rule.Subs {
-				if isRuleRef(sub) {
-					if _, ok := res.FindRuleSet(sub); !ok {
-						return res, fmt.Errorf("No such rule set (1): %s", sub)
+				if sub.IsSpelloutRuleRef() {
+					if _, ok := res.FindSpelloutRuleSet(sub.RuleRef); !ok {
+						return res, fmt.Errorf("No such rule set: %s", sub)
 					}
 				}
-				if isSpelloutRuleRef(sub) {
-					if _, ok := res.FindSpelloutRuleSet(sub); !ok {
-						return res, fmt.Errorf("No such rule set (2): %s", sub)
+				if sub.IsRuleRef() {
+					if _, ok := res.FindRuleSet(sub.RuleRef); !ok {
+						return res, fmt.Errorf("No such rule set: %s", sub)
 					}
 				}
 			}
@@ -289,8 +363,7 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 	}
 
 	var subs = []string{}
-	for _, sub0 := range matchedRule.Subs {
-		sub := sub0
+	for _, sub := range matchedRule.Subs {
 		if debug {
 			fmt.Fprintf(os.Stderr, "[rbnf] input %v\n", input)
 			fmt.Fprintf(os.Stderr, "[rbnf] this sub: %#v\n", sub)
@@ -298,9 +371,7 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 		}
 		// http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/RuleBasedNumberFormat.html
 		// Omit the optional text if the number is an even multiple of the rule's divisor
-		optional := strings.HasPrefix(sub, "[") && strings.HasSuffix(sub, "]")
-		if optional {
-			sub = strings.TrimPrefix(strings.TrimSuffix(sub, "]"), "[")
+		if sub.Optional {
 			if inputInt, err := strconv.Atoi(input); err == nil && matchedRule.Base.IsInt() {
 				if debug {
 					fmt.Fprintf(os.Stderr, "[rbnf.optional] matchedRule divisor %v\n", matchedRule.Base.Divisor())
@@ -319,32 +390,32 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 			fmt.Fprintf(os.Stderr, "[rbnf] accumulated subs: %#v\n", subs)
 			fmt.Fprintf(os.Stderr, "[rbnf] this sub after optional omit: %#v\n", sub)
 		}
-		if namedRuleSet, ok := g.FindRuleSet(sub); ok {
-			spelled, err := g.spellout(match.ForwardLeft, namedRuleSet, debug)
-			if err != nil {
-				return "", err
-			}
-			subs = append(subs, spelled)
-		} else if namedRuleSet, ok := g.FindSpelloutRuleSet(sub); ok {
+		if namedRuleSet, ok := g.FindSpelloutRuleSet(sub.RuleRef); ok && sub.IsSpelloutRuleRef() {
 			spelled, err := g.spellout(input, namedRuleSet, debug)
 			if err != nil {
 				return "", err
 			}
 			subs = append(subs, spelled)
-		} else if sub == ">>" {
+		} else if namedRuleSet, ok := g.FindRuleSet(sub.RuleRef); ok && sub.IsRuleRef() {
+			spelled, err := g.spellout(match.ForwardLeft, namedRuleSet, debug)
+			if err != nil {
+				return "", err
+			}
+			subs = append(subs, spelled)
+		} else if sub.Operation == ">>" {
 			spelled, err := g.spellout(match.ForwardRight, ruleSet, debug)
 			if err != nil {
 				return "", err
 			}
 			subs = append(subs, spelled)
-		} else if sub == "<<" {
+		} else if sub.Operation == "<<" {
 			spelled, err := g.spellout(match.ForwardLeft, ruleSet, debug)
 			if err != nil {
 				return "", err
 			}
 			subs = append(subs, spelled)
-		} else if sub != "" {
-			subs = append(subs, sub)
+		} else if sub.Orth != "" {
+			subs = append(subs, sub.Orth)
 		}
 	}
 
