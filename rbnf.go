@@ -21,7 +21,24 @@ type Base struct {
 	Radix int // only used for Int base
 
 	// String base
-	String string
+	String            string
+	StringMatchRegexp *Regexp
+}
+
+func NewBaseString(s string) Base {
+	return Base{
+		String:            s,
+		StringMatchRegexp: buildStringMatchRegexp(s),
+	}
+
+}
+
+func NewBaseInt(n int, radix int) Base {
+	return Base{
+		Int:   n,
+		Radix: radix,
+	}
+
 }
 
 func (b Base) ToString() string {
@@ -108,10 +125,14 @@ func (sub Sub) Validate() error {
 	return nil
 }
 
+type Regexp struct {
+	initialised bool
+	re          *regexp.Regexp
+}
+
 type BaseRule struct {
-	Base              Base
-	Subs              []Sub
-	stringMatchRegexp *regexp.Regexp
+	Base Base
+	Subs []Sub
 }
 
 func NewIntRule(baseInt int, radix int, subs ...string) BaseRule {
@@ -132,9 +153,8 @@ func NewStringRule(baseString string, subs ...string) BaseRule {
 		subSubs = append(subSubs, sub)
 	}
 	return BaseRule{
-		Base:              Base{String: baseString},
-		Subs:              subSubs,
-		stringMatchRegexp: buildStringMatchRegexp(baseString),
+		Base: Base{String: baseString, StringMatchRegexp: buildStringMatchRegexp(baseString)},
+		Subs: subSubs,
 	}
 }
 
@@ -188,10 +208,9 @@ func regexpEscape(s string) string {
 var nonXRE = regexp.MustCompile("([^x]+)")
 var noInitialX = regexp.MustCompile("^([^x])")
 var noFinalX = regexp.MustCompile("([^x])$")
-var emptyRegexp *regexp.Regexp
 
 // TODO: this is sooo ugly -- can it be done better?
-func buildStringMatchRegexp(baseString string) *regexp.Regexp {
+func buildStringMatchRegexp(baseString string) *Regexp {
 	reString := baseString
 	reString = regexpEscape(reString)                        // escape special chars in the BaseString
 	reString = nonXRE.ReplaceAllString(reString, "($1)")     // regexp group for non-x sequences
@@ -200,10 +219,11 @@ func buildStringMatchRegexp(baseString string) *regexp.Regexp {
 	reString = strings.ReplaceAll(reString, "x", "(.*)")     // regexp group for x sequences
 	//fmt.Printf("%v => /%v/\n", baseString, reString)
 	re := regexp.MustCompile("^" + reString + "$")
-	return re
+	return &Regexp{initialised: true, re: re}
 }
 
 func (r *BaseRule) Match(input string) (MatchResult, bool) {
+	// A) Int rule
 	if r.Base.IsInt() {
 		n, err := strconv.Atoi(input)
 		if err != nil {
@@ -217,11 +237,11 @@ func (r *BaseRule) Match(input string) (MatchResult, bool) {
 		return MatchResult{ForwardLeft: fmt.Sprintf("%d", left), ForwardRight: fmt.Sprintf("%d", right)}, true
 	}
 
-	// String rule
-	if r.stringMatchRegexp != emptyRegexp || r.stringMatchRegexp == nil {
-		r.stringMatchRegexp = buildStringMatchRegexp(r.Base.String)
+	// B) String rule
+	if !r.Base.StringMatchRegexp.initialised {
+		r.Base.StringMatchRegexp = buildStringMatchRegexp(r.Base.String)
 	}
-	m := r.stringMatchRegexp.FindStringSubmatch(input)
+	m := r.Base.StringMatchRegexp.re.FindStringSubmatch(input)
 	if m != nil && len(m) == 4 {
 		//fmt.Printf("%v => %#v\n", input, m)
 		left := m[1]

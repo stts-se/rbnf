@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 
@@ -71,23 +70,20 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 	for _, r := range rs.Rbnfrule {
 		//fmt.Printf("RULE %#v\n", r)
 		rule := rbnf.BaseRule{}
-		rule.Base = rbnf.Base{}
 		baseNum, err := strconv.Atoi(r.Attrvalue)
 		if err == nil { // numeric rule
-			rule.Base.Int = baseNum
 			// TODO test
+			radix := 10 // Default radix
 			if r.Attrradix != "" {
-				radix, err := strconv.Atoi(r.Attrradix)
+				radix, err = strconv.Atoi(r.Attrradix)
 				if err != nil {
-					fmt.Fprintf(os.Stderr, "failed to convert radix : %v\n", err)
-				} else {
-					rule.Base.Radix = radix
+					return res, fmt.Errorf("failed to convert radix : %v\n", err)
 				}
-			} else {
-				rule.Base.Radix = 10 // Default radix
+
 			}
+			rule.Base = rbnf.NewBaseInt(baseNum, radix)
 		} else { // non-numeric rule
-			rule.Base.String = r.Attrvalue
+			rule.Base = rbnf.NewBaseString(r.Attrvalue)
 		}
 		lex := lexer.Lex(r.String)
 		err = lex.Run()
