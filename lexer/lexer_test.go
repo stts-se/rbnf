@@ -284,7 +284,7 @@ func TestOptionalSub(t *testing.T) {
 
 }
 
-func TestSpanishAndGerman(t *testing.T) {
+func TestMiscLangs(t *testing.T) {
 	var input string
 	var exp Result
 	var l *Lexer
@@ -318,4 +318,17 @@ func TestSpanishAndGerman(t *testing.T) {
 	for _, err := range compare(input, exp, l.Result()) {
 		t.Error(err)
 	}
+
+	//
+	input = "' =%spellout-cardinal-masculine=;"
+	exp = Result{
+		{ItemSub, "' "},
+		{ItemSub, "=%spellout-cardinal-masculine="},
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result()) {
+		t.Error(err)
+	}
+
 }

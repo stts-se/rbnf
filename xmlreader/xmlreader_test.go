@@ -222,3 +222,63 @@ func TestRulesFromXMLFileDE(t *testing.T) {
 	}
 
 }
+
+func TestRulesFromXMLFileFR(t *testing.T) {
+
+	pack, err := RulesFromXMLFile("test_data/fr.xml")
+	if err != nil {
+		t.Errorf("Pain! %v", err)
+	}
+
+	if w, g := "fr", pack.Language; w != g {
+		t.Errorf("wanted '%s' got '%s'", w, g)
+	}
+
+	ruleSetGroups := pack.RuleSetGroups
+	if len(ruleSetGroups) == 0 {
+		t.Errorf("Noooo!")
+	}
+
+	if w, g := "SpelloutRules", ruleSetGroups[0].Name; w != g {
+		t.Errorf("wanted '%s' got '%s'", w, g)
+	}
+
+	var input, expect, res string
+
+	input = "78"
+	expect = "soixante-dix-huit"
+	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
+	if err != nil {
+		t.Errorf("P-P-Pure Pain! %v", err)
+	} else if res != expect {
+		t.Errorf("wanted %s, got %s", expect, res)
+	}
+
+	input = "8765"
+	expect = "huit mille sept cent' soixante-cinq"
+	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
+	if err != nil {
+		t.Errorf("P-P-Pure Pain! %v", err)
+	} else if res != expect {
+		t.Errorf("wanted %s, got %s", expect, res)
+	}
+
+	input = "485"
+	expect = "quatre cent' quatre-vingt-cinq"
+	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
+	if err != nil {
+		t.Errorf("P-P-Pure Pain! %v", err)
+	} else if res != expect {
+		t.Errorf("wanted %s, got %s", expect, res)
+	}
+
+	input = "435"
+	expect = "quatre cent' trente-cinq"
+	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
+	if err != nil {
+		t.Errorf("P-P-Pure Pain! %v", err)
+	} else if res != expect {
+		t.Errorf("wanted %s, got %s", expect, res)
+	}
+
+}

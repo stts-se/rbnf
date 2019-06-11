@@ -72,8 +72,8 @@ const (
 	// string constants
 	rulePointer             = "←→="
 	aToZ                    = "abcdefghijklmnopqrstuvwxyz"
-	delimChars              = " -\u00AD" // \u00AD = soft hyphen
-	delimCharsNotInRuleName = " \u00AD"  // \u00AD = soft hyphen
+	delimChars              = "' -\u00AD" // \u00AD = soft hyphen
+	delimCharsNotInRuleName = "' \u00AD"  // \u00AD = soft hyphen
 	ruleNameChars           = aToZ + "-"
 	x                       = 'x'
 )
@@ -241,10 +241,10 @@ func subFn(l *Lexer) stateFn {
 
 	for {
 		r := l.peek()
-		// fmt.Printf("input: '%s' acc result: '%s'\n", l.input, l.Result)
-		// fmt.Println("inside tags", r, string(r))
+		//fmt.Printf("input: '%s' acc result: '%s'\n", l.input, l.Result())
+		//fmt.Println("inside tags", r, string(r))
 		if doClose, includeClosingRune := closingFunc(r); doClose {
-			// fmt.Printf("%v '%v' | doClose %v, includeClosingRune %v\n", r, string(r), doClose, includeClosingRune)
+			//fmt.Printf("%v '%v' | doClose %v, includeClosingRune %v\n", r, string(r), doClose, includeClosingRune)
 			if includeClosingRune {
 				l.next()
 			}

@@ -427,10 +427,7 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 
 	res := strings.TrimSpace(strings.Join(subs, ""))
 	if res == "" {
-		if debug {
-			fmt.Fprintf(os.Stderr, "[rbnf] Empty output for input string %s\n", input)
-		}
-		return input, nil
+		return input, fmt.Errorf("empty output for input string %s", input)
 	}
 	return res, nil
 }
