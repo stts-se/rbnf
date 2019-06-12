@@ -1,7 +1,6 @@
 package lexer
 
 // The code in this file is based on the template lexer of the standard Go distribution:
-//
 // https://golang.org/src/text/template/parse/lex.go
 //
 // A presentation of the original code:
