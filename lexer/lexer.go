@@ -1,5 +1,15 @@
 package lexer
 
+// The code in this file is based on the template lexer of the standard Go distribution:
+// https://golang.org/src/text/template/parse/lex.go
+//
+// A presentation of the original code:
+// https://talks.golang.org/2011/lex.slide
+// https://www.youtube.com/watch?v=HxaD_trXwRE
+//
+// The original code is published under a BSD license:
+// https://golang.org/LICENSE
+
 import (
 	"fmt"
 	"strings"
