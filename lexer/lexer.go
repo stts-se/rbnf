@@ -7,7 +7,7 @@ package lexer
 // https://talks.golang.org/2011/lex.slide
 // https://www.youtube.com/watch?v=HxaD_trXwRE
 //
-// The original code is published under a BSD like license:
+// The original code is published under a BSD license:
 // https://golang.org/LICENSE
 
 import (
