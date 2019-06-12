@@ -10,8 +10,9 @@ import (
 )
 
 type RuleSet struct {
-	Name  string
-	Rules []BaseRule
+	Name    string
+	Rules   []BaseRule
+	Private bool
 }
 
 type Base struct {

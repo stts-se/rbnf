@@ -60,13 +60,24 @@ func replaceChars(s string) string {
 	s = strings.Replace(s, "→", ">", -1)
 	s = strings.Replace(s, "←", "<", -1)
 	s = strings.Replace(s, "−", "-", -1)
-	s = strings.Replace(s, "\u00ad", "", -1) // soft hyphen
+	//s = strings.Replace(s, "\u00ad", "", -1) // soft hyphen
 	return s
+}
+
+func unknownRuleFormat(rFmt string) bool {
+	return strings.Contains(rFmt, "$") ||
+		strings.Contains(rFmt, "ignorable") ||
+		strings.Contains(rFmt, "##") ||
+		strings.Contains(rFmt, "=0=") ||
+		strings.Contains(rFmt, "→→→")
 }
 
 func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 	var res rbnf.RuleSet
 	res.Name = rs.Attrtype
+	if rs.Attraccess == "private" {
+		res.Private = true
+	}
 	for _, r := range rs.Rbnfrule {
 		//fmt.Printf("RULE %#v\n", r)
 		rule := rbnf.BaseRule{}
@@ -85,17 +96,26 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 		} else { // non-numeric rule
 			rule.Base = rbnf.NewBaseString(r.Attrvalue)
 		}
+
+		if unknownRuleFormat(r.String) {
+			if verb {
+				log.Printf("[xmlreader] skipping unknown rule format : %#v", r)
+			}
+			continue
+		}
+
 		lex := lexer.Lex(r.String)
 		err = lex.Run()
 
 		if err != nil {
+			err = fmt.Errorf("parse failed for '%v' : %v", r, err)
 			if verb {
-				log.Printf("[xmlreader] parse failed for '%s' : %s", r.String, err)
+				log.Printf("[xmlreader] %v", err)
 			}
+			return res, err
 
 		} else {
 
-			//fmt.Printf(">>>>: %#v\n", lex.Result)
 			for _, i := range lex.Result() {
 				switch i.Typ {
 				// "can't" happen
@@ -116,7 +136,7 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 				}
 			}
 		}
-		//fmt.Printf("PARSED RULE\t%s\t%s\t%s\t%#v\n", res.Name, r.String, rule, rule)
+		//fmt.Printf("PARSED RULE\t%#v\t%#v\t%#v\t%#v\n", res.Name, r.String, rule, rule)
 		res.Rules = append(res.Rules, rule)
 	}
 

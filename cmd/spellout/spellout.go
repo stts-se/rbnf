@@ -20,7 +20,8 @@ func main() {
 	// Flags
 	var flags = flag.NewFlagSet(cmd, flag.ExitOnError)
 	syntaxCheck := flags.Bool("s", false, "Check rule file syntax and exit")
-	listRules := flags.Bool("l", false, "List rules and exit (rule groups and rule sets)")
+	listPublicRules := flags.Bool("l", false, "List public rules and exit (rule groups and rule sets)")
+	listAllRules := flags.Bool("L", false, "List all (private/public) rules and exit (rule groups and rule sets)")
 	ruleGroup := flags.String("g", "", "Use named `rule group` (default first group)")
 	ruleSet := flags.String("r", "", "Use named `rule set`")
 	debug := flags.Bool("d", false, "Debug")
@@ -58,16 +59,27 @@ func main() {
 		os.Exit(0)
 	}
 
-	if *listRules {
+	if *listAllRules || *listPublicRules {
+		if *listAllRules {
+			fmt.Println("== Listing all rule sets ==")
+		} else {
+			fmt.Println("== Listing public rule sets ==")
+		}
 		for _, g := range rPackage.RuleSetGroups {
 			fmt.Printf("%s\n", g.Name)
 			rs := []rbnf.RuleSet{}
 			for _, s := range g.RuleSets {
-				rs = append(rs, s)
+				if *listAllRules || !s.Private {
+					rs = append(rs, s)
+				}
 			}
 			sort.Slice(rs, func(i, j int) bool { return rs[i].Name < rs[j].Name })
 			for _, s := range rs {
-				fmt.Printf(" - %s (%d)\n", s.Name, len(s.Rules))
+				access := "public"
+				if s.Private {
+					access = "private"
+				}
+				fmt.Printf(" - %s [%s] (%d)\n", s.Name, access, len(s.Rules))
 			}
 		}
 		os.Exit(0)

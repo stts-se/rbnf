@@ -22,7 +22,7 @@ import (
 // -
 // [→%right-dummy-rule→];
 
-var fs = "For input '%s', expected '%s', got '%s'"
+var fs = "For input '%s', expected '%#v', got '%#v'"
 var fsindex = "For input '%s' item %d, expected '%s', got '%s'"
 
 func compare(input string, exp, got Result) []error {
@@ -324,6 +324,51 @@ func TestMiscLangs(t *testing.T) {
 	exp = Result{
 		{ItemSub, "' "},
 		{ItemSub, "=%spellout-cardinal-masculine="},
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result()) {
+		t.Error(err)
+	}
+
+	//
+	input = "பன்னிரண்டு;"
+	exp = Result{
+		{ItemSub, "பன்னிரண்டு"},
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result()) {
+		t.Error(err)
+	}
+
+	//
+	input = "அறுபது;"
+	exp = Result{
+		{ItemSub, "அறுபது"},
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result()) {
+		t.Error(err)
+	}
+
+	//
+	input = "எழுநூறு;"
+	exp = Result{
+		{ItemSub, "எழுநூறு"},
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compare(input, exp, l.Result()) {
+		t.Error(err)
+	}
+
+	//
+	input = ", =%spellout-cardinal-verbose=;"
+	exp = Result{
+		{ItemSub, ", "},
+		{ItemSub, "=%spellout-cardinal-verbose="},
 	}
 	l = Lex(input)
 	l.Run()

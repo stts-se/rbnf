@@ -5,6 +5,9 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
 type Result []Item
@@ -72,8 +75,8 @@ const (
 	// string constants
 	rulePointer             = "←→="
 	aToZ                    = "abcdefghijklmnopqrstuvwxyz"
-	delimChars              = "' -\u00AD" // \u00AD = soft hyphen
-	delimCharsNotInRuleName = "' \u00AD"  // \u00AD = soft hyphen
+	delimCharsNotInRuleName = "', \u00AD−" // \u00AD = soft hyphen
+	delimChars              = delimCharsNotInRuleName + "-"
 	ruleNameChars           = aToZ + "-"
 	x                       = 'x'
 )
@@ -182,6 +185,18 @@ func (l *Lexer) acceptPeekString(valid string) bool {
 	return strings.IndexRune(valid, l.peek()) >= 0
 }
 
+func isLetter(r rune) bool {
+	return unicode.IsLetter(r) ||
+		/* tamil */ (r >= '\u0B80' && r <= '\u0BFF') ||
+		/* japanese */ (r >= '\u3000' && r <= '\u303f') || (r >= '\u3040' && r <= '\u309f') || (r >= '\u30a0' && r <= '\u30ff') || (r >= '\uff00' && r <= '\uffef') ||
+		r == '\''
+}
+
+func nfc(s string) string {
+	normed, _, _ := transform.String(norm.NFC, s)
+	return normed
+}
+
 func subFn(l *Lexer) stateFn {
 	var closingFunc func(r rune) (bool, bool) // first bool: we're at a closing tag; 2nd bool: include current rune before emitting
 
@@ -228,14 +243,14 @@ func subFn(l *Lexer) stateFn {
 			}
 			l.next()
 			break
-		} else if unicode.IsLetter(r) || r == '\'' {
+		} else if isLetter(r) {
 			closingFunc = func(rx rune) (bool, bool) {
-				return !(unicode.IsLetter(rx) || r == '\''), false
+				return !(isLetter(rx)), false
 			}
 			l.next()
 			break
 		} else {
-			return l.errorf("unknown opening input at expected %s: '%s'", ItemSub, l.currentToEnd())
+			return l.errorf("unknown opening input at expected %v: '%v'", ItemSub, l.currentToEnd())
 		}
 	}
 
@@ -299,6 +314,7 @@ func initialState(l *Lexer) stateFn {
 }
 
 func Lex(input string) *Lexer {
+	input = nfc(input)
 	l := &Lexer{
 		input:  input,
 		state:  initialState,

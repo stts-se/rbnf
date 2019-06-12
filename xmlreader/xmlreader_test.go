@@ -102,7 +102,7 @@ func TestRulesFromXMLFileSV(t *testing.T) {
 
 	//
 	input = "20000"
-	expect = "tjugotusen"
+	expect = "tjugo­tusen"
 	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
 	if err != nil {
 		t.Errorf("P-P-Pure Pain for %s! %v", input, err)
@@ -112,7 +112,7 @@ func TestRulesFromXMLFileSV(t *testing.T) {
 
 	//
 	input = "200000"
-	expect = "tvåhundratusen"
+	expect = "två­hundra­tusen"
 	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
 	if err != nil {
 		t.Errorf("P-P-Pure Pain for %s! %v", input, err)
@@ -122,7 +122,7 @@ func TestRulesFromXMLFileSV(t *testing.T) {
 
 	//
 	input = "200001"
-	expect = "tvåhundratusen ett"
+	expect = "två­hundra­tusen ett"
 	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
 	if err != nil {
 		t.Errorf("P-P-Pure Pain for %s! %v", input, err)
@@ -141,7 +141,7 @@ func TestRulesFromXMLFileSV(t *testing.T) {
 	}
 
 	input = "20117500"
-	expect = "tjugo miljoner etthundrasjuttontusen femhundra"
+	expect = "tjugo miljoner ett­hundra­sjutton­tusen fem­hundra"
 	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
 	if err != nil {
 		t.Errorf("Stradivarius: %s! %v", input, err)
@@ -150,7 +150,7 @@ func TestRulesFromXMLFileSV(t *testing.T) {
 	}
 
 	input = "10117500"
-	expect = "tio miljoner etthundrasjuttontusen femhundra"
+	expect = "tio miljoner ett­hundra­sjutton­tusen fem­hundra"
 	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
 	if err != nil {
 		t.Errorf("Filtsocka: %s! %v", input, err)
@@ -183,7 +183,7 @@ func TestRulesFromXMLFileDE(t *testing.T) {
 	var input, expect, res string
 
 	input = "21"
-	expect = "einundzwanzig"
+	expect = "ein­und­zwanzig"
 	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
 	if err != nil {
 		t.Errorf("P-P-Pure Pain! %v", err)
@@ -193,7 +193,7 @@ func TestRulesFromXMLFileDE(t *testing.T) {
 
 	//
 	input = "48"
-	expect = "achtundvierzig"
+	expect = "acht­und­vierzig"
 	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
 	if err != nil {
 		t.Errorf("P-P-Pure Pain! %v", err)
@@ -203,7 +203,7 @@ func TestRulesFromXMLFileDE(t *testing.T) {
 
 	//
 	input = "2748"
-	expect = "zweitausendsiebenhundertachtundvierzig"
+	expect = "zwei­tausend­sieben­hundert­acht­und­vierzig"
 	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
 	if err != nil {
 		t.Errorf("P-P-Pure Pain! %v", err)
@@ -213,7 +213,7 @@ func TestRulesFromXMLFileDE(t *testing.T) {
 
 	//
 	input = "13000"
-	expect = "dreizehntausend"
+	expect = "dreizehn­tausend"
 	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
 	if err != nil {
 		t.Errorf("P-P-Pure Pain! %v", err)
@@ -274,6 +274,67 @@ func TestRulesFromXMLFileFR(t *testing.T) {
 
 	input = "435"
 	expect = "quatre cent' trente-cinq"
+	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
+	if err != nil {
+		t.Errorf("P-P-Pure Pain! %v", err)
+	} else if res != expect {
+		t.Errorf("wanted %s, got %s", expect, res)
+	}
+
+}
+
+func TestRulesFromXMLFileTA(t *testing.T) {
+
+	pack, err := RulesFromXMLFile("test_data/ta.xml")
+	if err != nil {
+		t.Errorf("Pain! %v", err)
+	}
+
+	if w, g := "ta", pack.Language; w != g {
+		t.Errorf("wanted '%s' got '%s'", w, g)
+	}
+
+	ruleSetGroups := pack.RuleSetGroups
+	if len(ruleSetGroups) == 0 {
+		t.Errorf("Noooo!")
+		return
+	}
+
+	if w, g := "SpelloutRules", ruleSetGroups[0].Name; w != g {
+		t.Errorf("wanted '%s' got '%s'", w, g)
+	}
+
+	var input, expect, res string
+
+	input = "78"
+	expect = "எழுபது எட்டு"
+	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
+	if err != nil {
+		t.Errorf("P-P-Pure Pain! %v", err)
+	} else if res != expect {
+		t.Errorf("wanted %s, got %s", expect, res)
+	}
+
+	input = "8765"
+	expect = "எட்டு ஆயிரம் எழுநூறு அறுபது ஐந்து"
+	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
+	if err != nil {
+		t.Errorf("P-P-Pure Pain! %v", err)
+	} else if res != expect {
+		t.Errorf("wanted %s, got %s", expect, res)
+	}
+
+	input = "485"
+	expect = "நாநூறூ எண்பது ஐந்து"
+	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
+	if err != nil {
+		t.Errorf("P-P-Pure Pain! %v", err)
+	} else if res != expect {
+		t.Errorf("wanted %s, got %s", expect, res)
+	}
+
+	input = "935"
+	expect = "தொள்ளாயிரம் முப்பது ஐந்து"
 	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
 	if err != nil {
 		t.Errorf("P-P-Pure Pain! %v", err)
