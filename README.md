@@ -11,12 +11,14 @@ The license of the original software and data is here: https://github.com/unicod
 
 The current spellout implementation does not use any of the original ICU code, but uses it supports most of the spellout rule format, and it can read the rule files, https://github.com/unicode-org/cldr/tree/master/common/rbnf.
 
-## Unsupported formats 
+## Unsupported features
 The following formats are used in the ICU rules, but not supported by this package:
 * _$_ (for singular and plural forms)
 * _=#,##=_ and _=0=_
 * _last primary ignorable_
 * _→→→_
+
+The rule sets include information on its public/private attribute, but the distinction is not supported on rule execution (all rules can be references as public).
 
 
 ## Links and references
