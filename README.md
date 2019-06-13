@@ -45,7 +45,7 @@ Or, download the rule file and save as en.xml:
        curl https://raw.githubusercontent.com/unicode-org/cldr/master/common/rbnf/en.xml > en.xml
     
 
-Test cardinal rule expansion:
+Test the default cardinal rule expansion:
 
       ./spellout -r spellout-numbering en.xml 1066
       1066	one thousand sixty-six
