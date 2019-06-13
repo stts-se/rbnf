@@ -64,7 +64,7 @@ func replaceChars(s string) string {
 	return s
 }
 
-func unknownRuleFormat(rFmt string) bool {
+func unsupportedRuleFormat(rFmt string) bool {
 	return strings.Contains(rFmt, "$") ||
 		strings.Contains(rFmt, "ignorable") ||
 		strings.Contains(rFmt, "##") ||
@@ -97,10 +97,10 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 			rule.Base = rbnf.NewBaseString(r.Attrvalue)
 		}
 
-		if unknownRuleFormat(r.String) {
-			if verb {
-				log.Printf("[xmlreader] skipping unknown rule format : %#v", r)
-			}
+		if unsupportedRuleFormat(r.String) {
+			//if verb {
+			log.Printf("[xmlreader] skipping unsupported rule format : %#v", r)
+			//}
 			continue
 		}
 
