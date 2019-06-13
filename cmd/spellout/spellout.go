@@ -56,7 +56,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Couldn't parse file %s : %v", f, err)
 	}
-	log.Printf("Parsed rule file %s", f)
+	if *debug {
+		log.Printf("Parsed rule file %s", f)
+	}
 
 	if *syntaxCheck && *ruleSet == "" {
 		os.Exit(0)
