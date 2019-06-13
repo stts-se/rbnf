@@ -56,7 +56,7 @@ List the rules of the English rule file (reading the file directly from github):
 
 
 
-Or, download the rule file and save as en.xml:
+Or, download the rule file and save as `en.xml`:
 
        curl https://raw.githubusercontent.com/unicode-org/cldr/master/common/rbnf/en.xml > en.xml
     
