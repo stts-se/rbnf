@@ -44,6 +44,9 @@ func main() {
 	var rPackage rbnf.RulePackage
 	var err error
 	f := args[0]
+
+	xmlreader.Verb = *debug
+
 	if strings.HasPrefix(f, "http") {
 		rPackage, err = xmlreader.RulesFromXMLURL(f)
 	} else {

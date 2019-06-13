@@ -19,7 +19,7 @@ import (
 	"github.com/stts-se/rbnf/lexer"
 )
 
-const verb = false
+var Verb = false
 
 func readXMLFile(fn string) (Ldml, error) {
 	res := Ldml{}
@@ -107,10 +107,10 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 		}
 
 		if unsupportedRuleFormat(r.String) {
-			if verb {
+			if Verb {
 				log.Printf("[xmlreader] skipping unsupported rule format: %#v", r)
-			} else {
-				log.Printf("[xmlreader] skipping unsupported rule format: %#v", r.String)
+				// } else {
+				// 	log.Printf("[xmlreader] skipping unsupported rule format: %#v", r.String)
 			}
 			continue
 		}
@@ -120,7 +120,7 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 
 		if err != nil {
 			err = fmt.Errorf("parse failed for '%v' : %v", r, err)
-			if verb {
+			if Verb {
 				log.Printf("[xmlreader] %v", err)
 			}
 			return res, err
