@@ -84,8 +84,7 @@ func TestSub(t *testing.T) {
 	input = "←← komma;"
 	exp = Result{
 		{ItemSub, "←←"},
-		{ItemSub, " "},
-		{ItemSub, "komma"},
+		{ItemSub, " komma"},
 	}
 	l = Lex(input)
 	l.Run()
@@ -96,8 +95,7 @@ func TestSub(t *testing.T) {
 	//
 	input = "komma →→;"
 	exp = Result{
-		{ItemSub, "komma"},
-		{ItemSub, " "},
+		{ItemSub, "komma "},
 		{ItemSub, "→→"},
 	}
 	l = Lex(input)
@@ -110,9 +108,7 @@ func TestSub(t *testing.T) {
 	input = "←← komma →→;"
 	exp = Result{
 		{ItemSub, "←←"},
-		{ItemSub, " "},
-		{ItemSub, "komma"},
-		{ItemSub, " "},
+		{ItemSub, " komma "},
 		{ItemSub, "→→"},
 	}
 	l = Lex(input)
@@ -125,9 +121,7 @@ func TestSub(t *testing.T) {
 	input = "←%cardinal-neuter← komma →%cardinal-reale→;"
 	exp = Result{
 		{ItemSub, "←%cardinal-neuter←"},
-		{ItemSub, " "},
-		{ItemSub, "komma"},
-		{ItemSub, " "},
+		{ItemSub, " komma "},
 		{ItemSub, "→%cardinal-reale→"},
 	}
 	l = Lex(input)
@@ -148,8 +142,7 @@ func TestOptionalSub(t *testing.T) {
 	exp = Result{
 		{ItemSub, "[←←]"},
 		{ItemSub, "[ ]"},
-		{ItemSub, "komma"},
-		{ItemSub, " "},
+		{ItemSub, "komma "},
 		{ItemSub, "→→"},
 	}
 	l = Lex(input)
@@ -162,8 +155,7 @@ func TestOptionalSub(t *testing.T) {
 	input = "←← komma[ →→];"
 	exp = Result{
 		{ItemSub, "←←"},
-		{ItemSub, " "},
-		{ItemSub, "komma"},
+		{ItemSub, " komma"},
 		{ItemSub, "[ ]"},
 		{ItemSub, "[→→]"},
 	}
@@ -190,8 +182,7 @@ func TestOptionalSub(t *testing.T) {
 	input = "←← komma[ →%cardinal-reale→];"
 	exp = Result{
 		{ItemSub, "←←"},
-		{ItemSub, " "},
-		{ItemSub, "komma"},
+		{ItemSub, " komma"},
 		{ItemSub, "[ ]"},
 		{ItemSub, "[→%cardinal-reale→]"},
 	}
@@ -204,9 +195,7 @@ func TestOptionalSub(t *testing.T) {
 	//
 	input = "en miljon[→→];"
 	exp = Result{
-		{ItemSub, "en"},
-		{ItemSub, " "},
-		{ItemSub, "miljon"},
+		{ItemSub, "en miljon"},
 		{ItemSub, "[→→]"},
 	}
 	l = Lex(input)
@@ -230,11 +219,9 @@ func TestOptionalSub(t *testing.T) {
 	//
 	input = "er =%spellout-cardinal-neuter= de;"
 	exp = Result{
-		{ItemSub, "er"},
-		{ItemSub, " "},
+		{ItemSub, "er "},
 		{ItemSub, "=%spellout-cardinal-neuter="},
-		{ItemSub, " "},
-		{ItemSub, "de"},
+		{ItemSub, " de"},
 	}
 	l = Lex(input)
 	l.Run()
@@ -246,10 +233,7 @@ func TestOptionalSub(t *testing.T) {
 	input = "=%spellout-numbering= miljoner tusen;"
 	exp = Result{
 		{ItemSub, "=%spellout-numbering="},
-		{ItemSub, " "},
-		{ItemSub, "miljoner"},
-		{ItemSub, " "},
-		{ItemSub, "tusen"},
+		{ItemSub, " miljoner tusen"},
 	}
 	l = Lex(input)
 	l.Run()
@@ -293,9 +277,7 @@ func TestMiscLangs(t *testing.T) {
 	input = "sesenta[ y →→];"
 	exp = Result{
 		{ItemSub, "sesenta"},
-		{ItemSub, "[ ]"},
-		{ItemSub, "[y]"},
-		{ItemSub, "[ ]"},
+		{ItemSub, "[ y ]"},
 		{ItemSub, "[→→]"},
 	}
 	l = Lex(input)
@@ -308,9 +290,7 @@ func TestMiscLangs(t *testing.T) {
 	input = "[→%spellout-cardinal-masculine→­und­]fünfzig;"
 	exp = Result{
 		{ItemSub, "[→%spellout-cardinal-masculine→]"},
-		{ItemSub, "[­]"},
-		{ItemSub, "[und]"},
-		{ItemSub, "[­]"},
+		{ItemSub, "[­und­]"},
 		{ItemSub, "fünfzig"},
 	}
 	l = Lex(input)

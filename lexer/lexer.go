@@ -1,19 +1,17 @@
-package lexer
+/** Package lexer contains a parser for the ICU project rbnf rule format. The code in the file lexer.go is based on the template lexer of the standard Go distribution: https://golang.org/src/text/template/parse/lex.go
 
-// The code in this file is based on the template lexer of the standard Go distribution:
-// https://golang.org/src/text/template/parse/lex.go
-//
-// A presentation of the original code:
-// https://talks.golang.org/2011/lex.slide
-// https://www.youtube.com/watch?v=HxaD_trXwRE
-//
-// The original code is published under a BSD license:
-// https://golang.org/LICENSE
+A presentation of the original code:
+https://talks.golang.org/2011/lex.slide
+https://www.youtube.com/watch?v=HxaD_trXwRE
+
+The original code is published under a BSD license: https://golang.org/LICENSE
+*/
+
+package lexer
 
 import (
 	"fmt"
 	"strings"
-	"unicode"
 	"unicode/utf8"
 
 	"golang.org/x/text/transform"
@@ -62,7 +60,7 @@ func (i Item) String() string {
 	return fmt.Sprintf("%s{%v}", i.Typ, i.Val)
 }
 
-//go:generate stringer -type=ItemType
+//go:generate stringer -type=ItemType (doesn't work with go mod?)
 
 type ItemType int
 
@@ -195,11 +193,8 @@ func (l *Lexer) acceptPeekString(valid string) bool {
 	return strings.IndexRune(valid, l.peek()) >= 0
 }
 
-func isLetter(r rune) bool {
-	return unicode.IsLetter(r) ||
-		/* tamil */ (r >= '\u0B80' && r <= '\u0BFF') ||
-		/* japanese */ (r >= '\u3000' && r <= '\u303f') || (r >= '\u3040' && r <= '\u309f') || (r >= '\u30a0' && r <= '\u30ff') || (r >= '\uff00' && r <= '\uffef') ||
-		r == '\''
+func isPlainText(r rune) bool {
+	return r != rightArr && r != leftArr && r != rightBracket && r != leftBracket && r != '=' && r != ';' && r != eof
 }
 
 func nfc(s string) string {
@@ -247,15 +242,9 @@ func subFn(l *Lexer) stateFn {
 				return false, false
 			}
 			break
-		} else if l.acceptPeekString(delimChars) {
+		} else if isPlainText(r) {
 			closingFunc = func(rx rune) (bool, bool) {
-				return strings.IndexRune(delimChars, rx) < 0, false
-			}
-			l.next()
-			break
-		} else if isLetter(r) {
-			closingFunc = func(rx rune) (bool, bool) {
-				return !(isLetter(rx)), false
+				return !(isPlainText(rx)), false
 			}
 			l.next()
 			break
