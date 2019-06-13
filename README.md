@@ -98,6 +98,3 @@ Test spelling out as year:
 * ICU license: <br/>
   http://www.unicode.org/copyright.html#License <br/>
   https://github.com/unicode-org/icu/blob/master/icu4c/LICENSE
-* Go implementation of parts of CLDR: <br/>
-  https://godoc.org/golang.org/x/text/unicode/cldr <br/>
-  https://github.com/golang/text/tree/master/unicode/cldr 
