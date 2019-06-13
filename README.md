@@ -5,7 +5,7 @@ Libraries and commands for spelling out numeric expansion, based on the "RBNF" p
 The license of the original software and data is here: https://github.com/unicode-org/icu/blob/master/icu4c/LICENSE
 
 
-The current spellout implementation does not use any of the original ICU code, but uses the spellout rule format and data files, https://github.com/unicode-org/cldr/tree/master/common/rbnf.
+The current spellout implementation does not use any of the original ICU code, but uses it supports most of the spellout rule format, and it can read the rule files, https://github.com/unicode-org/cldr/tree/master/common/rbnf.
 
 ## Unsupported formats 
 The following formats are used in the ICU rules, but not supported by this package:
