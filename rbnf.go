@@ -351,9 +351,11 @@ func NewRuleSetGroup(name string, ruleSets []RuleSet) (RuleSetGroup, error) {
 func findMatchingRule(input string, ruleSet RuleSet) (BaseRule, bool) {
 	var res BaseRule
 	var found = false
+
+	n, err := strconv.Atoi(input)
+
 	for _, r := range ruleSet.Rules {
 		if r.Base.IsInt() {
-			n, err := strconv.Atoi(input)
 			if err != nil {
 				continue
 			}
