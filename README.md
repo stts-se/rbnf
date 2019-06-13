@@ -17,7 +17,11 @@ The following formats are used in the ICU rules, but not supported by this packa
 
 ## Links and references
 * ICU project: http://userguide.icu-project.org/
-* Rule format: http://icu-project.org/apiref/icu4c/classRuleBasedNumberFormat.html | http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/RuleBasedNumberFormat.html
-* Rule files (xml): https://github.com/unicode-org/cldr/tree/master/common/rbnf
-* Go implementation of parts of CLDR: https://godoc.org/golang.org/x/text/unicode/cldr and https://github.com/golang/text/tree/master/unicode/cldr 
+* Rule format: <br/>
+ http://icu-project.org/apiref/icu4c/classRuleBasedNumberFormat.html   <br/>
+ http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/RuleBasedNumberFormat.html 
+* Rule files: https://github.com/unicode-org/cldr/tree/master/common/rbnf
 * ICU license: https://github.com/unicode-org/icu/blob/master/icu4c/LICENSE
+* Go implementation of parts of CLDR: <br/>
+  https://godoc.org/golang.org/x/text/unicode/cldr <br/>
+  https://github.com/golang/text/tree/master/unicode/cldr 
