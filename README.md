@@ -12,7 +12,7 @@ The license of the original software and data is here: https://github.com/unicod
 The current spellout implementation does not use any of the original ICU code, but uses it supports most of the spellout rule format, and it can read the rule files, https://github.com/unicode-org/cldr/tree/master/common/rbnf.
 
 ## Unsupported features
-The following formats are used in the ICU rules, but not supported by this package:
+The following format strings are used in the ICU rules, but not supported by this package:
 * _$_ (for singular and plural forms)
 * _=#,##=_ and _=0=_
 * _last primary ignorable_
