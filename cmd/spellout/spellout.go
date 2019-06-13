@@ -38,7 +38,7 @@ func main() {
 
 	if *help || len(args) < 1 {
 		flags.Usage()
-		os.Exit(2)
+		os.Exit(0)
 	}
 
 	var rPackage rbnf.RulePackage
