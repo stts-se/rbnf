@@ -235,16 +235,51 @@ func (r *BaseRule) Match(input string) (MatchResult, bool) {
 	}
 
 	// B) String rule
-	if !r.Base.StringMatchRegexp.initialised {
-		r.Base.StringMatchRegexp = buildStringMatchRegexp(r.Base.String)
-	}
-	//fmt.Println("RULE AND REGEXP:", r, r.Base.StringMatchRegexp.re)
-	m := r.Base.StringMatchRegexp.re.FindStringSubmatch(input)
-	if m != nil && len(m) == 4 {
-		//fmt.Printf("%v => %#v\n", input, m)
-		left := m[1]
-		right := m[3]
-		return MatchResult{ForwardLeft: left, ForwardRight: right}, true
+
+	var fasterMatch = true
+
+	if fasterMatch {
+		switch r.Base.String {
+		case "x.x":
+			pts := strings.Split(input, ".")
+			if len(pts) == 2 {
+				res := MatchResult{ForwardLeft: pts[0], ForwardRight: pts[1]}
+				return res, true
+			}
+		case "x,x":
+			pts := strings.Split(input, ",")
+			if len(pts) == 2 {
+				res := MatchResult{ForwardLeft: pts[0], ForwardRight: pts[1]}
+				return res, true
+			}
+		case "-x":
+			pts := strings.Split(input, "-")
+			if len(pts) == 2 {
+				res := MatchResult{ForwardLeft: pts[0], ForwardRight: pts[1]}
+				return res, true
+			}
+		case "x%":
+			pts := strings.Split(input, "%")
+			if len(pts) == 2 {
+				res := MatchResult{ForwardLeft: pts[0], ForwardRight: pts[1]}
+				return res, true
+			}
+			//case "#,##": return MatchResult{}, false
+		default:
+			return MatchResult{}, false
+		}
+	} else {
+		if !r.Base.StringMatchRegexp.initialised {
+			r.Base.StringMatchRegexp = buildStringMatchRegexp(r.Base.String)
+		}
+		//fmt.Println("RULE AND REGEXP:", r, r.Base.StringMatchRegexp.re)
+		m := r.Base.StringMatchRegexp.re.FindStringSubmatch(input)
+		if m != nil && len(m) == 4 {
+			//fmt.Printf("%v => %#v\n", input, m)
+			left := m[1]
+			right := m[3]
+			return MatchResult{ForwardLeft: left, ForwardRight: right}, true
+		}
 	}
 	return MatchResult{}, false
 }
