@@ -22,7 +22,7 @@ The following format strings are used in the ICU rules, but not supported by thi
 * _last primary ignorable_
 * _→→→_
 
-The rule sets have information on the public/private attribute, but the distinction is not supported on rule execution (all rules can be references as public).
+The rule sets have information on the public/private attribute, but the distinction is not supported on rule execution (all rules can be references as if they were public).
 
 
 ## Command line tool
