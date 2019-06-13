@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -69,12 +70,15 @@ func replaceChars(s string) string {
 	return s
 }
 
+var threeArrows = regexp.MustCompile("(→%+[a-z-]*→[a-z-]*→|←%+[a-z-]*←[a-z-]*←)")
+
 func unsupportedRuleFormat(rFmt string) bool {
 	return strings.Contains(rFmt, "$") ||
 		strings.Contains(rFmt, "ignorable") ||
 		strings.Contains(rFmt, "##") ||
 		strings.Contains(rFmt, "=0=") ||
-		strings.Contains(rFmt, "→→→")
+		strings.Contains(rFmt, "→→→") ||
+		threeArrows.MatchString(rFmt)
 }
 
 func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
@@ -86,12 +90,12 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 	for _, r := range rs.Rbnfrule {
 		//fmt.Printf("RULE %#v\n", r)
 		rule := rbnf.BaseRule{}
-		baseNum, err := strconv.Atoi(r.Attrvalue)
+		baseNum, err := strconv.Atoi(strings.Replace(r.Attrvalue, ",", "", -1))
 		if err == nil { // numeric rule
 			// TODO test
 			radix := 10 // Default radix
 			if r.Attrradix != "" {
-				radix, err = strconv.Atoi(r.Attrradix)
+				radix, err = strconv.Atoi(strings.Replace(r.Attrradix, ",", "", -1))
 				if err != nil {
 					return res, fmt.Errorf("failed to convert radix : %v\n", err)
 				}
@@ -156,16 +160,21 @@ func convertGroup(g *RulesetGrouping) (string, []rbnf.RuleSet, error) {
 	}
 
 	for _, rs := range g.Ruleset {
-		rbntRuleSet, err := convertRuleSet(rs)
+		rbnfRuleSet, err := convertRuleSet(rs)
 		if err != nil {
-			return rbntRuleSet.Name, res, fmt.Errorf("failed to convert rule set : %v", err)
+			return name, res, fmt.Errorf("failed to convert rule set : %v", err)
 			//fmt.Fprintf(os.Stderr, "skipping rule set '%s' : %v\n", rbntRuleSet.Name, err)
 			//continue
 		}
-		res = append(res, rbntRuleSet)
+		if len(rbnfRuleSet.Rules) > 0 {
+			res = append(res, rbnfRuleSet)
+		}
 	}
 
-	return name, res, nil
+	if len(res) > 0 {
+		return name, res, nil
+	}
+	return name, res, fmt.Errorf("no rule sets for rule set group %s", name)
 }
 
 func rulesFromLdml(ldml Ldml) ([]rbnf.RuleSetGroup, error) {

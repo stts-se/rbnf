@@ -255,7 +255,7 @@ func TestRulesFromXMLFileFR(t *testing.T) {
 	}
 
 	input = "8765"
-	expect = "huit mille sept cent' soixante-cinq"
+	expect = "huit mille sept cent soixante-cinq"
 	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
 	if err != nil {
 		t.Errorf("P-P-Pure Pain! %v", err)
@@ -264,7 +264,7 @@ func TestRulesFromXMLFileFR(t *testing.T) {
 	}
 
 	input = "485"
-	expect = "quatre cent' quatre-vingt-cinq"
+	expect = "quatre cent quatre-vingt-cinq"
 	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
 	if err != nil {
 		t.Errorf("P-P-Pure Pain! %v", err)
@@ -273,7 +273,7 @@ func TestRulesFromXMLFileFR(t *testing.T) {
 	}
 
 	input = "435"
-	expect = "quatre cent' trente-cinq"
+	expect = "quatre cent trente-cinq"
 	res, err = pack.Spellout(input, "SpelloutRules", "spellout-numbering", false)
 	if err != nil {
 		t.Errorf("P-P-Pure Pain! %v", err)

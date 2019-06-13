@@ -426,7 +426,9 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 		}
 	}
 
-	res := strings.TrimSpace(strings.Join(subs, ""))
+	res := strings.Join(subs, "")
+	res = strings.TrimSpace(res)       // trim space
+	res = strings.TrimPrefix(res, "'") // trim single quote after trim space
 	if res == "" {
 		return input, fmt.Errorf("empty output for input string %s", input)
 	}
