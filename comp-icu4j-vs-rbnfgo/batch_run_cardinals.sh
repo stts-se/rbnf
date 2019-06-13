@@ -23,9 +23,9 @@ icu4j_jar=~/progz/icu/icu4j/icu4j.jar
 #numsfile=nums_1_to_100k
 numsfile=nums_1_to_1M
 
-langs="en sv fr de da ja ar sk cs fi en_IN hu it ta ru"
+langs="en sv fr de da ja ar cs fi en_IN hu it ta"
 
-# not working: th
+# not working: th (not sure why); ru (sin/plu); sk (sin/plu)
 
 for lang in $langs; do
     echo "=== PROCESSING $lang ... " 1>&2
