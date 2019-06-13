@@ -22,7 +22,7 @@ The following format strings are used in the ICU rules, but not supported by thi
 * _last primary ignorable_
 * _→→→_
 
-The rule sets have information on the public/private attribute, but the distinction is not supported on rule execution (all rules can be references as public).
+The rule sets have information on the public/private attribute, but the distinction is not supported on rule execution (all rules can be references as if they were public).
 
 
 ## Command line tool
@@ -72,6 +72,26 @@ Test spelling out as year:
       1066	ten sixty-six
 
 
+Test spelling out with standard in:
+
+      echo 1066 | ./spellout -r spellout-numbering-year en.xml
+      1066	ten sixty-six
+
+Usage:
+
+      ./spellout -h
+      Usage: spellout <options> <xml file/url> <input>
+        if no input argument is specified, input will be read from stdin
+      Options:
+        -L	List all (private/public) rules and exit (rule groups and rule sets)
+        -d	Debug
+        -g rule group
+          	Use named rule group (default first group)
+        -h	Print usage and exit
+        -l	List public rules and exit (rule groups and rule sets)
+        -r rule set
+          	Use named rule set
+        -s	Check rule file syntax and exit
 
 
 
