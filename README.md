@@ -72,6 +72,12 @@ Test spelling out as year:
       1066	ten sixty-six
 
 
+Test spelling out with standard in:
+
+      echo 1066 | ./spellout -r spellout-numbering-year en.xml
+      1066	ten sixty-six
+
+
 
 
 
