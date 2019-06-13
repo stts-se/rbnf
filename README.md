@@ -1,6 +1,6 @@
 # rbnf
 
-Libraries and commands for spelling out numeric expansion, based on the "RBNF" the ICU project, https://github.com/unicode-org/icu and https://github.com/unicode-org/cldr.
+Libraries and commands for spelling out numeric expansion, based on the "RBNF" part of the ICU project, https://github.com/unicode-org/icu and https://github.com/unicode-org/cldr.
 
 The license of the original software and data is here: https://github.com/unicode-org/icu/blob/master/icu4c/LICENSE
 
