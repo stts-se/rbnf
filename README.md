@@ -25,18 +25,18 @@ Start by cloning the `github.com/stts-se/rbnf` repository, then:
 
 List the rules of the English rule file (reading the file directly from github):
 
-   ./spellout -l https://raw.githubusercontent.com/unicode-org/cldr/master/common/rbnf/en.xml
-   == Listing public rule sets ==
-   SpelloutRules
-    - spellout-cardinal [public] (38)
-    - spellout-cardinal-verbose [public] (12)
-    - spellout-numbering [public] (4)
-    - spellout-numbering-verbose [public] (4)
-    - spellout-numbering-year [public] (29)
-    - spellout-ordinal [public] (30)
-    - spellout-ordinal-verbose [public] (10)
-    OrdinalRules
-     - digits-ordinal [public] (1)
+     ./spellout -l https://raw.githubusercontent.com/unicode-org/cldr/master/common/rbnf/en.xml
+     == Listing public rule sets ==
+     SpelloutRules
+      - spellout-cardinal [public] (38)
+      - spellout-cardinal-verbose [public] (12)
+      - spellout-numbering [public] (4)
+      - spellout-numbering-verbose [public] (4)
+      - spellout-numbering-year [public] (29)
+      - spellout-ordinal [public] (30)
+      - spellout-ordinal-verbose [public] (10)
+      OrdinalRules
+       - digits-ordinal [public] (1)
 
 
 
