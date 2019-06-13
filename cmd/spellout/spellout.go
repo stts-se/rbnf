@@ -12,9 +12,14 @@ import (
 
 	"github.com/stts-se/rbnf"
 	"github.com/stts-se/rbnf/xmlreader"
+	//
+	//"github.com/pkg/profile"
 )
 
 func main() {
+
+	//defer profile.Start().Stop()
+
 	cmd := path.Base(os.Args[0])
 
 	// Flags

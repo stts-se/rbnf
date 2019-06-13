@@ -238,6 +238,7 @@ func (r *BaseRule) Match(input string) (MatchResult, bool) {
 	if !r.Base.StringMatchRegexp.initialised {
 		r.Base.StringMatchRegexp = buildStringMatchRegexp(r.Base.String)
 	}
+	//fmt.Println("RULE AND REGEXP:", r, r.Base.StringMatchRegexp.re)
 	m := r.Base.StringMatchRegexp.re.FindStringSubmatch(input)
 	if m != nil && len(m) == 4 {
 		//fmt.Printf("%v => %#v\n", input, m)
