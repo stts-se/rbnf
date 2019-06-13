@@ -32,8 +32,8 @@ langs=$all_langs
 for lang in $langs; do
 
     echo "=== PROCESSING $lang ... " 1>&2
-    outgo="output/${numsfile}_out_${lang}_rbnfgo.txt"
-    outicu4j="output/${numsfile}_out_${lang}_icu4j.txt"
+    outicu4j="output/${lang}_${numsfile}_icu4j.txt"
+    outgo="output/${lang}_${numsfile}_rbnfgo.txt"
 
     # rule set name
     ruleset="spellout-numbering"
@@ -44,10 +44,13 @@ for lang in $langs; do
 
     
     time cat ${numsfile}.txt | scala -cp ${icu4j_jar} batch_run_icu4j.scala ${lang} >| $outicu4j
-    time cat ${numsfile}.txt | go run ../cmd/spellout/spellout.go -r $ruleset https://github.com/unicode-org/cldr/raw/master/common/rbnf/${lang}.xml >| $outgo
-
-    compare_line_by_line -q $outgo $outicu4j &> output/${lang}.diff
-    echo "=== DONE" 1>&2
+    if time cat ${numsfile}.txt | go run ../cmd/spellout/spellout.go -r $ruleset https://github.com/unicode-org/cldr/raw/master/common/rbnf/${lang}.xml >| $outgo ; then
+	compare_line_by_line -q $outgo $outicu4j &> output/${lang}.diff
+	echo "=== $lang DONE" 1>&2
+    else
+	echo "=== $lang FAILED" 1>&2
+    fi
     echo "" 1>&2
+	
 
 done;
