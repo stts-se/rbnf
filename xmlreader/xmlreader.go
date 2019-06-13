@@ -107,9 +107,11 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 		}
 
 		if unsupportedRuleFormat(r.String) {
-			//if verb {
-			log.Printf("[xmlreader] skipping unsupported rule format : %#v", r)
-			//}
+			if verb {
+				log.Printf("[xmlreader] skipping unsupported rule format: %#v", r)
+			} else {
+				log.Printf("[xmlreader] skipping unsupported rule format: %#v", r.String)
+			}
 			continue
 		}
 
