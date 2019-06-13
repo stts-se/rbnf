@@ -1,11 +1,6 @@
 # rbnf
 
-Libraries and commands for numeric expansion, based on the "RBNF" part of the ICU project.
-
-http://site.icu-project.org/ <br/>
-http://cldr.unicode.org/ <br/>
-https://github.com/unicode-org/icu <br/>
-https://github.com/unicode-org/cldr <br/>
+Libraries and commands for numeric expansion, based on the "RBNF" part of the ICU project (http://site.icu-project.org/  and http://cldr.unicode.org/).
 
 
 The license of the original software and data is here: https://github.com/unicode-org/icu/blob/master/icu4c/LICENSE http://www.unicode.org/copyright.html#License
@@ -22,14 +17,21 @@ The following formats are used in the ICU rules, but not supported by this packa
 
 
 ## Links and references
+* ICU project and source code: <br/>
+  http://site.icu-project.org/ <br/>
+  https://github.com/unicode-org/icu
 * ICU user guide: http://userguide.icu-project.org/
+* CLDR project and source code: <br/>
+  http://cldr.unicode.org/ <br/>
+  https://github.com/unicode-org/cldr <br/>
 * Rule format: <br/>
- http://icu-project.org/apiref/icu4c/classRuleBasedNumberFormat.html   <br/>
- http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/RuleBasedNumberFormat.html 
+  http://userguide.icu-project.org/formatparse/numbers/rbnf-examples <br/>
+  http://icu-project.org/apiref/icu4c/classRuleBasedNumberFormat.html   <br/>
+  http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/RuleBasedNumberFormat.html 
 * Rule files: https://github.com/unicode-org/cldr/tree/master/common/rbnf
 * ICU license: <br/>
-http://www.unicode.org/copyright.html#License <br/>
-https://github.com/unicode-org/icu/blob/master/icu4c/LICENSE
+  http://www.unicode.org/copyright.html#License <br/>
+  https://github.com/unicode-org/icu/blob/master/icu4c/LICENSE
 * Go implementation of parts of CLDR: <br/>
   https://godoc.org/golang.org/x/text/unicode/cldr <br/>
   https://github.com/golang/text/tree/master/unicode/cldr 
