@@ -124,25 +124,8 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 			return res, err
 
 		} else {
-
 			for _, i := range lex.Result() {
-				switch i.Typ {
-				// "can't" happen
-				case lexer.ItemError:
-					return res, fmt.Errorf("convertRuleSet encountered an error from lexer : %s", i.Val)
-
-				case lexer.ItemSub:
-					rule.Subs = append(rule.Subs, rbnf.ParseSub(replaceChars(i.Val)))
-
-				case lexer.ItemLeftBracket:
-					//rule.Subs = append(rule.Subs, i.Val)
-
-				case lexer.ItemRightBracket:
-					//rule.Subs = append(rule.Subs, i.Val)
-
-				default:
-					return res, fmt.Errorf("Unknown item type: %v", i.Typ)
-				}
+				rule.Subs = append(rule.Subs, rbnf.ParseSub(replaceChars(i)))
 			}
 		}
 		//fmt.Printf("PARSED RULE\t%#v\t%#v\t%#v\t%#v\n", res.Name, r.String, rule, rule)

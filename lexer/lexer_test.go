@@ -25,7 +25,22 @@ import (
 var fs = "For input '%s', expected '%#v', got '%#v'"
 var fsindex = "For input '%s' item %d, expected '%s', got '%s'"
 
-func compare(input string, exp, got Result) []error {
+func compareResult(input string, exp, got result) []error {
+	res := []error{}
+	if len(exp) != len(got) {
+		res = append(res, fmt.Errorf(fs, input, exp, got))
+		return res
+	}
+	for i, expi := range exp {
+		goti := got[i]
+		if expi != goti {
+			res = append(res, fmt.Errorf(fsindex, input, i, expi, goti))
+		}
+	}
+	return res
+}
+
+func compareStrings(input string, exp, got []string) []error {
 	res := []error{}
 	if len(exp) != len(got) {
 		res = append(res, fmt.Errorf(fs, input, exp, got))
@@ -42,34 +57,34 @@ func compare(input string, exp, got Result) []error {
 
 func TestBasic(t *testing.T) {
 	var input string
-	var exp Result
+	var exp result
 	var l *Lexer
-	var prematureEOIItem = Item{ItemError, "premature end of input"}
+	var prematureEOIItem = item{itemError, "premature end of input"}
 
 	//
 	input = ""
-	exp = Result{prematureEOIItem}
+	exp = result{prematureEOIItem}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareResult(input, exp, l.result) {
 		t.Error(err)
 	}
 
 	//
 	input = "minus"
-	exp = Result{{ItemSub, "minus"}, prematureEOIItem}
+	exp = result{{itemSub, "minus"}, prematureEOIItem}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareResult(input, exp, l.result) {
 		t.Error(err)
 	}
 
 	//
 	input = "minus;"
-	exp = Result{{ItemSub, "minus"}}
+	exp = result{{itemSub, "minus"}}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareResult(input, exp, l.result) {
 		t.Error(err)
 	}
 
@@ -77,56 +92,56 @@ func TestBasic(t *testing.T) {
 
 func TestSub(t *testing.T) {
 	var input string
-	var exp Result
+	var exp []string
 	var l *Lexer
 
 	//
 	input = "←← komma;"
-	exp = Result{
-		{ItemSub, "←←"},
-		{ItemSub, " komma"},
+	exp = []string{
+		"←←",
+		" komma",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "komma →→;"
-	exp = Result{
-		{ItemSub, "komma "},
-		{ItemSub, "→→"},
+	exp = []string{
+		"komma ",
+		"→→",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "←← komma →→;"
-	exp = Result{
-		{ItemSub, "←←"},
-		{ItemSub, " komma "},
-		{ItemSub, "→→"},
+	exp = []string{
+		"←←",
+		" komma ",
+		"→→",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "←%cardinal-neuter← komma →%cardinal-reale→;"
-	exp = Result{
-		{ItemSub, "←%cardinal-neuter←"},
-		{ItemSub, " komma "},
-		{ItemSub, "→%cardinal-reale→"},
+	exp = []string{
+		"←%cardinal-neuter←",
+		" komma ",
+		"→%cardinal-reale→",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
@@ -134,135 +149,135 @@ func TestSub(t *testing.T) {
 
 func TestOptionalSub(t *testing.T) {
 	var input string
-	var exp Result
+	var exp []string
 	var l *Lexer
 
 	//
 	input = "[←← ]komma →→;"
-	exp = Result{
-		{ItemSub, "[←←]"},
-		{ItemSub, "[ ]"},
-		{ItemSub, "komma "},
-		{ItemSub, "→→"},
+	exp = []string{
+		"[←←]",
+		"[ ]",
+		"komma ",
+		"→→",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "←← komma[ →→];"
-	exp = Result{
-		{ItemSub, "←←"},
-		{ItemSub, " komma"},
-		{ItemSub, "[ ]"},
-		{ItemSub, "[→→]"},
+	exp = []string{
+		"←←",
+		" komma",
+		"[ ]",
+		"[→→]",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "komma[ →→];"
-	exp = Result{
-		{ItemSub, "komma"},
-		{ItemSub, "[ ]"},
-		{ItemSub, "[→→]"},
+	exp = []string{
+		"komma",
+		"[ ]",
+		"[→→]",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "←← komma[ →%cardinal-reale→];"
-	exp = Result{
-		{ItemSub, "←←"},
-		{ItemSub, " komma"},
-		{ItemSub, "[ ]"},
-		{ItemSub, "[→%cardinal-reale→]"},
+	exp = []string{
+		"←←",
+		" komma",
+		"[ ]",
+		"[→%cardinal-reale→]",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "en miljon[→→];"
-	exp = Result{
-		{ItemSub, "en miljon"},
-		{ItemSub, "[→→]"},
+	exp = []string{
+		"en miljon",
+		"[→→]",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "=%spellout-cardinal-neuter=de;"
-	exp = Result{
-		{ItemSub, "=%spellout-cardinal-neuter="},
-		{ItemSub, "de"},
+	exp = []string{
+		"=%spellout-cardinal-neuter=",
+		"de",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "er =%spellout-cardinal-neuter= de;"
-	exp = Result{
-		{ItemSub, "er "},
-		{ItemSub, "=%spellout-cardinal-neuter="},
-		{ItemSub, " de"},
+	exp = []string{
+		"er ",
+		"=%spellout-cardinal-neuter=",
+		" de",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "=%spellout-numbering= miljoner tusen;"
-	exp = Result{
-		{ItemSub, "=%spellout-numbering="},
-		{ItemSub, " miljoner tusen"},
+	exp = []string{
+		"=%spellout-numbering=",
+		" miljoner tusen",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "­=%spellout-ordinal-feminine=;"
-	exp = Result{
-		{ItemSub, "­"},
-		{ItemSub, "=%spellout-ordinal-feminine="},
+	exp = []string{
+		"­",
+		"=%spellout-ordinal-feminine=",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "tjugo[­→→];"
-	exp = Result{
-		{ItemSub, "tjugo"},
-		{ItemSub, "[­]"},
-		{ItemSub, "[→→]"},
+	exp = []string{
+		"tjugo",
+		"[­]",
+		"[→→]",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
@@ -270,89 +285,89 @@ func TestOptionalSub(t *testing.T) {
 
 func TestMiscLangs(t *testing.T) {
 	var input string
-	var exp Result
+	var exp []string
 	var l *Lexer
 
 	//
 	input = "sesenta[ y →→];"
-	exp = Result{
-		{ItemSub, "sesenta"},
-		{ItemSub, "[ y ]"},
-		{ItemSub, "[→→]"},
+	exp = []string{
+		"sesenta",
+		"[ y ]",
+		"[→→]",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "[→%spellout-cardinal-masculine→­und­]fünfzig;"
-	exp = Result{
-		{ItemSub, "[→%spellout-cardinal-masculine→]"},
-		{ItemSub, "[­und­]"},
-		{ItemSub, "fünfzig"},
+	exp = []string{
+		"[→%spellout-cardinal-masculine→]",
+		"[­und­]",
+		"fünfzig",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "' =%spellout-cardinal-masculine=;"
-	exp = Result{
-		{ItemSub, "' "},
-		{ItemSub, "=%spellout-cardinal-masculine="},
+	exp = []string{
+		"' ",
+		"=%spellout-cardinal-masculine=",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "பன்னிரண்டு;"
-	exp = Result{
-		{ItemSub, "பன்னிரண்டு"},
+	exp = []string{
+		"பன்னிரண்டு",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "அறுபது;"
-	exp = Result{
-		{ItemSub, "அறுபது"},
+	exp = []string{
+		"அறுபது",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = "எழுநூறு;"
-	exp = Result{
-		{ItemSub, "எழுநூறு"},
+	exp = []string{
+		"எழுநூறு",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 
 	//
 	input = ", =%spellout-cardinal-verbose=;"
-	exp = Result{
-		{ItemSub, ", "},
-		{ItemSub, "=%spellout-cardinal-verbose="},
+	exp = []string{
+		", ",
+		"=%spellout-cardinal-verbose=",
 	}
 	l = Lex(input)
 	l.Run()
-	for _, err := range compare(input, exp, l.Result()) {
+	for _, err := range compareStrings(input, exp, l.Result()) {
 		t.Error(err)
 	}
 

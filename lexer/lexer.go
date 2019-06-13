@@ -18,9 +18,9 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-type Result []Item
+type result []item
 
-func (r Result) String() string {
+func (r result) String() string {
 	res := []string{}
 	for _, i := range r {
 		res = append(res, i.String())
@@ -28,10 +28,10 @@ func (r Result) String() string {
 	return strings.Join(res, ", ")
 }
 
-func (r Result) Errors() []Item {
-	var res []Item
+func (r result) Errors() []item {
+	var res []item
 	for _, i := range r {
-		if i.Typ == ItemError {
+		if i.typ == itemError {
 			res = append(res, i)
 		}
 	}
@@ -43,32 +43,32 @@ type Lexer struct {
 	start  int    // start position of this Item
 	pos    int    // current position in the input
 	width  int    // width of last rune read
-	result Result // slice of scanned Items
+	result result // slice of scanned Items
 	state  stateFn
 }
 
-type Item struct {
-	Typ ItemType
-	Val string
+type item struct {
+	typ itemType
+	val string
 }
 
-func (i Item) String() string {
-	switch i.Typ {
-	case ItemError:
-		return i.Val
+func (i item) String() string {
+	switch i.typ {
+	case itemError:
+		return i.val
 	}
-	return fmt.Sprintf("%s{%v}", i.Typ, i.Val)
+	return fmt.Sprintf("%s{%v}", i.typ, i.val)
 }
 
 //go:generate stringer -type=ItemType (doesn't work with go mod?)
 
-type ItemType int
+type itemType int
 
 const (
-	ItemError ItemType = iota
-	ItemSub
-	ItemLeftBracket
-	ItemRightBracket
+	itemError itemType = iota
+	itemSub
+	itemLeftBracket
+	itemRightBracket
 )
 
 const (
@@ -89,15 +89,15 @@ const (
 	x                       = 'x'
 )
 
-func (t ItemType) String() string {
+func (t itemType) String() string {
 	switch t {
-	case ItemError:
+	case itemError:
 		return "error"
-	case ItemSub:
+	case itemSub:
 		return "sub"
-	case ItemLeftBracket:
+	case itemLeftBracket:
 		return "leftbracket"
-	case ItemRightBracket:
+	case itemRightBracket:
 		return "rightbracket"
 	default:
 		panic(fmt.Sprintf("undefined string output for %d", t))
@@ -123,8 +123,8 @@ func (l *Lexer) next2() (rune, rune) {
 
 func (l *Lexer) errorf(format string, args ...interface{}) stateFn {
 	return func(lx *Lexer) stateFn {
-		i := Item{
-			ItemError,
+		i := item{
+			itemError,
 			fmt.Sprintf(format, args...),
 		}
 		l.result = append(l.result, i)
@@ -218,11 +218,11 @@ func subFn(l *Lexer) stateFn {
 			return nil
 		} else if r == leftBracket {
 			l.next()
-			l.emit(ItemLeftBracket)
+			l.emit(itemLeftBracket)
 			return subFn
 		} else if r == rightBracket {
 			l.next()
-			l.emit(ItemRightBracket)
+			l.emit(itemRightBracket)
 			return subFn
 		} else if r == rightArr || r == leftArr || r == '=' {
 			l.next()
@@ -249,7 +249,7 @@ func subFn(l *Lexer) stateFn {
 			l.next()
 			break
 		} else {
-			return l.errorf("unknown opening input at expected %v: '%v'", ItemSub, l.currentToEnd())
+			return l.errorf("unknown opening input at expected %v: '%v'", itemSub, l.currentToEnd())
 		}
 	}
 
@@ -262,7 +262,7 @@ func subFn(l *Lexer) stateFn {
 			if includeClosingRune {
 				l.next()
 			}
-			l.emit(ItemSub)
+			l.emit(itemSub)
 			if r == eof {
 				l.next()
 				return prematureEndOfInput
@@ -317,25 +317,25 @@ func Lex(input string) *Lexer {
 	l := &Lexer{
 		input:  input,
 		state:  initialState,
-		result: Result{},
+		result: result{},
 	}
 	return l
 }
 
-func (l *Lexer) Result() Result {
-	res := []Item{}
+func (l *Lexer) Result() []string {
+	res := []string{}
 	// Post-process brackets for optional content
 	openBracket := false
 	for _, item := range l.result {
-		if item.Typ == ItemLeftBracket {
+		if item.typ == itemLeftBracket {
 			openBracket = true
-		} else if item.Typ == ItemRightBracket {
+		} else if item.typ == itemRightBracket {
 			openBracket = false
 		} else if openBracket {
-			item.Val = "[" + item.Val + "]"
-			res = append(res, item)
+			item.val = "[" + item.val + "]"
+			res = append(res, item.val)
 		} else {
-			res = append(res, item)
+			res = append(res, item.val)
 		}
 	}
 	return res
@@ -347,8 +347,8 @@ func (l *Lexer) current() string {
 func (l *Lexer) currentToEnd() string {
 	return l.input[l.pos:]
 }
-func (l *Lexer) emit(t ItemType) {
-	i := Item{t, l.current()}
+func (l *Lexer) emit(t itemType) {
+	i := item{t, l.current()}
 	//fmt.Printf("emit: %s\n", i)
 	l.result = append(l.result, i)
 	l.start = l.pos
@@ -365,9 +365,9 @@ func (l *Lexer) Run() error {
 	for state := initialState; state != nil; {
 		state = state(l)
 	}
-	for _, i := range l.Result() {
-		if i.Typ == ItemError {
-			return fmt.Errorf("%v", i.Val)
+	for _, i := range l.result {
+		if i.typ == itemError {
+			return fmt.Errorf("%v", i.val)
 		}
 	}
 	return nil
