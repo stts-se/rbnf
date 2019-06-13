@@ -236,6 +236,7 @@ func (r *BaseRule) Match(input string) (MatchResult, bool) {
 
 	// B) String rule
 
+	// TODO
 	var fasterMatch = true
 
 	if fasterMatch {
