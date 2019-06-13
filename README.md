@@ -2,6 +2,9 @@
 
 Libraries and commands for numeric expansion, based on the "RBNF" part of the ICU project (http://site.icu-project.org/  and http://cldr.unicode.org/).
 
+<!--
+[![GoDoc](https://godoc.org/github.com/stts-se/rbnf?status.svg)](https://godoc.org/github.com/stts-se/rbnf) [![Go Report Card](https://goreportcard.com/badge/github.com/stts-se/rbnf)](https://goreportcard.com/report/github.com/stts-se/rbnf) [![Build Status](https://travis-ci.org/stts-se/rbnf.svg?branch=master)] 
+-->
 
 The license of the original software and data is here: https://github.com/unicode-org/icu/blob/master/icu4c/LICENSE http://www.unicode.org/copyright.html#License
 
