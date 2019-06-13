@@ -1,3 +1,8 @@
+/** Package xmlreader contains a parser for the CLDR RBNF format https://github.com/unicode-org/cldr/tree/master/common/rbnf
+
+License for CLDR: https://github.com/unicode-org/cldr/blob/master/ICU-LICENSE
+
+*/
 package xmlreader
 
 import (
