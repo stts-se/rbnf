@@ -471,9 +471,14 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 	//res = strings.TrimSpace(res)       // trim space  -- ga 120.000 doesn't work with trimspace here
 	res = strings.TrimPrefix(res, "'") // trim single quote after trim space
 	res = strings.Replace(res, "  ", " ", -1)
-	// if res == "" {
-	// 	return input, fmt.Errorf("empty output for input string %s", input)
-	// }
+	if res == "" {
+		if debug {
+			fmt.Fprintf(os.Stderr, "empty output for input string %s", input)
+		}
+		if !ruleSet.Private {
+			return input, fmt.Errorf("empty output for input string %s", input)
+		}
+	}
 	return res, nil
 }
 
