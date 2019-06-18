@@ -376,7 +376,9 @@ func findMatchingRule(input string, ruleSet RuleSet) (BaseRule, bool) {
 
 func (g RuleSetGroup) Spellout(input string, ruleSetName string, debug bool) (string, error) {
 	if rs, ok := g.FindRuleSet(ruleSetName); ok {
-		return g.spellout(input, rs, debug)
+		res, err := g.spellout(input, rs, debug)
+		return strings.TrimSpace(res), err
+
 	}
 	return "", fmt.Errorf("No such rule set: %s", ruleSetName)
 }
@@ -466,11 +468,12 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 	}
 
 	res := strings.Join(subs, "")
-	res = strings.TrimSpace(res)       // trim space
+	//res = strings.TrimSpace(res)       // trim space  -- ga 120.000 doesn't work with trimspace here
 	res = strings.TrimPrefix(res, "'") // trim single quote after trim space
-	if res == "" {
-		return input, fmt.Errorf("empty output for input string %s", input)
-	}
+	res = strings.Replace(res, "  ", " ", -1)
+	// if res == "" {
+	// 	return input, fmt.Errorf("empty output for input string %s", input)
+	// }
 	return res, nil
 }
 

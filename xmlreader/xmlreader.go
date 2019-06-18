@@ -130,7 +130,9 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 				rule.Subs = append(rule.Subs, rbnf.ParseSub(replaceChars(i)))
 			}
 		}
-		//fmt.Printf("PARSED RULE\t%#v\t%#v\t%#v\t%#v\n", res.Name, r.String, rule, rule)
+		if Verb {
+			fmt.Printf("PARSED RULE\t%#v\t%#v\t%#v\t%#v\n", res.Name, r.String, rule, rule)
+		}
 		res.Rules = append(res.Rules, rule)
 	}
 
