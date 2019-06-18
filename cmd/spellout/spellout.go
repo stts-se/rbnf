@@ -29,6 +29,7 @@ func main() {
 	listAllRules := flags.Bool("L", false, "List all (private/public) rules and exit (rule groups and rule sets)")
 	ruleGroup := flags.String("g", "", "Use named `rule group` (default first group)")
 	ruleSet := flags.String("r", "", "Use named `rule set`")
+	trimSoftHyphen := flags.Bool("t", false, "Remove soft hyphen")
 	debug := flags.Bool("d", false, "Debug")
 	help := flags.Bool("h", false, "Print usage and exit")
 	flags.Parse(os.Args[1:])
@@ -128,6 +129,9 @@ func main() {
 		nSpelled++
 		if err != nil {
 			log.Fatalf("Couldn't spellout %s : %v", s, err)
+		}
+		if *trimSoftHyphen {
+			res = strings.Replace(res, "\u00ad", "", -1)
 		}
 		fmt.Printf("%s\t%s\n", s, res)
 	}
