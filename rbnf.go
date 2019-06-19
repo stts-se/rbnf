@@ -112,6 +112,10 @@ func (sub Sub) IsRuleRef() bool {
 	return sub.RuleRef != "" && strings.HasPrefix(sub.RuleRef, "%")
 }
 
+func (sub Sub) IsError() bool {
+	return sub.Orth == "ERROR"
+}
+
 func (sub Sub) Validate() error {
 	if sub.Orth != "" && sub.RuleRef != "" {
 		return fmt.Errorf("Orth and RuleRef cannot both be instantiated")
@@ -450,6 +454,8 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 			}
 		} else if sub.IsRuleRef() {
 			return input, fmt.Errorf("unknown rule set ref %s in rule sub %s", sub.RuleRef, sub)
+		} else if sub.IsError() {
+			return input, fmt.Errorf("Internal rule error for input string %s (pre-defined in rule)", input)
 		} else if sub.Operation == ">>" {
 			spelled, err := g.spellout(match.ForwardRight, ruleSet, debug)
 			if err != nil {

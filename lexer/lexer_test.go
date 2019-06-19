@@ -372,3 +372,21 @@ func TestMiscLangs(t *testing.T) {
 	}
 
 }
+
+func TestError(t *testing.T) {
+	var input string
+	var exp []string
+	var l *Lexer
+
+	//
+	input = "ERROR;"
+	exp = []string{
+		"ERROR",
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compareStrings(input, exp, l.Result()) {
+		t.Error(err)
+	}
+
+}

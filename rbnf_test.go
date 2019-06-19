@@ -595,6 +595,7 @@ func Test_SpelloutDE(t *testing.T) {
 			NewIntRule(70, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "siebzig"),
 			NewIntRule(80, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "achtzig"),
 			NewIntRule(90, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "neunzig"),
+			NewIntRule(100, 10, "ERROR"),
 		},
 	}
 	spelloutCardinalMasculine := RuleSet{
@@ -637,6 +638,11 @@ func Test_SpelloutDE(t *testing.T) {
 	}
 	if res != exp {
 		t.Errorf(fs, exp, res)
+	}
+
+	res, err = g.Spellout("100", "spellout-numbering", false)
+	if err == nil {
+		t.Error("expected error here")
 	}
 
 }
