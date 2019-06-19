@@ -236,6 +236,12 @@ func subFn(l *Lexer) stateFn {
 					}
 					return false, false
 				}
+				if strings.IndexRune(l.current(), '#') >= 0 {
+					if strings.IndexRune("#,.0123456789", rx) < 0 {
+						return true, true
+					}
+					return false, false
+				}
 				if strings.IndexRune(delimChars, rx) >= 0 {
 					return true, false
 				}

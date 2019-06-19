@@ -390,3 +390,32 @@ func TestError(t *testing.T) {
 	}
 
 }
+
+func TestHashes(t *testing.T) {
+	var input string
+	var exp []string
+	var l *Lexer
+
+	//
+	input = "=#,##0.#=;"
+	exp = []string{
+		"=#,##0.#=",
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compareStrings(input, exp, l.Result()) {
+		t.Error(err)
+	}
+
+	//
+	input = ">#,##0.#>;"
+	exp = []string{
+		">#,##0.#>",
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compareStrings(input, exp, l.Result()) {
+		t.Error(err)
+	}
+
+}
