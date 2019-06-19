@@ -116,7 +116,7 @@ func (sub Sub) IsRuleRef() bool {
 }
 
 func (sub Sub) IsFormatRef() bool {
-	return strings.HasPrefix(sub.RuleRef, "#")
+	return strings.HasPrefix(sub.RuleRef, "#") || (sub.Operation != "" && sub.RuleRef == "0")
 }
 
 func (sub Sub) IsError() bool {
@@ -410,6 +410,7 @@ func findMatchingRule(input string, ruleSet RuleSet) (BaseRule, bool) {
 	return res, found
 }
 
+// details here: http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/DecimalFormat.html
 func format(input, lang, format string, debug bool) (string, error) {
 	if debug {
 		fmt.Fprintf(os.Stderr, "[rbnf.format] Input:%s Lang:%s Fmt:%s\n", input, lang, format)

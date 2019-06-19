@@ -75,8 +75,6 @@ var threeArrows = regexp.MustCompile("(→%+[a-z-]*→[a-z-]*→|←%+[a-z-]*←
 func unsupportedRuleFormat(rFmt string) bool {
 	return strings.Contains(rFmt, "$") ||
 		strings.Contains(rFmt, "ignorable") ||
-		//strings.Contains(rFmt, "##") ||
-		strings.Contains(rFmt, "=0=") ||
 		strings.Contains(rFmt, "→→→") ||
 		threeArrows.MatchString(rFmt)
 }

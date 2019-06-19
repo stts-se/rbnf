@@ -418,4 +418,15 @@ func TestHashes(t *testing.T) {
 		t.Error(err)
 	}
 
+	//
+	input = "=0=;"
+	exp = []string{
+		"=0=",
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compareStrings(input, exp, l.Result()) {
+		t.Error(err)
+	}
+
 }
