@@ -7,6 +7,8 @@ import (
 	// "sort"
 	"strconv"
 	"strings"
+
+	"golang.org/x/text/message"
 )
 
 type RuleSet struct {
@@ -304,8 +306,8 @@ type RulePackage struct {
 	Debug         bool
 }
 
-func (p RulePackage) Spellout(input string, groupName string, ruleSetName string, debug bool) (string, error) {
-	for _, g := range p.RuleSetGroups {
+func (r *RulePackage) Spellout(input string, groupName string, ruleSetName string, debug bool) (string, error) {
+	for _, g := range r.RuleSetGroups {
 		if g.Name == groupName {
 			res, err := g.Spellout(input, ruleSetName, debug)
 			if err != nil {
@@ -319,6 +321,7 @@ func (p RulePackage) Spellout(input string, groupName string, ruleSetName string
 
 type RuleSetGroup struct {
 	Name     string
+	Language string
 	RuleSets map[string]RuleSet
 }
 
@@ -330,14 +333,38 @@ func (g RuleSetGroup) FindRuleSet(ruleRef string) (RuleSet, bool) {
 	return res, ok
 }
 
-func NewRuleSetGroup(name string, ruleSets []RuleSet) (RuleSetGroup, error) {
+func NewRulePackage(lang string, ruleSetGroups []RuleSetGroup, debug bool) (RulePackage, error) {
+	res := RulePackage{Language: lang, Debug: debug, RuleSetGroups: ruleSetGroups}
+	for _, g := range res.RuleSetGroups {
+		if g.Language != res.Language {
+			return res, fmt.Errorf("Language for rule set group %s does not match package language: %s / %s", g.Name, res.Language, g.Language)
+		}
+		for _, ruleSet := range g.RuleSets {
+			for _, rule := range ruleSet.Rules {
+				if rule.Base.Int != 0 && rule.Base.String != "" {
+					return res, fmt.Errorf("Rule must use either BaseInt or BaseString, not both: %v", rule)
+				}
+				for _, sub := range rule.Subs {
+					if sub.IsRuleRef() {
+						if _, ok := g.FindRuleSet(sub.RuleRef); !ok {
+							return res, fmt.Errorf("No such rule set: %s", sub)
+						}
+					}
+				}
+			}
+		}
+	}
+	return res, nil
+}
+
+func NewRuleSetGroup(name string, lang string, ruleSets []RuleSet) (RuleSetGroup, error) {
 	rsMap := make(map[string]RuleSet)
 	for _, rs := range ruleSets {
 		// sort each rule set in ascending order?
 		//sort.Slice(rs.Rules, func(i, j int) bool { return rs.Rules[i].BaseInt < rs.Rules[j].BaseInt })
 		rsMap[rs.Name] = rs
 	}
-	res := RuleSetGroup{Name: name, RuleSets: rsMap}
+	res := RuleSetGroup{Name: name, Language: lang, RuleSets: rsMap}
 
 	for _, ruleSet := range res.RuleSets {
 		for _, rule := range ruleSet.Rules {
@@ -382,12 +409,29 @@ func findMatchingRule(input string, ruleSet RuleSet) (BaseRule, bool) {
 	return res, found
 }
 
-func (g RuleSetGroup) format(input string, format string, debug bool) (string, error) {
-	return input, nil
-	//return "", fmt.Errorf("g.format not implemented")
+func format(input, language, format string, debug bool) (string, error) {
+	if debug {
+		fmt.Fprintf(os.Stderr, "[rbnf.format] Input:%s Lang:%s Fmt:%s\n", input, language, format)
+	}
+	p := message.NewPrinter(message.MatchLanguage(language))
+	i, err := strconv.ParseInt(input, 10, 64)
+	if err != nil {
+		f, err := strconv.ParseFloat(input, 64)
+		if err != nil {
+			return input, err
+		}
+		if debug {
+			fmt.Fprintf(os.Stderr, "[rbnf.format] f: %f\n", f)
+		}
+		return p.Sprint(f), nil
+	}
+	if debug {
+		fmt.Fprintf(os.Stderr, "[rbnf.format] i: %d\n", i)
+	}
+	return p.Sprint(i), nil
 }
 
-func (g RuleSetGroup) Spellout(input string, ruleSetName string, debug bool) (string, error) {
+func (g *RuleSetGroup) Spellout(input string, ruleSetName string, debug bool) (string, error) {
 	if rs, ok := g.FindRuleSet(ruleSetName); ok {
 		res, err := g.spellout(input, rs, debug)
 		return strings.TrimSpace(res), err
@@ -396,7 +440,7 @@ func (g RuleSetGroup) Spellout(input string, ruleSetName string, debug bool) (st
 	return "", fmt.Errorf("No such rule set: %s", ruleSetName)
 }
 
-func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (string, error) {
+func (g *RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (string, error) {
 	matchedRule, ok := findMatchingRule(input, ruleSet)
 	if !ok {
 		return input, fmt.Errorf("No matching base rule for %s", input)
@@ -441,19 +485,19 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 		}
 		if sub.IsFormatRef() {
 			if sub.Operation == ">>" {
-				spelled, err := g.format(match.ForwardRight, sub.RuleRef, debug)
+				spelled, err := format(match.ForwardRight, g.Language, sub.RuleRef, debug)
 				if err != nil {
 					return "", err
 				}
 				subs = append(subs, spelled)
 			} else if sub.Operation == "<<" {
-				spelled, err := g.format(match.ForwardLeft, sub.RuleRef, debug)
+				spelled, err := format(match.ForwardLeft, g.Language, sub.RuleRef, debug)
 				if err != nil {
 					return "", err
 				}
 				subs = append(subs, spelled)
 			} else if sub.Operation == "==" {
-				spelled, err := g.format(input, sub.RuleRef, debug)
+				spelled, err := format(input, g.Language, sub.RuleRef, debug)
 				if err != nil {
 					return "", err
 				}

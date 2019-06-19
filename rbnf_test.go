@@ -186,6 +186,7 @@ func Test_Spellout1(t *testing.T) {
 	}
 	g, err := NewRuleSetGroup(
 		"spellout-cardinal",
+		"sv",
 		[]RuleSet{
 			defaultRules,
 			spelloutCardinalReale,
@@ -377,6 +378,7 @@ func Test_Spellout2(t *testing.T) {
 
 	g, err := NewRuleSetGroup(
 		"years",
+		"sv",
 		[]RuleSet{
 			defaultRules,
 		})
@@ -491,6 +493,7 @@ func Test_SpelloutOperationEqSign(t *testing.T) {
 
 	g, err := NewRuleSetGroup(
 		"years",
+		"sv",
 		[]RuleSet{
 			defaultRules,
 			rules2,
@@ -612,6 +615,7 @@ func Test_SpelloutDE(t *testing.T) {
 
 	g, err := NewRuleSetGroup(
 		"default",
+		"de",
 		[]RuleSet{
 			defaultRules,
 			spelloutCardinalMasculine,
@@ -649,12 +653,61 @@ func Test_SpelloutDE(t *testing.T) {
 
 	//
 	res, err = g.Spellout("1000000000000000000", "spellout-numbering", false)
-	//exp = "1.000.000.000.000.000.000"
-	exp = "1000000000000000000"
+	exp = "1,000,000,000,000,000,000"
 	if err != nil {
 		t.Error(err)
 	} else if res != exp {
 		t.Errorf(fs, exp, res)
 	}
 
+}
+
+func TestHashFormat(t *testing.T) {
+
+	var lang, input, res, exp string
+	var err error
+
+	//
+	lang = "de"
+	input = "1000000000000000000"
+	exp = "1,000,000,000,000,000,000"
+	res, err = format(input, lang, "#,##", false)
+	if err != nil {
+		t.Error(err)
+	} else if res != exp {
+		t.Errorf(fs, exp, res)
+	}
+
+	//
+	lang = "de"
+	input = "12000.3789"
+	exp = "12,000.3789"
+	res, err = format(input, lang, "#,##", false)
+	if err != nil {
+		t.Error(err)
+	} else if res != exp {
+		t.Errorf(fs, exp, res)
+	}
+
+	//
+	lang = "sv"
+	input = "1000000000000000000"
+	exp = "1,000,000,000,000,000,000"
+	res, err = format(input, lang, "#,##", false)
+	if err != nil {
+		t.Error(err)
+	} else if res != exp {
+		t.Errorf(fs, exp, res)
+	}
+
+	//
+	lang = "sv"
+	input = "12000.3789"
+	exp = "12,000.3789"
+	res, err = format(input, lang, "#,##", false)
+	if err != nil {
+		t.Error(err)
+	} else if res != exp {
+		t.Errorf(fs, exp, res)
+	}
 }

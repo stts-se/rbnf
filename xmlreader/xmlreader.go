@@ -164,7 +164,7 @@ func convertGroup(g *RulesetGrouping) (string, []rbnf.RuleSet, error) {
 	return name, res, fmt.Errorf("no rule sets for rule set group %s", name)
 }
 
-func rulesFromLdml(ldml Ldml) ([]rbnf.RuleSetGroup, error) {
+func rulesFromLdml(ldml Ldml, lang string) ([]rbnf.RuleSetGroup, error) {
 	//var res rbnf.RuleSetGroup
 	res := []rbnf.RuleSetGroup{}
 	// name of whole file
@@ -182,7 +182,7 @@ func rulesFromLdml(ldml Ldml) ([]rbnf.RuleSetGroup, error) {
 			//fmt.Fprintf(os.Stderr, "skipping rule group '%s' : %v", name, err)
 			//continue
 		}
-		group, err := rbnf.NewRuleSetGroup(name, ruleSet)
+		group, err := rbnf.NewRuleSetGroup(name, lang, ruleSet)
 		if err != nil {
 
 			//fmt.Printf("%#v\n", group)
@@ -210,12 +210,12 @@ func RulesFromXMLFile(fn string) (rbnf.RulePackage, error) {
 	}
 	lang = ldml.Identity.Language.Attrtype
 
-	groups, err := rulesFromLdml(ldml)
+	groups, err := rulesFromLdml(ldml, lang)
 	if err != nil {
 		return rbnf.RulePackage{}, fmt.Errorf("RulesFromXMLFile: %v", err)
 	}
 
-	return rbnf.RulePackage{Language: lang, RuleSetGroups: groups}, nil
+	return rbnf.NewRulePackage(lang, groups, false)
 }
 
 func RulesFromXMLURL(url string) (rbnf.RulePackage, error) {
@@ -227,10 +227,10 @@ func RulesFromXMLURL(url string) (rbnf.RulePackage, error) {
 	}
 	lang = ldml.Identity.Language.Attrtype
 
-	groups, err := rulesFromLdml(ldml)
+	groups, err := rulesFromLdml(ldml, lang)
 	if err != nil {
 		return rbnf.RulePackage{}, fmt.Errorf("RulesFromXMLURL: %v", err)
 	}
 
-	return rbnf.RulePackage{Language: lang, RuleSetGroups: groups}, nil
+	return rbnf.NewRulePackage(lang, groups, false)
 }
