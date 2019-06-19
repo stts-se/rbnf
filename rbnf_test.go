@@ -653,7 +653,7 @@ func Test_SpelloutDE(t *testing.T) {
 
 	//
 	res, err = g.Spellout("1000000000000000000", "spellout-numbering", false)
-	exp = "1,000,000,000,000,000,000"
+	exp = "1.000.000.000.000.000.000"
 	if err != nil {
 		t.Error(err)
 	} else if res != exp {
@@ -668,7 +668,7 @@ func TestHashFormat(t *testing.T) {
 	var err error
 
 	//
-	lang = "de"
+	lang = "en"
 	input = "1000000000000000000"
 	exp = "1,000,000,000,000,000,000"
 	res, err = format(input, lang, "#,##", false)
@@ -679,9 +679,31 @@ func TestHashFormat(t *testing.T) {
 	}
 
 	//
-	lang = "de"
+	lang = "en"
 	input = "12000.3789"
 	exp = "12,000.3789"
+	res, err = format(input, lang, "#,##", false)
+	if err != nil {
+		t.Error(err)
+	} else if res != exp {
+		t.Errorf(fs, exp, res)
+	}
+
+	//
+	lang = "de"
+	input = "1000000000000000000"
+	exp = "1.000.000.000.000.000.000"
+	res, err = format(input, lang, "#,##", false)
+	if err != nil {
+		t.Error(err)
+	} else if res != exp {
+		t.Errorf(fs, exp, res)
+	}
+
+	//
+	lang = "de"
+	input = "12000.3789"
+	exp = "12.000,3789"
 	res, err = format(input, lang, "#,##", false)
 	if err != nil {
 		t.Error(err)
@@ -692,7 +714,7 @@ func TestHashFormat(t *testing.T) {
 	//
 	lang = "sv"
 	input = "1000000000000000000"
-	exp = "1,000,000,000,000,000,000"
+	exp = "1 000 000 000 000 000 000" // non-breaking space \u00A0
 	res, err = format(input, lang, "#,##", false)
 	if err != nil {
 		t.Error(err)
@@ -703,7 +725,18 @@ func TestHashFormat(t *testing.T) {
 	//
 	lang = "sv"
 	input = "12000.3789"
-	exp = "12,000.3789"
+	exp = "12 000,3789" // non-breaking space \u00A0
+	res, err = format(input, lang, "#,##", false)
+	if err != nil {
+		t.Error(err)
+	} else if res != exp {
+		t.Errorf(fs, exp, res)
+	}
+
+	//
+	lang = "bn"
+	input = "123456.78"
+	exp = "১,২৩,৪৫৬.৭৮"
 	res, err = format(input, lang, "#,##", false)
 	if err != nil {
 		t.Error(err)

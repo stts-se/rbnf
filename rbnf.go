@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
 
@@ -409,11 +410,11 @@ func findMatchingRule(input string, ruleSet RuleSet) (BaseRule, bool) {
 	return res, found
 }
 
-func format(input, language, format string, debug bool) (string, error) {
+func format(input, lang, format string, debug bool) (string, error) {
 	if debug {
-		fmt.Fprintf(os.Stderr, "[rbnf.format] Input:%s Lang:%s Fmt:%s\n", input, language, format)
+		fmt.Fprintf(os.Stderr, "[rbnf.format] Input:%s Lang:%s Fmt:%s\n", input, lang, format)
 	}
-	p := message.NewPrinter(message.MatchLanguage(language))
+	var p = message.NewPrinter(language.Make(lang))
 	var numeric interface{}
 	var err error
 	numeric, err = strconv.ParseInt(input, 10, 64)
@@ -424,9 +425,10 @@ func format(input, language, format string, debug bool) (string, error) {
 		}
 	}
 	if debug {
-		fmt.Fprintf(os.Stderr, "[rbnf.format] i: %d\n", numeric)
+		fmt.Fprintf(os.Stderr, "[rbnf.format] numeric: %v\n", numeric)
 	}
-	return p.Sprint(numeric), nil
+	res := p.Sprint(numeric)
+	return res, nil
 }
 
 func (g *RuleSetGroup) Spellout(input string, ruleSetName string, debug bool) (string, error) {
@@ -441,7 +443,11 @@ func (g *RuleSetGroup) Spellout(input string, ruleSetName string, debug bool) (s
 func (g *RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (string, error) {
 	matchedRule, ok := findMatchingRule(input, ruleSet)
 	if !ok {
-		return input, fmt.Errorf("No matching base rule for %s", input)
+		err := fmt.Errorf("No matching base rule for %s", input)
+		if debug {
+			fmt.Fprintf(os.Stderr, "[rbnf] %v : rule set: %#v\n", err, ruleSet)
+		}
+		return input, err
 	}
 	if debug {
 		fmt.Fprintf(os.Stderr, "[rbnf] Input %v\n", input)
@@ -546,9 +552,11 @@ func (g *RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (stri
 		}
 	}
 
+	for i, sub := range subs {
+		subs[i] = strings.Trim(sub, "'")
+	}
 	res := strings.Join(subs, "")
 	//res = strings.TrimSpace(res)       // trim space  -- ga 120.000 doesn't work with trimspace here
-	res = strings.TrimPrefix(res, "'") // trim single quote after trim space
 	res = strings.Replace(res, "  ", " ", -1)
 	if res == "" {
 		if debug {

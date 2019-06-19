@@ -158,6 +158,24 @@ func TestRulesFromXMLFileSV(t *testing.T) {
 		t.Errorf("wanted %s, got %s", expect, res)
 	}
 
+	input = "12345"
+	expect = "12 345:e"
+	res, err = pack.Spellout(input, "OrdinalRules", "digits-ordinal-masculine", true)
+	if err != nil {
+		t.Errorf("Filtsocka: %s! %v", input, err)
+	} else if res != expect {
+		t.Errorf("wanted %s, got %s", expect, res)
+	}
+
+	input = "2300000007000010000"
+	expect = "2 300 000 007 000 010 000:e"
+	res, err = pack.Spellout(input, "SpelloutRules", "spellout-ordinal-neuter", true)
+	if err != nil {
+		t.Errorf("Filtsocka: %s! %v", input, err)
+	} else if res != expect {
+		t.Errorf("wanted %s, got %s", expect, res)
+	}
+
 }
 
 func TestRulesFromXMLFileDE(t *testing.T) {

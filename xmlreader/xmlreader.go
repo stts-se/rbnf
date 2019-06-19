@@ -75,7 +75,7 @@ var threeArrows = regexp.MustCompile("(→%+[a-z-]*→[a-z-]*→|←%+[a-z-]*←
 func unsupportedRuleFormat(rFmt string) bool {
 	return strings.Contains(rFmt, "$") ||
 		strings.Contains(rFmt, "ignorable") ||
-		strings.Contains(rFmt, "##") ||
+		//strings.Contains(rFmt, "##") ||
 		strings.Contains(rFmt, "=0=") ||
 		strings.Contains(rFmt, "→→→") ||
 		threeArrows.MatchString(rFmt)
@@ -130,9 +130,9 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 				rule.Subs = append(rule.Subs, rbnf.ParseSub(replaceChars(i)))
 			}
 		}
-		if Verb {
-			fmt.Printf("PARSED RULE\t%#v\t%#v\t%#v\t%#v\n", res.Name, r.String, rule, rule)
-		}
+		// if Verb {
+		// 	fmt.Fprintf(os.Stderr, "PARSED RULE\t%#v\t%#v\t%#v\t%#v\n", res.Name, r.String, rule, rule)
+		// }
 		res.Rules = append(res.Rules, rule)
 	}
 
