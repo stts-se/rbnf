@@ -19,7 +19,8 @@ The following format strings are used in the ICU rules, but not supported by thi
 * _$_ (for singular and plural forms)
 * _last primary ignorable_
 * _→→→_
-*  Only partial support for decimal format [http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/DecimalFormat.html]
+*  Partial support for decimal format <br/>
+http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/DecimalFormat.html
 
 The rule sets have information on the public/private attribute, but the distinction is not supported on rule execution (all rules can be references as if they were public).
 
