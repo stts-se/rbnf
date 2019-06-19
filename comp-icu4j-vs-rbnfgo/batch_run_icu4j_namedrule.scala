@@ -35,14 +35,14 @@ if (args.length>=4) {
     val s = args(i)
     val n = if (s.matches("^[0-9-]+$")) s.toLong else s.toDouble
     val res = rbnf.format(n,ruleset)
-    Console.out.println(n + "\t" + res)
+    Console.out.println(s + "\t" + n + "\t" + res)
   }
 } else {
   var s = ""
   while ({s = StdIn.readLine(); s != null}) {
     val n = if (s.matches("^[0-9-]+$")) s.toLong else s.toDouble
     val res = rbnf.format(n,ruleset)
-    Console.out.println(n + "\t" + res)
+    Console.out.println(s + "\t" + n + "\t" + res)
   }
 
 
