@@ -1,14 +1,13 @@
 # rbnf
 
-This is a Go implementation of parts of ICU's spellout rules (RBNF) for numbers.
 
-
-It's based on the "RBNF" part of the ICU project (http://site.icu-project.org/  and http://cldr.unicode.org/).
-
-<!--
+![License: MIT](https://img.shields.io/badge/License-MIT-green.svg) <!--
 [![GoDoc](https://godoc.org/github.com/stts-se/rbnf?status.svg)](https://godoc.org/github.com/stts-se/rbnf) [![Go Report Card](https://goreportcard.com/badge/github.com/stts-se/rbnf)](https://goreportcard.com/report/github.com/stts-se/rbnf) [![Build Status](https://travis-ci.org/stts-se/rbnf.svg?branch=master)] 
 -->
 
+This is a Go implementation of parts of ICU's spellout rules (RBNF) for numbers.
+
+It's based on the "RBNF" part of the ICU project (http://site.icu-project.org/  and http://cldr.unicode.org/).
 
 The license of the original software and data is here: https://github.com/unicode-org/icu/blob/master/icu4c/LICENSE http://www.unicode.org/copyright.html#License
 
