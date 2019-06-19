@@ -112,6 +112,10 @@ func (sub Sub) IsRuleRef() bool {
 	return sub.RuleRef != "" && strings.HasPrefix(sub.RuleRef, "%")
 }
 
+func (sub Sub) IsFormatRef() bool {
+	return strings.HasPrefix(sub.RuleRef, "#")
+}
+
 func (sub Sub) IsError() bool {
 	return sub.Orth == "ERROR"
 }
@@ -378,6 +382,11 @@ func findMatchingRule(input string, ruleSet RuleSet) (BaseRule, bool) {
 	return res, found
 }
 
+func (g RuleSetGroup) format(input string, format string, debug bool) (string, error) {
+	return input, nil
+	//return "", fmt.Errorf("g.format not implemented")
+}
+
 func (g RuleSetGroup) Spellout(input string, ruleSetName string, debug bool) (string, error) {
 	if rs, ok := g.FindRuleSet(ruleSetName); ok {
 		res, err := g.spellout(input, rs, debug)
@@ -430,7 +439,29 @@ func (g RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (strin
 		if debug {
 			fmt.Fprintf(os.Stderr, "[rbnf] Accumulated subs: %#v\n", subs)
 		}
-		if namedRuleSet, ok := g.FindRuleSet(sub.RuleRef); ok {
+		if sub.IsFormatRef() {
+			if sub.Operation == ">>" {
+				spelled, err := g.format(match.ForwardRight, sub.RuleRef, debug)
+				if err != nil {
+					return "", err
+				}
+				subs = append(subs, spelled)
+			} else if sub.Operation == "<<" {
+				spelled, err := g.format(match.ForwardLeft, sub.RuleRef, debug)
+				if err != nil {
+					return "", err
+				}
+				subs = append(subs, spelled)
+			} else if sub.Operation == "==" {
+				spelled, err := g.format(input, sub.RuleRef, debug)
+				if err != nil {
+					return "", err
+				}
+				subs = append(subs, spelled)
+			} else {
+				return input, fmt.Errorf("unknown operation for sub %#v : %s", sub, sub.Operation)
+			}
+		} else if namedRuleSet, ok := g.FindRuleSet(sub.RuleRef); ok {
 			if sub.Operation == ">>" {
 				spelled, err := g.spellout(match.ForwardRight, namedRuleSet, debug)
 				if err != nil {

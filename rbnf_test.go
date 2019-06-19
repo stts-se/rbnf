@@ -648,12 +648,13 @@ func Test_SpelloutDE(t *testing.T) {
 	}
 
 	//
-	// res, err = g.Spellout("1000000000000000000", "spellout-numbering", false)
-	// exp = "XX"
-	// if err != nil {
-	// 	t.Error(err)
-	// } else if res != exp {
-	// 	t.Errorf(fs, exp, res)
-	// }
+	res, err = g.Spellout("1000000000000000000", "spellout-numbering", false)
+	//exp = "1.000.000.000.000.000.000"
+	exp = "1000000000000000000"
+	if err != nil {
+		t.Error(err)
+	} else if res != exp {
+		t.Errorf(fs, exp, res)
+	}
 
 }
