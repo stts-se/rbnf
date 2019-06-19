@@ -33,16 +33,16 @@ else {
 if (args.length>=4) {
   for (i <- 3 until args.length) {
     val s = args(i)
-    val n = s.toLong
+    val n = if (s.matches("^[0-9-]+$")) s.toLong else s.toDouble
     val res = rbnf.format(n,ruleset)
-    Console.out.println(s + "\t" + res)
+    Console.out.println(n + "\t" + res)
   }
 } else {
   var s = ""
   while ({s = StdIn.readLine(); s != null}) {
-    val n = s.toLong
+    val n = if (s.matches("^[0-9-]+$")) s.toLong else s.toDouble
     val res = rbnf.format(n,ruleset)
-    Console.out.println(s + "\t" + res)
+    Console.out.println(n + "\t" + res)
   }
 
 
