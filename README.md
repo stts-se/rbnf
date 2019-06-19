@@ -17,9 +17,9 @@ The current spellout implementation does not use any of the original ICU code, b
 ## Unsupported features
 The following format strings are used in the ICU rules, but not supported by this package:
 * _$_ (for singular and plural forms)
-*  _=0=_
 * _last primary ignorable_
 * _→→→_
+*  _=0=_
 
 The rule sets have information on the public/private attribute, but the distinction is not supported on rule execution (all rules can be references as if they were public).
 
