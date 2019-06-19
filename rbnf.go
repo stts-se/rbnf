@@ -414,21 +414,19 @@ func format(input, language, format string, debug bool) (string, error) {
 		fmt.Fprintf(os.Stderr, "[rbnf.format] Input:%s Lang:%s Fmt:%s\n", input, language, format)
 	}
 	p := message.NewPrinter(message.MatchLanguage(language))
-	i, err := strconv.ParseInt(input, 10, 64)
+	var numeric interface{}
+	var err error
+	numeric, err = strconv.ParseInt(input, 10, 64)
 	if err != nil {
-		f, err := strconv.ParseFloat(input, 64)
+		numeric, err = strconv.ParseFloat(input, 64)
 		if err != nil {
 			return input, err
 		}
-		if debug {
-			fmt.Fprintf(os.Stderr, "[rbnf.format] f: %f\n", f)
-		}
-		return p.Sprint(f), nil
 	}
 	if debug {
-		fmt.Fprintf(os.Stderr, "[rbnf.format] i: %d\n", i)
+		fmt.Fprintf(os.Stderr, "[rbnf.format] i: %d\n", numeric)
 	}
-	return p.Sprint(i), nil
+	return p.Sprint(numeric), nil
 }
 
 func (g *RuleSetGroup) Spellout(input string, ruleSetName string, debug bool) (string, error) {
