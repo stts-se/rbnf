@@ -28,7 +28,6 @@ mkdir -p $outdir
 all_langs="af ak am ar az be bg bs ca ccp chr cs cy da de de_CH ee el en en_IN eo es et fa fa_AF ff fi fil fo fr fr_BE fr_CH ga he hi hr hu hy id is it ja ka kl km ko ky lb lo lrc lt lv mk ms mt my nb nl nn pl pt pt_PT qu ro ru se sk sl sq sr sr_Latn sv sw ta th tr uk vi yue yue_Hans zh"
 
 langs=$all_langs
-langs="ru"
 
 echo "LANGS: $langs" 1>&2
 echo "OUTDIR: $outdir" 1>&2
