@@ -118,3 +118,7 @@ Usage:
 * ICU license: <br/>
   http://www.unicode.org/copyright.html#License <br/>
   https://github.com/unicode-org/icu/blob/master/icu4c/LICENSE
+  
+  -------------------------
+  
+  (There is a CLDR package in Go: https://godoc.org/golang.org/x/text/unicode/cldr)
