@@ -19,11 +19,11 @@ The following format strings are used in the ICU rules, but not fully supported 
 * _last primary ignorable_
 * _→→→_
 
-## Partially supported features
-* Singular/plural inflection forms (rules formulated as _$(...)$_) <br/>
-https://unicode.org/reports/tr35/tr35-numbers.html#Language_Plural_Rules
+## Experimental support
 *  Decimal format <br/>
 http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/DecimalFormat.html
+* Singular/plural inflection forms (rules formulated as _$(...)$_) <br/>
+https://unicode.org/reports/tr35/tr35-numbers.html#Language_Plural_Rules
 
 The rule sets have information on the public/private attribute, but the distinction is not supported on rule execution (all rules can be references as if they were public).
 
