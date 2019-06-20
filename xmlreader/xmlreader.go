@@ -79,7 +79,7 @@ func unsupportedRuleFormat(rFmt string) bool {
 		threeArrows.MatchString(rFmt)
 }
 
-func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
+func convertRuleSet(rs *Ruleset, lang string) (rbnf.RuleSet, error) {
 	var res rbnf.RuleSet
 	res.Name = rs.Attrtype
 	if rs.Attraccess == "private" {
@@ -125,7 +125,7 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 
 		} else {
 			for _, i := range lex.Result() {
-				rule.Subs = append(rule.Subs, rbnf.ParseSub(replaceChars(i)))
+				rule.Subs = append(rule.Subs, rbnf.ParseSub(replaceChars(i), rbnf.Language(lang)))
 			}
 		}
 		// if Verb {
@@ -137,7 +137,7 @@ func convertRuleSet(rs *Ruleset) (rbnf.RuleSet, error) {
 	return res, nil
 }
 
-func convertGroup(g *RulesetGrouping) (string, []rbnf.RuleSet, error) {
+func convertGroup(g *RulesetGrouping, lang string) (string, []rbnf.RuleSet, error) {
 	var res []rbnf.RuleSet
 	name := g.Attrtype
 	if strings.TrimSpace(name) == "" {
@@ -145,7 +145,7 @@ func convertGroup(g *RulesetGrouping) (string, []rbnf.RuleSet, error) {
 	}
 
 	for _, rs := range g.Ruleset {
-		rbnfRuleSet, err := convertRuleSet(rs)
+		rbnfRuleSet, err := convertRuleSet(rs, lang)
 		if err != nil {
 			return name, res, fmt.Errorf("failed to convert rule set : %v", err)
 			//fmt.Fprintf(os.Stderr, "skipping rule set '%s' : %v\n", rbntRuleSet.Name, err)
@@ -174,13 +174,13 @@ func rulesFromLdml(ldml Ldml, lang string) ([]rbnf.RuleSetGroup, error) {
 
 	var rbnfGroups []rbnf.RuleSetGroup
 	for _, g := range groups {
-		name, ruleSet, err := convertGroup(g)
+		name, ruleSet, err := convertGroup(g, lang)
 		if err != nil {
 			return res, fmt.Errorf("failed to convert rule group : %v", err)
 			//fmt.Fprintf(os.Stderr, "skipping rule group '%s' : %v", name, err)
 			//continue
 		}
-		group, err := rbnf.NewRuleSetGroup(name, lang, ruleSet)
+		group, err := rbnf.NewRuleSetGroup(name, rbnf.Language(lang), ruleSet)
 		if err != nil {
 
 			//fmt.Printf("%#v\n", group)
@@ -213,7 +213,7 @@ func RulesFromXMLFile(fn string) (rbnf.RulePackage, error) {
 		return rbnf.RulePackage{}, fmt.Errorf("RulesFromXMLFile: %v", err)
 	}
 
-	return rbnf.NewRulePackage(lang, groups, false)
+	return rbnf.NewRulePackage(rbnf.Language(lang), groups, false)
 }
 
 func RulesFromXMLURL(url string) (rbnf.RulePackage, error) {
@@ -230,5 +230,5 @@ func RulesFromXMLURL(url string) (rbnf.RulePackage, error) {
 		return rbnf.RulePackage{}, fmt.Errorf("RulesFromXMLURL: %v", err)
 	}
 
-	return rbnf.NewRulePackage(lang, groups, false)
+	return rbnf.NewRulePackage(rbnf.Language(lang), groups, false)
 }

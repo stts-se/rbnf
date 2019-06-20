@@ -10,7 +10,7 @@ import com.ibm.icu.util.ULocale
 if (args.length < 3) {
   Console.err.println("USAGE: scala batch_run_icu4j_ordinal.scala <langcode> <rulegroup> <ruleset> <numerals>")
   Console.err.println("   OR: cat <numeralfiles> | scala batch_run_icu4j_ordinal.scala <langcode> <rulegroup> <ruleset>")
-  Console.err.println("   <rulegroup> cardinal/ordinal")
+  Console.err.println("   <rulegroup> spellout/ordinal")
   System.exit(1)
 }
 
@@ -19,7 +19,7 @@ var ruleset = args(2)
 if (!ruleset.startsWith("%")) {
   ruleset = "%" + ruleset
 }
-val rbnf = if (rulegroup.equalsIgnoreCase("cardinal"))
+val rbnf = if (rulegroup.equalsIgnoreCase("spellout"))
   new RuleBasedNumberFormat(new ULocale(args(0)), RuleBasedNumberFormat.SPELLOUT)
 else if (rulegroup.equalsIgnoreCase("ordinal"))
   new RuleBasedNumberFormat(new ULocale(args(0)), RuleBasedNumberFormat.ORDINAL)

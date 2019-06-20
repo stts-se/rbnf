@@ -45,6 +45,8 @@ func NewBaseInt(n int, radix int) Base {
 
 }
 
+type Language string
+
 func (b Base) ToString() string {
 	if b.IsInt() {
 		return fmt.Sprintf("%d (%d)", b.Int, b.Radix)
@@ -59,14 +61,25 @@ func (b Base) Value() string {
 	return b.String
 }
 
+type Formatter struct {
+	printer     *message.Printer
+	format      string
+	initialized bool
+}
+
+func (f Formatter) String() string {
+	return f.format
+}
+
 type Sub struct {
 	Optional  bool
 	Orth      string
 	RuleRef   string
+	Formatter Formatter
 	Operation string
 }
 
-func ParseSub(sub string) Sub {
+func ParseSub(sub string, lang Language) Sub {
 	input := sub
 	res := Sub{}
 	if len([]rune(sub)) == 0 {
@@ -82,14 +95,19 @@ func ParseSub(sub string) Sub {
 	firstChar := string([]rune(sub)[0])
 	if (firstChar == ">" || firstChar == "<" || firstChar == "=") && strings.HasSuffix(sub, firstChar) {
 		res.Operation = firstChar + firstChar
-		ruleRef := strings.TrimPrefix(strings.TrimSuffix(sub, firstChar), firstChar)
-		res.RuleRef = ruleRef
+		ref := strings.TrimPrefix(strings.TrimSuffix(sub, firstChar), firstChar)
+		if strings.HasPrefix(ref, "#") || (res.Operation != "" && strings.Contains(ref, "0")) {
+			p := message.NewPrinter(language.Make(string(lang)))
+			res.Formatter = Formatter{printer: p, format: ref, initialized: true}
+		} else {
+			res.RuleRef = ref
+		}
 	} else {
 		res.Orth = sub
 	}
 	if res.String() != input {
-		s := fmt.Sprintf("wtf! %s != %s (%#v)", input, res.String(), res)
-		panic(s)
+		msg := fmt.Sprintf("wtf! %s != %s (%#v)", input, res.String(), res)
+		panic(msg)
 	}
 	return res
 }
@@ -100,6 +118,8 @@ func (sub Sub) String() string {
 		res = sub.Orth
 	} else if sub.RuleRef != "" {
 		res = sub.RuleRef
+	} else if sub.Formatter.initialized {
+		res = sub.Formatter.String()
 	}
 	if sub.Operation != "" {
 		op := []rune(sub.Operation)[0]
@@ -116,7 +136,7 @@ func (sub Sub) IsRuleRef() bool {
 }
 
 func (sub Sub) IsFormatRef() bool {
-	return strings.HasPrefix(sub.RuleRef, "#") || (sub.Operation != "" && sub.RuleRef == "0")
+	return sub.Formatter.initialized
 }
 
 func (sub Sub) IsError() bool {
@@ -143,10 +163,10 @@ type BaseRule struct {
 	Subs []Sub
 }
 
-func NewIntRule(baseInt int, radix int, subs ...string) BaseRule {
+func NewIntRule(lang Language, baseInt int, radix int, subs ...string) BaseRule {
 	subSubs := []Sub{}
 	for _, s := range subs {
-		sub := ParseSub(s)
+		sub := ParseSub(s, lang)
 		subSubs = append(subSubs, sub)
 	}
 	return BaseRule{
@@ -154,10 +174,10 @@ func NewIntRule(baseInt int, radix int, subs ...string) BaseRule {
 		Subs: subSubs,
 	}
 }
-func NewStringRule(baseString string, subs ...string) BaseRule {
+func NewStringRule(lang Language, baseString string, subs ...string) BaseRule {
 	subSubs := []Sub{}
 	for _, s := range subs {
-		sub := ParseSub(s)
+		sub := ParseSub(s, lang)
 		subSubs = append(subSubs, sub)
 	}
 	return BaseRule{
@@ -302,7 +322,7 @@ type MatchResult struct {
 }
 
 type RulePackage struct {
-	Language      string
+	Language      Language
 	RuleSetGroups []RuleSetGroup
 	Debug         bool
 }
@@ -322,7 +342,7 @@ func (r *RulePackage) Spellout(input string, groupName string, ruleSetName strin
 
 type RuleSetGroup struct {
 	Name     string
-	Language string
+	Language Language
 	RuleSets map[string]RuleSet
 }
 
@@ -334,7 +354,7 @@ func (g RuleSetGroup) FindRuleSet(ruleRef string) (RuleSet, bool) {
 	return res, ok
 }
 
-func NewRulePackage(lang string, ruleSetGroups []RuleSetGroup, debug bool) (RulePackage, error) {
+func NewRulePackage(lang Language, ruleSetGroups []RuleSetGroup, debug bool) (RulePackage, error) {
 	res := RulePackage{Language: lang, Debug: debug, RuleSetGroups: ruleSetGroups}
 	for _, g := range res.RuleSetGroups {
 		if g.Language != res.Language {
@@ -358,7 +378,25 @@ func NewRulePackage(lang string, ruleSetGroups []RuleSetGroup, debug bool) (Rule
 	return res, nil
 }
 
-func NewRuleSetGroup(name string, lang string, ruleSets []RuleSet) (RuleSetGroup, error) {
+func (g RuleSetGroup) Validate() error {
+	for _, ruleSet := range g.RuleSets {
+		for _, rule := range ruleSet.Rules {
+			if rule.Base.Int != 0 && rule.Base.String != "" {
+				return fmt.Errorf("Rule must use either BaseInt or BaseString, not both: %v", rule)
+			}
+			for _, sub := range rule.Subs {
+				if sub.IsRuleRef() {
+					if _, ok := g.FindRuleSet(sub.RuleRef); !ok {
+						return fmt.Errorf("No such rule set: %s", sub)
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func NewRuleSetGroup(name string, lang Language, ruleSets []RuleSet) (RuleSetGroup, error) {
 	rsMap := make(map[string]RuleSet)
 	for _, rs := range ruleSets {
 		// sort each rule set in ascending order?
@@ -367,21 +405,9 @@ func NewRuleSetGroup(name string, lang string, ruleSets []RuleSet) (RuleSetGroup
 	}
 	res := RuleSetGroup{Name: name, Language: lang, RuleSets: rsMap}
 
-	for _, ruleSet := range res.RuleSets {
-		for _, rule := range ruleSet.Rules {
-			if rule.Base.Int != 0 && rule.Base.String != "" {
-				return res, fmt.Errorf("Rule must use either BaseInt or BaseString, not both: %v", rule)
-			}
-			for _, sub := range rule.Subs {
-				if sub.IsRuleRef() {
-					if _, ok := res.FindRuleSet(sub.RuleRef); !ok {
-						return res, fmt.Errorf("No such rule set: %s", sub)
-					}
-				}
-			}
-		}
-	}
-	return res, nil
+	err := res.Validate()
+
+	return res, err
 }
 
 func findMatchingRule(input string, ruleSet RuleSet) (BaseRule, bool) {
@@ -411,11 +437,11 @@ func findMatchingRule(input string, ruleSet RuleSet) (BaseRule, bool) {
 }
 
 // details here: http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/DecimalFormat.html
-func format(input, lang, format string, debug bool) (string, error) {
+func format(input string, formatter Formatter, debug bool) (string, error) {
 	if debug {
-		fmt.Fprintf(os.Stderr, "[rbnf.format] Input:%s Lang:%s Fmt:%s\n", input, lang, format)
+		fmt.Fprintf(os.Stderr, "[rbnf.format] Input:%s Fmt:%s\n", input, formatter.format)
 	}
-	var p = message.NewPrinter(language.Make(lang))
+	//var p = message.NewPrinter(language.Make(lang))
 	var numeric interface{}
 	var err error
 	numeric, err = strconv.ParseInt(input, 10, 64)
@@ -428,7 +454,7 @@ func format(input, lang, format string, debug bool) (string, error) {
 	if debug {
 		fmt.Fprintf(os.Stderr, "[rbnf.format] numeric: %v\n", numeric)
 	}
-	res := p.Sprint(numeric)
+	res := formatter.printer.Sprint(numeric)
 	return res, nil
 }
 
@@ -490,19 +516,19 @@ func (g *RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (stri
 		}
 		if sub.IsFormatRef() {
 			if sub.Operation == ">>" {
-				spelled, err := format(match.ForwardRight, g.Language, sub.RuleRef, debug)
+				spelled, err := format(match.ForwardRight, sub.Formatter, debug)
 				if err != nil {
 					return "", err
 				}
 				subs = append(subs, spelled)
 			} else if sub.Operation == "<<" {
-				spelled, err := format(match.ForwardLeft, g.Language, sub.RuleRef, debug)
+				spelled, err := format(match.ForwardLeft, sub.Formatter, debug)
 				if err != nil {
 					return "", err
 				}
 				subs = append(subs, spelled)
 			} else if sub.Operation == "==" {
-				spelled, err := format(input, g.Language, sub.RuleRef, debug)
+				spelled, err := format(input, sub.Formatter, debug)
 				if err != nil {
 					return "", err
 				}

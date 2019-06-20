@@ -3,6 +3,9 @@ package rbnf
 import (
 	"strings"
 	"testing"
+
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 var fs = "Expected '%v', got '%v'"
@@ -21,33 +24,34 @@ func Test_exp(t *testing.T) {
 
 func Test_Divisor(t *testing.T) {
 	var r BaseRule
+	var lang = Language("sv")
 
-	r = NewIntRule(10, 10, "tio")
+	r = NewIntRule(lang, 10, 10, "tio")
 	if w, g := 10, r.Base.Divisor(); w != g {
 		t.Errorf(fs, w, g)
 	}
 
-	r = NewIntRule(100, 10, "hundra")
+	r = NewIntRule(lang, 100, 10, "hundra")
 	if w, g := 100, r.Base.Divisor(); w != g {
 		t.Errorf(fs, w, g)
 	}
 
-	r = NewIntRule(200, 10, "hundra")
+	r = NewIntRule(lang, 200, 10, "hundra")
 	if w, g := 100, r.Base.Divisor(); w != g {
 		t.Errorf(fs, w, g)
 	}
 
-	r = NewIntRule(2000, 10, "tusen", "")
+	r = NewIntRule(lang, 2000, 10, "tusen", "")
 	if w, g := 1000, r.Base.Divisor(); w != g {
 		t.Errorf(fs, w, g)
 	}
 
-	r = NewIntRule(2000, 10, "tusen", ">>")
+	r = NewIntRule(lang, 2000, 10, "tusen", ">>")
 	if w, g := 1000, r.Base.Divisor(); w != g {
 		t.Errorf(fs, w, g)
 	}
 
-	r = NewIntRule(1100, 100, "hundra", ">>")
+	r = NewIntRule(lang, 1100, 100, "hundra", ">>")
 	if w, g := 100, r.Base.Divisor(); w != g {
 		t.Errorf(fs, w, g)
 	}
@@ -55,133 +59,134 @@ func Test_Divisor(t *testing.T) {
 }
 
 func Test_Spellout1(t *testing.T) {
+	lang := Language("sv")
 	defaultRules := RuleSet{
 		Name: "default",
 		Rules: []BaseRule{
-			NewIntRule(0, 10, "noll"),
-			NewIntRule(1, 10, "ett"),
-			NewIntRule(2, 10, "två"),
-			NewIntRule(3, 10, "tre"),
-			NewIntRule(4, 10, "fyra"),
-			NewIntRule(5, 10, "fem"),
-			NewIntRule(6, 10, "sex"),
-			NewIntRule(7, 10, "sju"),
-			NewIntRule(8, 10, "åtta"),
-			NewIntRule(9, 10, "nio"),
-			NewIntRule(10, 10, "tio"),
-			NewIntRule(11, 10, "elva"),
-			NewIntRule(12, 10, "tolv"),
-			NewIntRule(13, 10, "tretton"),
-			NewIntRule(14, 10, "fjorton"),
-			NewIntRule(15, 10, "femton"),
-			NewIntRule(16, 10, "sexton"),
-			NewIntRule(17, 10, "sjutton"),
-			NewIntRule(18, 10, "arton"),
-			NewIntRule(19, 10, "nitton"),
-			NewIntRule(20, 10, "tjugo", "[-]", "[>>]"),
-			NewIntRule(30, 10, "trettio", "[-]", "[>>]"),
-			NewIntRule(40, 10, "fyrtio", "[-]", "[>>]"),
-			NewIntRule(50, 10, "femtio", "[-]", "[>>]"),
-			NewIntRule(60, 10, "sextio", "[-]", "[>>]"),
-			NewIntRule(70, 10, "sjuttio", "[-]", "[>>]"),
-			NewIntRule(80, 10, "åttio", "[-]", "[>>]"),
-			NewIntRule(90, 10, "nittio", "[-]", "[>>]"),
+			NewIntRule(lang, 0, 10, "noll"),
+			NewIntRule(lang, 1, 10, "ett"),
+			NewIntRule(lang, 2, 10, "två"),
+			NewIntRule(lang, 3, 10, "tre"),
+			NewIntRule(lang, 4, 10, "fyra"),
+			NewIntRule(lang, 5, 10, "fem"),
+			NewIntRule(lang, 6, 10, "sex"),
+			NewIntRule(lang, 7, 10, "sju"),
+			NewIntRule(lang, 8, 10, "åtta"),
+			NewIntRule(lang, 9, 10, "nio"),
+			NewIntRule(lang, 10, 10, "tio"),
+			NewIntRule(lang, 11, 10, "elva"),
+			NewIntRule(lang, 12, 10, "tolv"),
+			NewIntRule(lang, 13, 10, "tretton"),
+			NewIntRule(lang, 14, 10, "fjorton"),
+			NewIntRule(lang, 15, 10, "femton"),
+			NewIntRule(lang, 16, 10, "sexton"),
+			NewIntRule(lang, 17, 10, "sjutton"),
+			NewIntRule(lang, 18, 10, "arton"),
+			NewIntRule(lang, 19, 10, "nitton"),
+			NewIntRule(lang, 20, 10, "tjugo", "[-]", "[>>]"),
+			NewIntRule(lang, 30, 10, "trettio", "[-]", "[>>]"),
+			NewIntRule(lang, 40, 10, "fyrtio", "[-]", "[>>]"),
+			NewIntRule(lang, 50, 10, "femtio", "[-]", "[>>]"),
+			NewIntRule(lang, 60, 10, "sextio", "[-]", "[>>]"),
+			NewIntRule(lang, 70, 10, "sjuttio", "[-]", "[>>]"),
+			NewIntRule(lang, 80, 10, "åttio", "[-]", "[>>]"),
+			NewIntRule(lang, 90, 10, "nittio", "[-]", "[>>]"),
 
-			NewIntRule(100, 10, "<<", " ", "hundra", "[ ]", "[>>]"),
+			NewIntRule(lang, 100, 10, "<<", " ", "hundra", "[ ]", "[>>]"),
 
-			NewIntRule(1000, 10, " ", "ettusen", "[ ]", "[>>]"),
-			NewIntRule(2000, 10, "<%spellout-cardinal-reale<", " ", "tusen", "[ ]", "[>>]"),
+			NewIntRule(lang, 1000, 10, " ", "ettusen", "[ ]", "[>>]"),
+			NewIntRule(lang, 2000, 10, "<%spellout-cardinal-reale<", " ", "tusen", "[ ]", "[>>]"),
 
-			NewIntRule(1000000, 10, " ", "en miljon", "[ ]", "[>>]"),
-			NewIntRule(2000000, 10, "<%spellout-cardinal-reale<", " ", "miljoner", "[ ]", "[>>]"),
-			NewIntRule(1000000000, 10, "en miljard", "[ ]", "[>>]"),
-			NewIntRule(2000000000, 10, "<%spellout-cardinal-reale<", " ", "miljarder", "[ ]", "[>>]"),
+			NewIntRule(lang, 1000000, 10, " ", "en miljon", "[ ]", "[>>]"),
+			NewIntRule(lang, 2000000, 10, "<%spellout-cardinal-reale<", " ", "miljoner", "[ ]", "[>>]"),
+			NewIntRule(lang, 1000000000, 10, "en miljard", "[ ]", "[>>]"),
+			NewIntRule(lang, 2000000000, 10, "<%spellout-cardinal-reale<", " ", "miljarder", "[ ]", "[>>]"),
 		},
 	}
 
 	spelloutCardinalReale := RuleSet{
 		Name: "spellout-cardinal-reale",
 		Rules: []BaseRule{
-			NewIntRule(0, 10, "noll"),
-			NewIntRule(1, 10, "en"),
-			NewIntRule(2, 10, "två"),
-			NewIntRule(3, 10, "tre"),
-			NewIntRule(4, 10, "fyra"),
-			NewIntRule(5, 10, "fem"),
-			NewIntRule(6, 10, "sex"),
-			NewIntRule(7, 10, "sju"),
-			NewIntRule(8, 10, "åtta"),
-			NewIntRule(9, 10, "nio"),
-			NewIntRule(10, 10, "tio"),
-			NewIntRule(11, 10, "elva"),
-			NewIntRule(12, 10, "tolv"),
-			NewIntRule(13, 10, "tretton"),
-			NewIntRule(14, 10, "fjorton"),
-			NewIntRule(15, 10, "femton"),
-			NewIntRule(16, 10, "sexton"),
-			NewIntRule(17, 10, "sjutton"),
-			NewIntRule(18, 10, "arton"),
-			NewIntRule(19, 10, "nitton"),
-			NewIntRule(20, 10, "tjugo", "[-]", "[>>]"),
-			NewIntRule(30, 10, "trettio", "[-]", "[>>]"),
-			NewIntRule(40, 10, "fyrtio", "[-]", "[>>]"),
-			NewIntRule(50, 10, "femtio", "[-]", "[>>]"),
-			NewIntRule(60, 10, "sextio", "[-]", "[>>]"),
-			NewIntRule(70, 10, "sjuttio", "[-]", "[>>]"),
-			NewIntRule(80, 10, "åttio", "[-]", "[>>]"),
-			NewIntRule(90, 10, "nittio", "[-]", "[>>]"),
-			NewIntRule(100, 10, "<%spellout-cardinal-neuter<", " ", "hundra", "[ ]", "[>>]"),
-			NewIntRule(1000, 10, " ", "ettusen", "[-]", "[>>]"),
-			NewIntRule(2000, 10, "<%spellout-cardinal-reale<", " ", "tusen", "[ ]", "[>>]"),
-			NewIntRule(1000000, 10, " ", "en miljon", "[ ]", "[>>]"),
-			NewIntRule(2000000, 10, "<%spellout-cardinal-reale<", " ", "miljoner", "[ ]", "[>>]"),
+			NewIntRule(lang, 0, 10, "noll"),
+			NewIntRule(lang, 1, 10, "en"),
+			NewIntRule(lang, 2, 10, "två"),
+			NewIntRule(lang, 3, 10, "tre"),
+			NewIntRule(lang, 4, 10, "fyra"),
+			NewIntRule(lang, 5, 10, "fem"),
+			NewIntRule(lang, 6, 10, "sex"),
+			NewIntRule(lang, 7, 10, "sju"),
+			NewIntRule(lang, 8, 10, "åtta"),
+			NewIntRule(lang, 9, 10, "nio"),
+			NewIntRule(lang, 10, 10, "tio"),
+			NewIntRule(lang, 11, 10, "elva"),
+			NewIntRule(lang, 12, 10, "tolv"),
+			NewIntRule(lang, 13, 10, "tretton"),
+			NewIntRule(lang, 14, 10, "fjorton"),
+			NewIntRule(lang, 15, 10, "femton"),
+			NewIntRule(lang, 16, 10, "sexton"),
+			NewIntRule(lang, 17, 10, "sjutton"),
+			NewIntRule(lang, 18, 10, "arton"),
+			NewIntRule(lang, 19, 10, "nitton"),
+			NewIntRule(lang, 20, 10, "tjugo", "[-]", "[>>]"),
+			NewIntRule(lang, 30, 10, "trettio", "[-]", "[>>]"),
+			NewIntRule(lang, 40, 10, "fyrtio", "[-]", "[>>]"),
+			NewIntRule(lang, 50, 10, "femtio", "[-]", "[>>]"),
+			NewIntRule(lang, 60, 10, "sextio", "[-]", "[>>]"),
+			NewIntRule(lang, 70, 10, "sjuttio", "[-]", "[>>]"),
+			NewIntRule(lang, 80, 10, "åttio", "[-]", "[>>]"),
+			NewIntRule(lang, 90, 10, "nittio", "[-]", "[>>]"),
+			NewIntRule(lang, 100, 10, "<%spellout-cardinal-neuter<", " ", "hundra", "[ ]", "[>>]"),
+			NewIntRule(lang, 1000, 10, " ", "ettusen", "[-]", "[>>]"),
+			NewIntRule(lang, 2000, 10, "<%spellout-cardinal-reale<", " ", "tusen", "[ ]", "[>>]"),
+			NewIntRule(lang, 1000000, 10, " ", "en miljon", "[ ]", "[>>]"),
+			NewIntRule(lang, 2000000, 10, "<%spellout-cardinal-reale<", " ", "miljoner", "[ ]", "[>>]"),
 		},
 	}
 
 	spelloutCardinalNeuter := RuleSet{
 		Name: "spellout-cardinal-neuter",
 		Rules: []BaseRule{
-			NewIntRule(0, 10, "noll"),
-			NewIntRule(1, 10, "ett"),
-			NewIntRule(2, 10, "två"),
-			NewIntRule(3, 10, "tre"),
-			NewIntRule(4, 10, "fyra"),
-			NewIntRule(5, 10, "fem"),
-			NewIntRule(6, 10, "sex"),
-			NewIntRule(7, 10, "sju"),
-			NewIntRule(8, 10, "åtta"),
-			NewIntRule(9, 10, "nio"),
-			NewIntRule(10, 10, "tio"),
-			NewIntRule(11, 10, "elva"),
-			NewIntRule(12, 10, "tolv"),
-			NewIntRule(13, 10, "tretton"),
-			NewIntRule(14, 10, "fjorton"),
-			NewIntRule(15, 10, "femton"),
-			NewIntRule(16, 10, "sexton"),
-			NewIntRule(17, 10, "sjutton"),
-			NewIntRule(18, 10, "arton"),
-			NewIntRule(19, 10, "nitton"),
-			NewIntRule(20, 10, "tjugo", "[-]", "[>>]"),
-			NewIntRule(30, 10, "trettio", "[-]", "[>>]"),
-			NewIntRule(40, 10, "fyrtio", "[-]", "[>>]"),
-			NewIntRule(50, 10, "femtio", "[-]", "[>>]"),
-			NewIntRule(60, 10, "sextio", "[-]", "[>>]"),
-			NewIntRule(70, 10, "sjuttio", "[-]", "[>>]"),
-			NewIntRule(80, 10, "åttio", "[-]", "[>>]"),
-			NewIntRule(90, 10, "nittio", "[-]", "[>>]"),
-			NewIntRule(100, 10, "<%spellout-cardinal-neuter<", "hundra", "[ ]", "[>>]"),
-			NewIntRule(1000, 10, "ettusen", "[ ]", "[>>]"),
-			NewIntRule(2000, 10, "<%spellout-cardinal-reale<", "tusen", "[ ]", "[>>]"),
-			NewIntRule(1000000, 10, "en miljon", "[ ]", "[>>]"),
-			NewIntRule(2000000, 10, "<%spellout-cardinal-reale<", " ", "miljoner", "[ ]", "[>>]"),
-			NewIntRule(1000000000, 10, "en miljard", "[ ]", "[>>]"),
-			NewIntRule(2000000000, 10, "<%spellout-cardinal-reale<", " ", "miljarder", "[ ]", "[>>]"),
+			NewIntRule(lang, 0, 10, "noll"),
+			NewIntRule(lang, 1, 10, "ett"),
+			NewIntRule(lang, 2, 10, "två"),
+			NewIntRule(lang, 3, 10, "tre"),
+			NewIntRule(lang, 4, 10, "fyra"),
+			NewIntRule(lang, 5, 10, "fem"),
+			NewIntRule(lang, 6, 10, "sex"),
+			NewIntRule(lang, 7, 10, "sju"),
+			NewIntRule(lang, 8, 10, "åtta"),
+			NewIntRule(lang, 9, 10, "nio"),
+			NewIntRule(lang, 10, 10, "tio"),
+			NewIntRule(lang, 11, 10, "elva"),
+			NewIntRule(lang, 12, 10, "tolv"),
+			NewIntRule(lang, 13, 10, "tretton"),
+			NewIntRule(lang, 14, 10, "fjorton"),
+			NewIntRule(lang, 15, 10, "femton"),
+			NewIntRule(lang, 16, 10, "sexton"),
+			NewIntRule(lang, 17, 10, "sjutton"),
+			NewIntRule(lang, 18, 10, "arton"),
+			NewIntRule(lang, 19, 10, "nitton"),
+			NewIntRule(lang, 20, 10, "tjugo", "[-]", "[>>]"),
+			NewIntRule(lang, 30, 10, "trettio", "[-]", "[>>]"),
+			NewIntRule(lang, 40, 10, "fyrtio", "[-]", "[>>]"),
+			NewIntRule(lang, 50, 10, "femtio", "[-]", "[>>]"),
+			NewIntRule(lang, 60, 10, "sextio", "[-]", "[>>]"),
+			NewIntRule(lang, 70, 10, "sjuttio", "[-]", "[>>]"),
+			NewIntRule(lang, 80, 10, "åttio", "[-]", "[>>]"),
+			NewIntRule(lang, 90, 10, "nittio", "[-]", "[>>]"),
+			NewIntRule(lang, 100, 10, "<%spellout-cardinal-neuter<", "hundra", "[ ]", "[>>]"),
+			NewIntRule(lang, 1000, 10, "ettusen", "[ ]", "[>>]"),
+			NewIntRule(lang, 2000, 10, "<%spellout-cardinal-reale<", "tusen", "[ ]", "[>>]"),
+			NewIntRule(lang, 1000000, 10, "en miljon", "[ ]", "[>>]"),
+			NewIntRule(lang, 2000000, 10, "<%spellout-cardinal-reale<", " ", "miljoner", "[ ]", "[>>]"),
+			NewIntRule(lang, 1000000000, 10, "en miljard", "[ ]", "[>>]"),
+			NewIntRule(lang, 2000000000, 10, "<%spellout-cardinal-reale<", " ", "miljarder", "[ ]", "[>>]"),
 		},
 	}
 	spelloutCardinalNeuter2 := RuleSet{
 		Name: "spellout-cardinal-neuter-2",
 		Rules: []BaseRule{
-			NewIntRule(0, 10, "=%spellout-cardinal-neuter="),
+			NewIntRule(lang, 0, 10, "=%spellout-cardinal-neuter="),
 		},
 	}
 	g, err := NewRuleSetGroup(
@@ -337,42 +342,44 @@ func Test_Spellout1(t *testing.T) {
 }
 
 func Test_Spellout2(t *testing.T) {
+	var lang = Language("sv")
+
 	defaultRules := RuleSet{
 		Name: "default",
 		Rules: []BaseRule{
-			NewStringRule("-x", "minus", " ", ">>"),
-			NewStringRule("x.x", "<<", " ", "komma", " ", ">>"),
-			NewIntRule(0, 10, "noll"),
-			NewIntRule(1, 10, "ett"),
-			NewIntRule(2, 10, "två"),
-			NewIntRule(3, 10, "tre"),
-			NewIntRule(4, 10, "fyra"),
-			NewIntRule(5, 10, "fem"),
-			NewIntRule(6, 10, "sex"),
-			NewIntRule(7, 10, "sju"),
-			NewIntRule(8, 10, "åtta"),
-			NewIntRule(9, 10, "nio"),
-			NewIntRule(10, 10, "tio"),
-			NewIntRule(11, 10, "elva"),
-			NewIntRule(12, 10, "tolv"),
-			NewIntRule(13, 10, "tretton"),
-			NewIntRule(14, 10, "fjorton"),
-			NewIntRule(15, 10, "femton"),
-			NewIntRule(16, 10, "sexton"),
-			NewIntRule(17, 10, "sjutton"),
-			NewIntRule(18, 10, "arton"),
-			NewIntRule(19, 10, "nitton"),
-			NewIntRule(20, 10, "tjugo", "[-]", "[>>]"),
-			NewIntRule(30, 10, "trettio", "[-]", "[>>]"),
-			NewIntRule(40, 10, "fyrtio", "[-]", "[>>]"),
-			NewIntRule(50, 10, "femtio", "[-]", "[>>]"),
-			NewIntRule(60, 10, "sextio", "[-]", "[>>]"),
-			NewIntRule(70, 10, "sjuttio", "[-]", "[>>]"),
-			NewIntRule(80, 10, "åttio", "[-]", "[>>]"),
-			NewIntRule(90, 10, "nittio", "[-]", "[>>]"),
-			NewIntRule(100, 10, "<<", "hundra", "[ ]", "[>>]"),
-			NewIntRule(1100, 100, "<<", " ", "hundra", "[ ]", "[>>]"),
-			NewIntRule(2000, 10, "<<", " ", "tusen", "[ ]", "[>>]"),
+			NewStringRule(lang, "-x", "minus", " ", ">>"),
+			NewStringRule(lang, "x.x", "<<", " ", "komma", " ", ">>"),
+			NewIntRule(lang, 0, 10, "noll"),
+			NewIntRule(lang, 1, 10, "ett"),
+			NewIntRule(lang, 2, 10, "två"),
+			NewIntRule(lang, 3, 10, "tre"),
+			NewIntRule(lang, 4, 10, "fyra"),
+			NewIntRule(lang, 5, 10, "fem"),
+			NewIntRule(lang, 6, 10, "sex"),
+			NewIntRule(lang, 7, 10, "sju"),
+			NewIntRule(lang, 8, 10, "åtta"),
+			NewIntRule(lang, 9, 10, "nio"),
+			NewIntRule(lang, 10, 10, "tio"),
+			NewIntRule(lang, 11, 10, "elva"),
+			NewIntRule(lang, 12, 10, "tolv"),
+			NewIntRule(lang, 13, 10, "tretton"),
+			NewIntRule(lang, 14, 10, "fjorton"),
+			NewIntRule(lang, 15, 10, "femton"),
+			NewIntRule(lang, 16, 10, "sexton"),
+			NewIntRule(lang, 17, 10, "sjutton"),
+			NewIntRule(lang, 18, 10, "arton"),
+			NewIntRule(lang, 19, 10, "nitton"),
+			NewIntRule(lang, 20, 10, "tjugo", "[-]", "[>>]"),
+			NewIntRule(lang, 30, 10, "trettio", "[-]", "[>>]"),
+			NewIntRule(lang, 40, 10, "fyrtio", "[-]", "[>>]"),
+			NewIntRule(lang, 50, 10, "femtio", "[-]", "[>>]"),
+			NewIntRule(lang, 60, 10, "sextio", "[-]", "[>>]"),
+			NewIntRule(lang, 70, 10, "sjuttio", "[-]", "[>>]"),
+			NewIntRule(lang, 80, 10, "åttio", "[-]", "[>>]"),
+			NewIntRule(lang, 90, 10, "nittio", "[-]", "[>>]"),
+			NewIntRule(lang, 100, 10, "<<", "hundra", "[ ]", "[>>]"),
+			NewIntRule(lang, 1100, 100, "<<", " ", "hundra", "[ ]", "[>>]"),
+			NewIntRule(lang, 2000, 10, "<<", " ", "tusen", "[ ]", "[>>]"),
 		},
 	}
 
@@ -446,48 +453,49 @@ func Test_Spellout2(t *testing.T) {
 }
 
 func Test_SpelloutOperationEqSign(t *testing.T) {
+	lang := Language("sv")
 	defaultRules := RuleSet{
 		Name: "default",
 		Rules: []BaseRule{
-			NewStringRule("-x", "minus", " ", ">>"),
-			NewStringRule("x.x", "<<", " ", "komma", " ", ">>"),
-			NewIntRule(0, 10, "noll"),
-			NewIntRule(1, 10, "ett"),
-			NewIntRule(2, 10, "två"),
-			NewIntRule(3, 10, "tre"),
-			NewIntRule(4, 10, "fyra"),
-			NewIntRule(5, 10, "fem"),
-			NewIntRule(6, 10, "sex"),
-			NewIntRule(7, 10, "sju"),
-			NewIntRule(8, 10, "åtta"),
-			NewIntRule(9, 10, "nio"),
-			NewIntRule(10, 10, "tio"),
-			NewIntRule(11, 10, "elva"),
-			NewIntRule(12, 10, "tolv"),
-			NewIntRule(13, 10, "tretton"),
-			NewIntRule(14, 10, "fjorton"),
-			NewIntRule(15, 10, "femton"),
-			NewIntRule(16, 10, "sexton"),
-			NewIntRule(17, 10, "sjutton"),
-			NewIntRule(18, 10, "arton"),
-			NewIntRule(19, 10, "nitton"),
-			NewIntRule(20, 10, "tjugo", "[-]", "[>>]"),
-			NewIntRule(30, 10, "trettio", "[-]", "[>>]"),
-			NewIntRule(40, 10, "fyrtio", "[-]", "[>>]"),
-			NewIntRule(50, 10, "femtio", "[-]", "[>>]"),
-			NewIntRule(60, 10, "sextio", "[-]", "[>>]"),
-			NewIntRule(70, 10, "sjuttio", "[-]", "[>>]"),
-			NewIntRule(80, 10, "åttio", "[-]", "[>>]"),
-			NewIntRule(90, 10, "nittio", "[-]", "[>>]"),
-			NewIntRule(100, 10, "<<", "hundra", "[ ]", "[>>]"),
-			NewIntRule(1100, 100, "<<", " ", "hundra", "[ ]", "[>>]"),
-			NewIntRule(2000, 10, "<<", " ", "tusen", "[ ]", "[>>]"),
+			NewStringRule(lang, "-x", "minus", " ", ">>"),
+			NewStringRule(lang, "x.x", "<<", " ", "komma", " ", ">>"),
+			NewIntRule(lang, 0, 10, "noll"),
+			NewIntRule(lang, 1, 10, "ett"),
+			NewIntRule(lang, 2, 10, "två"),
+			NewIntRule(lang, 3, 10, "tre"),
+			NewIntRule(lang, 4, 10, "fyra"),
+			NewIntRule(lang, 5, 10, "fem"),
+			NewIntRule(lang, 6, 10, "sex"),
+			NewIntRule(lang, 7, 10, "sju"),
+			NewIntRule(lang, 8, 10, "åtta"),
+			NewIntRule(lang, 9, 10, "nio"),
+			NewIntRule(lang, 10, 10, "tio"),
+			NewIntRule(lang, 11, 10, "elva"),
+			NewIntRule(lang, 12, 10, "tolv"),
+			NewIntRule(lang, 13, 10, "tretton"),
+			NewIntRule(lang, 14, 10, "fjorton"),
+			NewIntRule(lang, 15, 10, "femton"),
+			NewIntRule(lang, 16, 10, "sexton"),
+			NewIntRule(lang, 17, 10, "sjutton"),
+			NewIntRule(lang, 18, 10, "arton"),
+			NewIntRule(lang, 19, 10, "nitton"),
+			NewIntRule(lang, 20, 10, "tjugo", "[-]", "[>>]"),
+			NewIntRule(lang, 30, 10, "trettio", "[-]", "[>>]"),
+			NewIntRule(lang, 40, 10, "fyrtio", "[-]", "[>>]"),
+			NewIntRule(lang, 50, 10, "femtio", "[-]", "[>>]"),
+			NewIntRule(lang, 60, 10, "sextio", "[-]", "[>>]"),
+			NewIntRule(lang, 70, 10, "sjuttio", "[-]", "[>>]"),
+			NewIntRule(lang, 80, 10, "åttio", "[-]", "[>>]"),
+			NewIntRule(lang, 90, 10, "nittio", "[-]", "[>>]"),
+			NewIntRule(lang, 100, 10, "<<", "hundra", "[ ]", "[>>]"),
+			NewIntRule(lang, 1100, 100, "<<", " ", "hundra", "[ ]", "[>>]"),
+			NewIntRule(lang, 2000, 10, "<<", " ", "tusen", "[ ]", "[>>]"),
 		},
 	}
 	rules2 := RuleSet{
 		Name: "rules2",
 		Rules: []BaseRule{
-			NewIntRule(0, 10, "=%default="),
+			NewIntRule(lang, 0, 10, "=%default="),
 		},
 	}
 
@@ -521,8 +529,9 @@ func Test_StringMatch(t *testing.T) {
 	var exp, res MatchResult
 	var ok bool
 	var in string
+	var lang = Language("sv")
 
-	r = NewStringRule("-x", "", "", "minus", " ", ">>")
+	r = NewStringRule(lang, "-x", "", "", "minus", " ", ">>")
 	in = "-18"
 	res, ok = r.Match(in)
 	exp = MatchResult{ForwardLeft: "", ForwardRight: "18"}
@@ -533,7 +542,7 @@ func Test_StringMatch(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
-	r = NewStringRule("x.x", "<<", " ", "komma", " ", ">>")
+	r = NewStringRule(lang, "x.x", "<<", " ", "komma", " ", ">>")
 	in = "3.18"
 	res, ok = r.Match(in)
 	exp = MatchResult{ForwardLeft: "3", ForwardRight: "18"}
@@ -544,7 +553,7 @@ func Test_StringMatch(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
-	r = NewStringRule("x,x", "<<", " ", "komma", " ", ">>")
+	r = NewStringRule(lang, "x,x", "<<", " ", "komma", " ", ">>")
 	in = "3,18"
 	res, ok = r.Match(in)
 	exp = MatchResult{ForwardLeft: "3", ForwardRight: "18"}
@@ -555,7 +564,7 @@ func Test_StringMatch(t *testing.T) {
 		t.Errorf(fs, exp, res)
 	}
 
-	r = NewStringRule("x%", "<<", " ", "procent", " ", "")
+	r = NewStringRule(lang, "x%", "<<", " ", "procent", " ", "")
 	in = "316%"
 	res, ok = r.Match(in)
 	exp = MatchResult{ForwardLeft: "316", ForwardRight: ""}
@@ -568,49 +577,50 @@ func Test_StringMatch(t *testing.T) {
 }
 
 func Test_SpelloutDE(t *testing.T) {
+	lang := Language("de")
 	defaultRules := RuleSet{
 		Name: "spellout-numbering",
 		Rules: []BaseRule{
-			NewStringRule("-x", "minus", " ", ">>"),
-			NewStringRule("x.x", "<<", " ", "komma", " ", ">>"),
-			NewIntRule(0, 10, "null"),
-			NewIntRule(1, 10, "eins"),
-			NewIntRule(2, 10, "zwei"),
-			NewIntRule(3, 10, "drei"),
-			NewIntRule(4, 10, "vier"),
-			NewIntRule(5, 10, "fünf"),
-			NewIntRule(6, 10, "sechs"),
-			NewIntRule(7, 10, "sieben"),
-			NewIntRule(8, 10, "acht"),
-			NewIntRule(9, 10, "neun"),
-			NewIntRule(10, 10, "zehn"),
-			NewIntRule(11, 10, "elf"),
-			NewIntRule(12, 10, "zwölf"),
-			NewIntRule(13, 10, ">>zehn"),
-			NewIntRule(16, 10, "sechzehn"),
-			NewIntRule(17, 10, "siebzehn"),
-			NewIntRule(18, 10, ">>zehn"),
-			NewIntRule(20, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "zwanzig"),
-			NewIntRule(30, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "dreißig"),
-			NewIntRule(40, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "vierzig"),
-			NewIntRule(50, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "fünfzig"),
-			NewIntRule(60, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "sechzig"),
-			NewIntRule(70, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "siebzig"),
-			NewIntRule(80, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "achtzig"),
-			NewIntRule(90, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "neunzig"),
-			NewIntRule(100, 10, "ERROR"),
-			NewIntRule(1000000000000000, 10, "=#,##0="),
-			NewIntRule(1000000000000000000, 10, "=0="),
+			NewStringRule(lang, "-x", "minus", " ", ">>"),
+			NewStringRule(lang, "x.x", "<<", " ", "komma", " ", ">>"),
+			NewIntRule(lang, 0, 10, "null"),
+			NewIntRule(lang, 1, 10, "eins"),
+			NewIntRule(lang, 2, 10, "zwei"),
+			NewIntRule(lang, 3, 10, "drei"),
+			NewIntRule(lang, 4, 10, "vier"),
+			NewIntRule(lang, 5, 10, "fünf"),
+			NewIntRule(lang, 6, 10, "sechs"),
+			NewIntRule(lang, 7, 10, "sieben"),
+			NewIntRule(lang, 8, 10, "acht"),
+			NewIntRule(lang, 9, 10, "neun"),
+			NewIntRule(lang, 10, 10, "zehn"),
+			NewIntRule(lang, 11, 10, "elf"),
+			NewIntRule(lang, 12, 10, "zwölf"),
+			NewIntRule(lang, 13, 10, ">>zehn"),
+			NewIntRule(lang, 16, 10, "sechzehn"),
+			NewIntRule(lang, 17, 10, "siebzehn"),
+			NewIntRule(lang, 18, 10, ">>zehn"),
+			NewIntRule(lang, 20, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "zwanzig"),
+			NewIntRule(lang, 30, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "dreißig"),
+			NewIntRule(lang, 40, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "vierzig"),
+			NewIntRule(lang, 50, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "fünfzig"),
+			NewIntRule(lang, 60, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "sechzig"),
+			NewIntRule(lang, 70, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "siebzig"),
+			NewIntRule(lang, 80, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "achtzig"),
+			NewIntRule(lang, 90, 10, "[>%spellout-cardinal-masculine>]", "[-und-]", "neunzig"),
+			NewIntRule(lang, 100, 10, "ERROR"),
+			NewIntRule(lang, 1000000000000000, 10, "=#,##0="),
+			NewIntRule(lang, 1000000000000000000, 10, "=0="),
 		},
 	}
 	spelloutCardinalMasculine := RuleSet{
 		Name: "spellout-cardinal-masculine",
 		Rules: []BaseRule{
-			NewStringRule("-x", "minus", " ", ">>"),
-			NewStringRule("x.x", "<<", " ", "komma", " ", ">>"),
-			NewIntRule(0, 10, "null"),
-			NewIntRule(1, 10, "ein"),
-			NewIntRule(2, 10, "=%spellout-numbering="),
+			NewStringRule(lang, "-x", "minus", " ", ">>"),
+			NewStringRule(lang, "x.x", "<<", " ", "komma", " ", ">>"),
+			NewIntRule(lang, 0, 10, "null"),
+			NewIntRule(lang, 1, 10, "ein"),
+			NewIntRule(lang, 2, 10, "=%spellout-numbering="),
 		},
 	}
 
@@ -674,14 +684,17 @@ func Test_SpelloutDE(t *testing.T) {
 
 func TestHashFormat(t *testing.T) {
 
-	var lang, input, res, exp string
+	var lang, fmt, input, res, exp string
 	var err error
+	var fmter Formatter
 
 	//
 	lang = "en"
+	fmt = "#,##"
+	fmter = Formatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
 	input = "1000000000000000000"
 	exp = "1,000,000,000,000,000,000"
-	res, err = format(input, lang, "#,##", false)
+	res, err = format(input, fmter, false)
 	if err != nil {
 		t.Error(err)
 	} else if res != exp {
@@ -690,9 +703,11 @@ func TestHashFormat(t *testing.T) {
 
 	//
 	lang = "en"
+	fmt = "#,##"
+	fmter = Formatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
 	input = "12000.3789"
 	exp = "12,000.3789"
-	res, err = format(input, lang, "#,##", false)
+	res, err = format(input, fmter, false)
 	if err != nil {
 		t.Error(err)
 	} else if res != exp {
@@ -701,9 +716,11 @@ func TestHashFormat(t *testing.T) {
 
 	//
 	lang = "de"
+	fmt = "#,##"
+	fmter = Formatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
 	input = "1000000000000000000"
 	exp = "1.000.000.000.000.000.000"
-	res, err = format(input, lang, "#,##", false)
+	res, err = format(input, fmter, false)
 	if err != nil {
 		t.Error(err)
 	} else if res != exp {
@@ -712,9 +729,11 @@ func TestHashFormat(t *testing.T) {
 
 	//
 	lang = "de"
+	fmt = "#,##"
+	fmter = Formatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
 	input = "12000.3789"
 	exp = "12.000,3789"
-	res, err = format(input, lang, "#,##", false)
+	res, err = format(input, fmter, false)
 	if err != nil {
 		t.Error(err)
 	} else if res != exp {
@@ -723,9 +742,11 @@ func TestHashFormat(t *testing.T) {
 
 	//
 	lang = "sv"
+	fmt = "#,##"
+	fmter = Formatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
 	input = "1000000000000000000"
 	exp = "1 000 000 000 000 000 000" // non-breaking space \u00A0
-	res, err = format(input, lang, "#,##", false)
+	res, err = format(input, fmter, false)
 	if err != nil {
 		t.Error(err)
 	} else if res != exp {
@@ -734,9 +755,11 @@ func TestHashFormat(t *testing.T) {
 
 	//
 	lang = "sv"
+	fmt = "#,##"
+	fmter = Formatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
 	input = "12000.3789"
 	exp = "12 000,3789" // non-breaking space \u00A0
-	res, err = format(input, lang, "#,##", false)
+	res, err = format(input, fmter, false)
 	if err != nil {
 		t.Error(err)
 	} else if res != exp {
@@ -745,9 +768,11 @@ func TestHashFormat(t *testing.T) {
 
 	//
 	lang = "bn"
+	fmt = "#,##"
+	fmter = Formatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
 	input = "123456.78"
 	exp = "১,২৩,৪৫৬.৭৮"
-	res, err = format(input, lang, "#,##", false)
+	res, err = format(input, fmter, false)
 	if err != nil {
 		t.Error(err)
 	} else if res != exp {

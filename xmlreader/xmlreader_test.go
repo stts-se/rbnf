@@ -57,7 +57,7 @@ func TestRulesFromXMLFileSV(t *testing.T) {
 		t.Errorf("Pain! %v", err)
 	}
 
-	if w, g := "sv", pack.Language; w != g {
+	if w, g := "sv", string(pack.Language); w != g {
 		t.Errorf("wanted '%s' got '%s'", w, g)
 	}
 
@@ -185,7 +185,7 @@ func TestRulesFromXMLFileDE(t *testing.T) {
 		t.Errorf("Pain! %v", err)
 	}
 
-	if w, g := "de", pack.Language; w != g {
+	if w, g := "de", string(pack.Language); w != g {
 		t.Errorf("wanted '%s' got '%s'", w, g)
 	}
 
@@ -248,7 +248,7 @@ func TestRulesFromXMLFileFR(t *testing.T) {
 		t.Errorf("Pain! %v", err)
 	}
 
-	if w, g := "fr", pack.Language; w != g {
+	if w, g := "fr", string(pack.Language); w != g {
 		t.Errorf("wanted '%s' got '%s'", w, g)
 	}
 
@@ -308,7 +308,7 @@ func TestRulesFromXMLFileTA(t *testing.T) {
 		t.Errorf("Pain! %v", err)
 	}
 
-	if w, g := "ta", pack.Language; w != g {
+	if w, g := "ta", string(pack.Language); w != g {
 		t.Errorf("wanted '%s' got '%s'", w, g)
 	}
 
