@@ -607,7 +607,7 @@ func (g *RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (stri
 				return input, fmt.Errorf("unknown operation for sub %#v : %s", sub, sub.Operation)
 			}
 		} else if sub.IsPluralFormatter() {
-			fmt.Printf("PluralFormatter base=%v radix=%v divisor=%v left=%v right=%v\n", matchedRule.Base.Value(), matchedRule.Base.Radix, matchedRule.Base.Divisor(), match.ForwardLeft, match.ForwardRight)
+			//fmt.Printf("PluralFormatter base=%v radix=%v divisor=%v left=%v right=%v\n", matchedRule.Base.Value(), matchedRule.Base.Radix, matchedRule.Base.Divisor(), match.ForwardLeft, match.ForwardRight)
 			if sub.Operation == ">>" {
 				spelled, err := formatPlural(match.ForwardRight, sub.PluralFormatter, debug)
 				if err != nil {
