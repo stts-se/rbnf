@@ -16,10 +16,13 @@ The current spellout implementation does not use any of the original ICU code, b
 
 ## Unsupported features
 The following format strings are used in the ICU rules, but not fully supported by this package:
-* _$_ (for singular and plural forms)
 * _last primary ignorable_
 * _→→→_
-*  Partial support for decimal format <br/>
+
+## Partially supported features
+* Singular/plural inflection forms (rules formulated as _$(...)$_) <br/>
+https://unicode.org/reports/tr35/tr35-numbers.html#Language_Plural_Rules
+*  Decimal format <br/>
 http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/DecimalFormat.html
 
 The rule sets have information on the public/private attribute, but the distinction is not supported on rule execution (all rules can be references as if they were public).
