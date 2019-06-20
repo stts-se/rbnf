@@ -686,15 +686,15 @@ func TestHashFormat(t *testing.T) {
 
 	var lang, fmt, input, res, exp string
 	var err error
-	var fmter Formatter
+	var fmter NumericFormatter
 
 	//
 	lang = "en"
 	fmt = "#,##"
-	fmter = Formatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
+	fmter = NumericFormatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
 	input = "1000000000000000000"
 	exp = "1,000,000,000,000,000,000"
-	res, err = format(input, fmter, false)
+	res, err = formatNumeric(input, fmter, false)
 	if err != nil {
 		t.Error(err)
 	} else if res != exp {
@@ -704,10 +704,10 @@ func TestHashFormat(t *testing.T) {
 	//
 	lang = "en"
 	fmt = "#,##"
-	fmter = Formatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
+	fmter = NumericFormatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
 	input = "12000.3789"
 	exp = "12,000.3789"
-	res, err = format(input, fmter, false)
+	res, err = formatNumeric(input, fmter, false)
 	if err != nil {
 		t.Error(err)
 	} else if res != exp {
@@ -717,10 +717,10 @@ func TestHashFormat(t *testing.T) {
 	//
 	lang = "de"
 	fmt = "#,##"
-	fmter = Formatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
+	fmter = NumericFormatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
 	input = "1000000000000000000"
 	exp = "1.000.000.000.000.000.000"
-	res, err = format(input, fmter, false)
+	res, err = formatNumeric(input, fmter, false)
 	if err != nil {
 		t.Error(err)
 	} else if res != exp {
@@ -730,10 +730,10 @@ func TestHashFormat(t *testing.T) {
 	//
 	lang = "de"
 	fmt = "#,##"
-	fmter = Formatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
+	fmter = NumericFormatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
 	input = "12000.3789"
 	exp = "12.000,3789"
-	res, err = format(input, fmter, false)
+	res, err = formatNumeric(input, fmter, false)
 	if err != nil {
 		t.Error(err)
 	} else if res != exp {
@@ -743,10 +743,10 @@ func TestHashFormat(t *testing.T) {
 	//
 	lang = "sv"
 	fmt = "#,##"
-	fmter = Formatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
+	fmter = NumericFormatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
 	input = "1000000000000000000"
 	exp = "1 000 000 000 000 000 000" // non-breaking space \u00A0
-	res, err = format(input, fmter, false)
+	res, err = formatNumeric(input, fmter, false)
 	if err != nil {
 		t.Error(err)
 	} else if res != exp {
@@ -756,10 +756,10 @@ func TestHashFormat(t *testing.T) {
 	//
 	lang = "sv"
 	fmt = "#,##"
-	fmter = Formatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
+	fmter = NumericFormatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
 	input = "12000.3789"
 	exp = "12 000,3789" // non-breaking space \u00A0
-	res, err = format(input, fmter, false)
+	res, err = formatNumeric(input, fmter, false)
 	if err != nil {
 		t.Error(err)
 	} else if res != exp {
@@ -769,10 +769,10 @@ func TestHashFormat(t *testing.T) {
 	//
 	lang = "bn"
 	fmt = "#,##"
-	fmter = Formatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
+	fmter = NumericFormatter{printer: message.NewPrinter(language.Make(string(lang))), format: fmt}
 	input = "123456.78"
 	exp = "১,২৩,৪৫৬.৭৮"
-	res, err = format(input, fmter, false)
+	res, err = formatNumeric(input, fmter, false)
 	if err != nil {
 		t.Error(err)
 	} else if res != exp {

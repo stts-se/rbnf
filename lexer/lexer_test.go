@@ -34,7 +34,7 @@ func compareResult(input string, exp, got result) []error {
 	for i, expi := range exp {
 		goti := got[i]
 		if expi != goti {
-			res = append(res, fmt.Errorf(fsindex, input, i, expi, goti))
+			res = append(res, fmt.Errorf(fsindex, input, i+1, expi, goti))
 		}
 	}
 	return res
@@ -49,7 +49,7 @@ func compareStrings(input string, exp, got []string) []error {
 	for i, expi := range exp {
 		goti := got[i]
 		if expi != goti {
-			res = append(res, fmt.Errorf(fsindex, input, i, expi, goti))
+			res = append(res, fmt.Errorf(fsindex, input, i+1, expi, goti))
 		}
 	}
 	return res
@@ -429,4 +429,51 @@ func TestHashes(t *testing.T) {
 		t.Error(err)
 	}
 
+}
+
+func TestPlurals(t *testing.T) {
+	var input string
+	var exp []string
+	var l *Lexer
+
+	//
+	input = "=#,##0=$(ordinal,one{:a}other{:e})$;"
+	exp = []string{
+		"=#,##0=",
+		"$(ordinal,one{:a}other{:e})$",
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compareStrings(input, exp, l.Result()) {
+		t.Error(err)
+	}
+
+	//
+	input = "←%spellout-cardinal-feminine← [ →→];"
+	exp = []string{
+		"←%spellout-cardinal-feminine←",
+		" ",
+		"[ ]",
+		"[→→]",
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compareStrings(input, exp, l.Result()) {
+		t.Error(err)
+	}
+
+	//
+	input = "←%spellout-cardinal-feminine← $(cardinal,one{тысяча}few{тысячи}other{тысяч})$[ →→];"
+	exp = []string{
+		"←%spellout-cardinal-feminine←",
+		" ",
+		"$(cardinal,one{тысяча}few{тысячи}other{тысяч})$",
+		"[ ]",
+		"[→→]",
+	}
+	l = Lex(input)
+	l.Run()
+	for _, err := range compareStrings(input, exp, l.Result()) {
+		t.Error(err)
+	}
 }

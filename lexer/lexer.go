@@ -194,7 +194,7 @@ func (l *Lexer) acceptPeekString(valid string) bool {
 }
 
 func isPlainText(r rune) bool {
-	return r != rightArr && r != leftArr && r != rightBracket && r != leftBracket && r != '=' && r != ';' && r != eof
+	return r != rightArr && r != leftArr && r != rightBracket && r != leftBracket && r != '=' && r != ';' && r != eof && r != '$'
 }
 
 func nfc(s string) string {
@@ -245,8 +245,20 @@ func subFn(l *Lexer) stateFn {
 				if strings.IndexRune(delimChars, rx) >= 0 {
 					return true, false
 				}
+				if strings.IndexRune("$", rx) >= 0 {
+					return true, false
+				}
 				return false, false
 			}
+			break
+		} else if r == '$' {
+			closingFunc = func(rx rune) (bool, bool) {
+				if rx == r {
+					return true, true
+				}
+				return false, false
+			}
+			l.next()
 			break
 		} else if isPlainText(r) {
 			closingFunc = func(rx rune) (bool, bool) {
@@ -261,7 +273,8 @@ func subFn(l *Lexer) stateFn {
 
 	for {
 		r := l.peek()
-		//fmt.Printf("input: '%s' acc result: '%s'\n", l.input, l.Result())
+		//fmt.Printf("input: '%s'\n", l.input)
+		//fmt.Printf("acc result: '%s'\n", l.Result())
 		//fmt.Println("inside tags", r, string(r))
 		if doClose, includeClosingRune := closingFunc(r); doClose {
 			//fmt.Printf("%v '%v' | doClose %v, includeClosingRune %v\n", r, string(r), doClose, includeClosingRune)

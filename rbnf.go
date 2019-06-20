@@ -8,6 +8,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/google/uuid"
+
+	"golang.org/x/text/feature/plural"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -25,14 +28,12 @@ type Base struct {
 	Radix int // only used for Int base
 
 	// String base
-	String            string
-	StringMatchRegexp *Regexp
+	String string
 }
 
 func NewBaseString(s string) Base {
 	return Base{
-		String:            s,
-		StringMatchRegexp: buildStringMatchRegexp(s),
+		String: s,
 	}
 
 }
@@ -61,44 +62,91 @@ func (b Base) Value() string {
 	return b.String
 }
 
-type Formatter struct {
+type PluralFormatter struct {
+	printer     *message.Printer
+	title       string
+	format      string
+	initialized bool
+}
+
+func (f PluralFormatter) String() string {
+	return f.format
+}
+
+type NumericFormatter struct {
 	printer     *message.Printer
 	format      string
 	initialized bool
 }
 
-func (f Formatter) String() string {
+func (f NumericFormatter) String() string {
 	return f.format
 }
 
 type Sub struct {
-	Optional  bool
-	Orth      string
-	RuleRef   string
-	Formatter Formatter
-	Operation string
+	Optional         bool
+	Orth             string
+	RuleRef          string
+	NumericFormatter NumericFormatter
+	PluralFormatter  PluralFormatter
+	Operation        string
 }
 
-func ParseSub(sub string, lang Language) Sub {
+func NewPluralFormatter(lang Language, fmtString string) (PluralFormatter, error) {
+	//$(ordinal,one{:a}other{:e})$
+	f := fmtString
+	f = strings.TrimPrefix(f, "$(")
+	f = strings.TrimSuffix(f, ")$")
+	fs := strings.Split(f, ",")
+	title := uuid.New().String() // fs[0]
+	if len(fs) != 2 {
+		return PluralFormatter{}, fmt.Errorf("invalid plural formatter string '%s' (got %d item(s): %#v, expected 2)", f, len(fs), fs)
+	}
+	cases := []interface{}{}
+	for _, sub := range strings.Split(fs[1], "}") {
+		if sub == "" {
+			continue
+		}
+		fs := strings.Split(sub, "{")
+		if len(fs) != 2 {
+			return PluralFormatter{}, fmt.Errorf("invalid plural formatter string '%s' (got %d item(s): %#v, expected 2)", sub, len(fs), fs)
+		}
+		cases = append(cases, fs[0])
+		cases = append(cases, fs[1])
+	}
+	//fmt.Printf("NewPluralFormatter cases: %#v\n", cases)
+	l := language.Make(string(lang))
+	message.Set(l, title, plural.Selectf(1, "%d", cases...))
+	p := message.NewPrinter(l)
+	return PluralFormatter{printer: p, format: fmtString, title: title, initialized: true}, nil
+}
+
+func ParseSub(sub string, lang Language) (Sub, error) {
 	input := sub
 	res := Sub{}
 	if len([]rune(sub)) == 0 {
-		return res
+		return res, nil
 	}
 	if strings.HasPrefix(sub, "[") && strings.HasSuffix(sub, "]") {
 		res.Optional = true
 		sub = strings.TrimPrefix(strings.TrimSuffix(sub, "]"), "[")
 	}
 	if len([]rune(sub)) == 0 {
-		return res
+		return res, nil
 	}
 	firstChar := string([]rune(sub)[0])
-	if (firstChar == ">" || firstChar == "<" || firstChar == "=") && strings.HasSuffix(sub, firstChar) {
+	if firstChar == "$" {
+		fmter, err := NewPluralFormatter(lang, sub)
+		if err != nil {
+			return res, err
+		}
+		res.PluralFormatter = fmter
+	} else if (firstChar == ">" || firstChar == "<" || firstChar == "=") && strings.HasSuffix(sub, firstChar) {
 		res.Operation = firstChar + firstChar
 		ref := strings.TrimPrefix(strings.TrimSuffix(sub, firstChar), firstChar)
 		if strings.HasPrefix(ref, "#") || (res.Operation != "" && strings.Contains(ref, "0")) {
 			p := message.NewPrinter(language.Make(string(lang)))
-			res.Formatter = Formatter{printer: p, format: ref, initialized: true}
+			res.NumericFormatter = NumericFormatter{printer: p, format: ref, initialized: true}
 		} else {
 			res.RuleRef = ref
 		}
@@ -106,10 +154,10 @@ func ParseSub(sub string, lang Language) Sub {
 		res.Orth = sub
 	}
 	if res.String() != input {
-		msg := fmt.Sprintf("wtf! %s != %s (%#v)", input, res.String(), res)
-		panic(msg)
+		err := fmt.Errorf("wtf! %s != %s (%#v)", input, res.String(), res)
+		return res, err
 	}
-	return res
+	return res, nil
 }
 
 func (sub Sub) String() string {
@@ -118,8 +166,10 @@ func (sub Sub) String() string {
 		res = sub.Orth
 	} else if sub.RuleRef != "" {
 		res = sub.RuleRef
-	} else if sub.Formatter.initialized {
-		res = sub.Formatter.String()
+	} else if sub.NumericFormatter.initialized {
+		res = sub.NumericFormatter.String()
+	} else if sub.PluralFormatter.initialized {
+		res = sub.PluralFormatter.String()
 	}
 	if sub.Operation != "" {
 		op := []rune(sub.Operation)[0]
@@ -135,8 +185,12 @@ func (sub Sub) IsRuleRef() bool {
 	return sub.RuleRef != "" && strings.HasPrefix(sub.RuleRef, "%")
 }
 
-func (sub Sub) IsFormatRef() bool {
-	return sub.Formatter.initialized
+func (sub Sub) IsNumericFormatter() bool {
+	return sub.NumericFormatter.initialized
+}
+
+func (sub Sub) IsPluralFormatter() bool {
+	return sub.PluralFormatter.initialized
 }
 
 func (sub Sub) IsError() bool {
@@ -146,6 +200,21 @@ func (sub Sub) IsError() bool {
 func (sub Sub) Validate() error {
 	if sub.Orth != "" && sub.RuleRef != "" {
 		return fmt.Errorf("Orth and RuleRef cannot both be instantiated")
+	}
+	if sub.Orth != "" && sub.NumericFormatter.initialized {
+		return fmt.Errorf("Orth and NumericFormatter cannot both be instantiated")
+	}
+	if sub.Orth != "" && sub.PluralFormatter.initialized {
+		return fmt.Errorf("Orth and PluralFormatter cannot both be instantiated")
+	}
+	if sub.NumericFormatter.initialized && sub.PluralFormatter.initialized {
+		return fmt.Errorf("NumericFormatter and PluralFormatter cannot both be instantiated")
+	}
+	if sub.RuleRef != "" && sub.PluralFormatter.initialized {
+		return fmt.Errorf("RuleRef and PluralFormatter cannot both be instantiated")
+	}
+	if sub.RuleRef != "" && sub.NumericFormatter.initialized {
+		return fmt.Errorf("RuleRef and NumericFormatter cannot both be instantiated")
 	}
 	if sub.Orth != "" && sub.Operation != "" {
 		return fmt.Errorf("Orth and Operation cannot both be instantiated")
@@ -166,7 +235,10 @@ type BaseRule struct {
 func NewIntRule(lang Language, baseInt int, radix int, subs ...string) BaseRule {
 	subSubs := []Sub{}
 	for _, s := range subs {
-		sub := ParseSub(s, lang)
+		sub, err := ParseSub(s, lang)
+		if err != nil {
+			panic(fmt.Sprintf("ParseSub failed : %v", err)) // TODO
+		}
 		subSubs = append(subSubs, sub)
 	}
 	return BaseRule{
@@ -177,11 +249,14 @@ func NewIntRule(lang Language, baseInt int, radix int, subs ...string) BaseRule 
 func NewStringRule(lang Language, baseString string, subs ...string) BaseRule {
 	subSubs := []Sub{}
 	for _, s := range subs {
-		sub := ParseSub(s, lang)
+		sub, err := ParseSub(s, lang)
+		if err != nil {
+			panic(fmt.Sprintf("ParseSub failed : %v", err)) // TODO
+		}
 		subSubs = append(subSubs, sub)
 	}
 	return BaseRule{
-		Base: Base{String: baseString, StringMatchRegexp: buildStringMatchRegexp(baseString)},
+		Base: Base{String: baseString},
 		Subs: subSubs,
 	}
 }
@@ -233,23 +308,6 @@ func regexpEscape(s string) string {
 	return res
 }
 
-var nonXRE = regexp.MustCompile("([^x]+)")
-var noInitialX = regexp.MustCompile("^([^x])")
-var noFinalX = regexp.MustCompile("([^x])$")
-
-// TODO: this is sooo ugly -- can it be done better?
-func buildStringMatchRegexp(baseString string) *Regexp {
-	reString := baseString
-	reString = regexpEscape(reString)                        // escape special chars in the BaseString
-	reString = nonXRE.ReplaceAllString(reString, "($1)")     // regexp group for non-x sequences
-	reString = noInitialX.ReplaceAllString(reString, "()$1") // add empty prefix group if needed
-	reString = noFinalX.ReplaceAllString(reString, "$1()")   // add empty suffix group if needed
-	reString = strings.ReplaceAll(reString, "x", "(.*)")     // regexp group for x sequences
-	//fmt.Printf("%v => /%v/\n", baseString, reString)
-	re := regexp.MustCompile("^" + reString + "$")
-	return &Regexp{initialised: true, re: re}
-}
-
 func (r *BaseRule) Match(input string) (MatchResult, bool) {
 	// A) Int rule
 	if r.Base.IsInt() {
@@ -267,51 +325,34 @@ func (r *BaseRule) Match(input string) (MatchResult, bool) {
 
 	// B) String rule
 
-	// TODO
-	var fasterMatch = true
-
-	if fasterMatch {
-		switch r.Base.String {
-		case "x.x":
-			pts := strings.Split(input, ".")
-			if len(pts) == 2 {
-				res := MatchResult{ForwardLeft: pts[0], ForwardRight: pts[1]}
-				return res, true
-			}
-		case "x,x":
-			pts := strings.Split(input, ",")
-			if len(pts) == 2 {
-				res := MatchResult{ForwardLeft: pts[0], ForwardRight: pts[1]}
-				return res, true
-			}
-		case "-x":
-			pts := strings.Split(input, "-")
-			if len(pts) == 2 {
-				res := MatchResult{ForwardLeft: pts[0], ForwardRight: pts[1]}
-				return res, true
-			}
-		case "x%":
-			pts := strings.Split(input, "%")
-			if len(pts) == 2 {
-				res := MatchResult{ForwardLeft: pts[0], ForwardRight: pts[1]}
-				return res, true
-			}
-			//case "#,##": return MatchResult{}, false
-		default:
-			return MatchResult{}, false
+	switch r.Base.String {
+	case "x.x":
+		pts := strings.Split(input, ".")
+		if len(pts) == 2 {
+			res := MatchResult{ForwardLeft: pts[0], ForwardRight: pts[1]}
+			return res, true
 		}
-	} else {
-		if !r.Base.StringMatchRegexp.initialised {
-			r.Base.StringMatchRegexp = buildStringMatchRegexp(r.Base.String)
+	case "x,x":
+		pts := strings.Split(input, ",")
+		if len(pts) == 2 {
+			res := MatchResult{ForwardLeft: pts[0], ForwardRight: pts[1]}
+			return res, true
 		}
-		//fmt.Println("RULE AND REGEXP:", r, r.Base.StringMatchRegexp.re)
-		m := r.Base.StringMatchRegexp.re.FindStringSubmatch(input)
-		if m != nil && len(m) == 4 {
-			//fmt.Printf("%v => %#v\n", input, m)
-			left := m[1]
-			right := m[3]
-			return MatchResult{ForwardLeft: left, ForwardRight: right}, true
+	case "-x":
+		pts := strings.Split(input, "-")
+		if len(pts) == 2 {
+			res := MatchResult{ForwardLeft: pts[0], ForwardRight: pts[1]}
+			return res, true
 		}
+	case "x%":
+		pts := strings.Split(input, "%")
+		if len(pts) == 2 {
+			res := MatchResult{ForwardLeft: pts[0], ForwardRight: pts[1]}
+			return res, true
+		}
+		//case "#,##": return MatchResult{}, false
+	default:
+		return MatchResult{}, false
 	}
 	return MatchResult{}, false
 }
@@ -410,7 +451,7 @@ func NewRuleSetGroup(name string, lang Language, ruleSets []RuleSet) (RuleSetGro
 	return res, err
 }
 
-func findMatchingRule(input string, ruleSet RuleSet) (BaseRule, bool) {
+func (g *RuleSetGroup) findMatchingRule(input string, ruleSet RuleSet) (BaseRule, bool) {
 	var res BaseRule
 	var found = false
 
@@ -433,13 +474,18 @@ func findMatchingRule(input string, ruleSet RuleSet) (BaseRule, bool) {
 			}
 		}
 	}
+	// if !found { // fallback rule?
+	// 	if rs, ok := g.FindRuleSet("spellout-cardinal"); ok {
+	// 		return g.findMatchingRule(input, rs)
+	// 	}
+	// }
 	return res, found
 }
 
 // details here: http://www.icu-project.org/applets/icu4j/4.1/docs-4_1_1/com/ibm/icu/text/DecimalFormat.html
-func format(input string, formatter Formatter, debug bool) (string, error) {
+func formatNumeric(input string, formatter NumericFormatter, debug bool) (string, error) {
 	if debug {
-		fmt.Fprintf(os.Stderr, "[rbnf.format] Input:%s Fmt:%s\n", input, formatter.format)
+		fmt.Fprintf(os.Stderr, "[rbnf.formatNumeric] Input:%s Fmt:%s\n", input, formatter.format)
 	}
 	//var p = message.NewPrinter(language.Make(lang))
 	var numeric interface{}
@@ -451,10 +497,34 @@ func format(input string, formatter Formatter, debug bool) (string, error) {
 			return input, err
 		}
 	}
-	if debug {
-		fmt.Fprintf(os.Stderr, "[rbnf.format] numeric: %v\n", numeric)
-	}
 	res := formatter.printer.Sprint(numeric)
+	if debug {
+		fmt.Fprintf(os.Stderr, "[rbnf.formatNumeric] Parsed numeric: %v Res: %s\n", numeric, res)
+	}
+	return res, nil
+}
+
+func formatPlural(input string, formatter PluralFormatter, debug bool) (string, error) {
+	if debug {
+		fmt.Fprintf(os.Stderr, "[rbnf.formatPlural] Input:%s Fmt:%s\n", input, formatter.format)
+	}
+	var numeric, inflectNumeric interface{}
+	var err error
+	i, err := strconv.ParseInt(input, 10, 64)
+	if err == nil {
+		numeric = i
+		inflectNumeric = i % 10
+	} else {
+		numeric, err = strconv.ParseFloat(input, 64)
+		inflectNumeric = numeric
+		if err != nil {
+			return input, err
+		}
+	}
+	res := formatter.printer.Sprintf(formatter.title, inflectNumeric)
+	if debug {
+		fmt.Fprintf(os.Stderr, "[rbnf.formatPlural] Parsed numeric: %v (%v) Res: %s\n", numeric, inflectNumeric, res)
+	}
 	return res, nil
 }
 
@@ -468,9 +538,9 @@ func (g *RuleSetGroup) Spellout(input string, ruleSetName string, debug bool) (s
 }
 
 func (g *RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (string, error) {
-	matchedRule, ok := findMatchingRule(input, ruleSet)
+	matchedRule, ok := g.findMatchingRule(input, ruleSet)
 	if !ok {
-		err := fmt.Errorf("No matching base rule for %s", input)
+		err := fmt.Errorf("No matching base rule for %s in rule set %s", input, ruleSet.Name)
 		if debug {
 			fmt.Fprintf(os.Stderr, "[rbnf] %v : rule set: %#v\n", err, ruleSet)
 		}
@@ -514,27 +584,54 @@ func (g *RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (stri
 		if debug {
 			fmt.Fprintf(os.Stderr, "[rbnf] Accumulated subs: %#v\n", subs)
 		}
-		if sub.IsFormatRef() {
+		if sub.IsNumericFormatter() {
 			if sub.Operation == ">>" {
-				spelled, err := format(match.ForwardRight, sub.Formatter, debug)
+				spelled, err := formatNumeric(match.ForwardRight, sub.NumericFormatter, debug)
 				if err != nil {
 					return "", err
 				}
 				subs = append(subs, spelled)
 			} else if sub.Operation == "<<" {
-				spelled, err := format(match.ForwardLeft, sub.Formatter, debug)
+				spelled, err := formatNumeric(match.ForwardLeft, sub.NumericFormatter, debug)
 				if err != nil {
 					return "", err
 				}
 				subs = append(subs, spelled)
 			} else if sub.Operation == "==" {
-				spelled, err := format(input, sub.Formatter, debug)
+				spelled, err := formatNumeric(input, sub.NumericFormatter, debug)
 				if err != nil {
 					return "", err
 				}
 				subs = append(subs, spelled)
 			} else {
 				return input, fmt.Errorf("unknown operation for sub %#v : %s", sub, sub.Operation)
+			}
+		} else if sub.IsPluralFormatter() {
+			fmt.Printf("PluralFormatter base=%v radix=%v divisor=%v left=%v right=%v\n", matchedRule.Base.Value(), matchedRule.Base.Radix, matchedRule.Base.Divisor(), match.ForwardLeft, match.ForwardRight)
+			if sub.Operation == ">>" {
+				spelled, err := formatPlural(match.ForwardRight, sub.PluralFormatter, debug)
+				if err != nil {
+					return "", err
+				}
+				subs = append(subs, spelled)
+			} else if sub.Operation == "<<" {
+				spelled, err := formatPlural(match.ForwardLeft, sub.PluralFormatter, debug)
+				if err != nil {
+					return "", err
+				}
+				subs = append(subs, spelled)
+			} else if sub.Operation == "==" {
+				spelled, err := formatPlural(input, sub.PluralFormatter, debug)
+				if err != nil {
+					return "", err
+				}
+				subs = append(subs, spelled)
+			} else {
+				spelled, err := formatPlural(match.ForwardLeft, sub.PluralFormatter, debug)
+				if err != nil {
+					return "", err
+				}
+				subs = append(subs, spelled)
 			}
 		} else if namedRuleSet, ok := g.FindRuleSet(sub.RuleRef); ok {
 			if sub.Operation == ">>" {

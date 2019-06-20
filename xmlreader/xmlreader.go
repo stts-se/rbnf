@@ -73,8 +73,8 @@ func replaceChars(s string) string {
 var threeArrows = regexp.MustCompile("(→%+[a-z-]*→[a-z-]*→|←%+[a-z-]*←[a-z-]*←)")
 
 func unsupportedRuleFormat(rFmt string) bool {
-	return strings.Contains(rFmt, "$") ||
-		strings.Contains(rFmt, "ignorable") ||
+	return strings.Contains(rFmt, "ignorable") ||
+		//strings.Contains(rFmt, "$") ||
 		strings.Contains(rFmt, "→→→") ||
 		threeArrows.MatchString(rFmt)
 }
@@ -123,13 +123,19 @@ func convertRuleSet(rs *Ruleset, lang string) (rbnf.RuleSet, error) {
 			}
 			return res, err
 
-		} else {
-			for _, i := range lex.Result() {
-				rule.Subs = append(rule.Subs, rbnf.ParseSub(replaceChars(i), rbnf.Language(lang)))
+		}
+		for _, i := range lex.Result() {
+			sub, err := rbnf.ParseSub(replaceChars(i), rbnf.Language(lang))
+			if err != nil {
+				if Verb {
+					log.Printf("[xmlreader] %v", err)
+				}
+				return res, err
 			}
+			rule.Subs = append(rule.Subs, sub)
 		}
 		// if Verb {
-		// 	fmt.Fprintf(os.Stderr, "PARSED RULE\t%#v\t%#v\t%#v\t%#v\n", res.Name, r.String, rule, rule)
+		// 	log.Printf("PARSED RULE\t%#v\t%#v\t%#v\t%#v\n", res.Name, r.String, rule, rule)
 		// }
 		res.Rules = append(res.Rules, rule)
 	}
