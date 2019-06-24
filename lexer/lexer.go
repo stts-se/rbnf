@@ -38,6 +38,7 @@ func (r result) Errors() []item {
 	return res
 }
 
+// Lexer is a struct for used to parse an input rbnf string into a slice of items
 type Lexer struct {
 	input  string // the string being scanned
 	start  int    // start position of this Item
@@ -331,6 +332,7 @@ func initialState(l *Lexer) stateFn {
 	return nil
 }
 
+// Lex creates a new Lexer for the input string
 func Lex(input string) *Lexer {
 	input = nfc(input)
 	l := &Lexer{
@@ -341,6 +343,7 @@ func Lex(input string) *Lexer {
 	return l
 }
 
+// Result creates the final result (slice of strings)
 func (l *Lexer) Result() []string {
 	res := []string{}
 	// Post-process brackets for optional content
@@ -379,6 +382,7 @@ func (l *Lexer) debug(msg string) {
 	//fmt.Printf("lexer debug %s: '%#v'\n", msg, l)
 }
 
+// Run is called to parse the input string into separate items
 func (l *Lexer) Run() error {
 	//fmt.Printf("Lexer input: '%s'\n", l.input)
 	for state := initialState; state != nil; {
