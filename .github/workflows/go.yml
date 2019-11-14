@@ -26,3 +26,9 @@ jobs:
 
     - name: Build
       run: go build -v .
+      
+    - name: Test
+      run: |
+        set -e
+        cat go.mod
+        go test -v ./... 
