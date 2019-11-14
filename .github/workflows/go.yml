@@ -28,4 +28,4 @@ jobs:
       run: go build -v .
       
     - name: Test
-      run: echo "TODO: Tests"
+      run: go test ./...
