@@ -1,7 +1,9 @@
 # rbnf
 
 
-![License: MIT](https://img.shields.io/badge/License-MIT-green.svg) <!--
+![License: MIT](https://img.shields.io/badge/License-MIT-green.svg) 
+![Build status](https://github.com/stts-se/rbnf/workflows/Go/badge.svg)
+<!--
 [![GoDoc](https://godoc.org/github.com/stts-se/rbnf?status.svg)](https://godoc.org/github.com/stts-se/rbnf) [![Go Report Card](https://goreportcard.com/badge/github.com/stts-se/rbnf)](https://goreportcard.com/report/github.com/stts-se/rbnf) [![Build Status](https://travis-ci.org/stts-se/rbnf.svg?branch=master)] 
 -->
 
