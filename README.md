@@ -14,7 +14,7 @@ It's based on the "RBNF" part of the ICU project (http://site.icu-project.org/  
 The license of the original software and data is here: https://github.com/unicode-org/icu/blob/master/icu4c/LICENSE http://www.unicode.org/copyright.html#License
 
 
-The current spellout implementation does not use any of the original ICU code, but uses it supports most of the spellout rule format, and it can read the rule files, https://github.com/unicode-org/cldr/tree/master/common/rbnf.
+The current spellout implementation does not use any of the original ICU code, but it supports most of the spellout rule format, and it can read the rule files, https://github.com/unicode-org/cldr/tree/master/common/rbnf.
 
 ## Unsupported features
 The following format strings are used in the ICU rules, but not fully supported by this package:
