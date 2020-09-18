@@ -199,25 +199,25 @@ func (sub Sub) IsError() bool {
 
 func (sub Sub) Validate() error {
 	if sub.Orth != "" && sub.RuleRef != "" {
-		return fmt.Errorf("Orth and RuleRef cannot both be instantiated")
+		return fmt.Errorf("orth and RuleRef cannot both be instantiated")
 	}
 	if sub.Orth != "" && sub.NumericFormatter.initialized {
-		return fmt.Errorf("Orth and NumericFormatter cannot both be instantiated")
+		return fmt.Errorf("orth and NumericFormatter cannot both be instantiated")
 	}
 	if sub.Orth != "" && sub.PluralFormatter.initialized {
-		return fmt.Errorf("Orth and PluralFormatter cannot both be instantiated")
+		return fmt.Errorf("orth and PluralFormatter cannot both be instantiated")
 	}
 	if sub.NumericFormatter.initialized && sub.PluralFormatter.initialized {
-		return fmt.Errorf("NumericFormatter and PluralFormatter cannot both be instantiated")
+		return fmt.Errorf("numericFormatter and PluralFormatter cannot both be instantiated")
 	}
 	if sub.RuleRef != "" && sub.PluralFormatter.initialized {
-		return fmt.Errorf("RuleRef and PluralFormatter cannot both be instantiated")
+		return fmt.Errorf("ruleRef and PluralFormatter cannot both be instantiated")
 	}
 	if sub.RuleRef != "" && sub.NumericFormatter.initialized {
-		return fmt.Errorf("RuleRef and NumericFormatter cannot both be instantiated")
+		return fmt.Errorf("ruleRef and NumericFormatter cannot both be instantiated")
 	}
 	if sub.Orth != "" && sub.Operation != "" {
-		return fmt.Errorf("Orth and Operation cannot both be instantiated")
+		return fmt.Errorf("orth and Operation cannot both be instantiated")
 	}
 	return nil
 }
@@ -378,7 +378,7 @@ func (r *RulePackage) Spellout(input string, groupName string, ruleSetName strin
 			return res, nil
 		}
 	}
-	return "", fmt.Errorf("No such rule set group: %s", groupName)
+	return "", fmt.Errorf("no such rule set group: %s", groupName)
 }
 
 type RuleSetGroup struct {
@@ -399,17 +399,17 @@ func NewRulePackage(lang Language, ruleSetGroups []RuleSetGroup, debug bool) (Ru
 	res := RulePackage{Language: lang, Debug: debug, RuleSetGroups: ruleSetGroups}
 	for _, g := range res.RuleSetGroups {
 		if g.Language != res.Language {
-			return res, fmt.Errorf("Language for rule set group %s does not match package language: %s / %s", g.Name, res.Language, g.Language)
+			return res, fmt.Errorf("language for rule set group %s does not match package language: %s / %s", g.Name, res.Language, g.Language)
 		}
 		for _, ruleSet := range g.RuleSets {
 			for _, rule := range ruleSet.Rules {
 				if rule.Base.Int != 0 && rule.Base.String != "" {
-					return res, fmt.Errorf("Rule must use either BaseInt or BaseString, not both: %v", rule)
+					return res, fmt.Errorf("rule must use either BaseInt or BaseString, not both: %v", rule)
 				}
 				for _, sub := range rule.Subs {
 					if sub.IsRuleRef() {
 						if _, ok := g.FindRuleSet(sub.RuleRef); !ok {
-							return res, fmt.Errorf("No such rule set: %s", sub)
+							return res, fmt.Errorf("no such rule set: %s", sub)
 						}
 					}
 				}
@@ -423,12 +423,12 @@ func (g RuleSetGroup) Validate() error {
 	for _, ruleSet := range g.RuleSets {
 		for _, rule := range ruleSet.Rules {
 			if rule.Base.Int != 0 && rule.Base.String != "" {
-				return fmt.Errorf("Rule must use either BaseInt or BaseString, not both: %v", rule)
+				return fmt.Errorf("rule must use either BaseInt or BaseString, not both: %v", rule)
 			}
 			for _, sub := range rule.Subs {
 				if sub.IsRuleRef() {
 					if _, ok := g.FindRuleSet(sub.RuleRef); !ok {
-						return fmt.Errorf("No such rule set: %s", sub)
+						return fmt.Errorf("no such rule set: %s", sub)
 					}
 				}
 			}
@@ -534,13 +534,13 @@ func (g *RuleSetGroup) Spellout(input string, ruleSetName string, debug bool) (s
 		return strings.TrimSpace(res), err
 
 	}
-	return "", fmt.Errorf("No such rule set: %s", ruleSetName)
+	return "", fmt.Errorf("no such rule set: %s", ruleSetName)
 }
 
 func (g *RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (string, error) {
 	matchedRule, ok := g.findMatchingRule(input, ruleSet)
 	if !ok {
-		err := fmt.Errorf("No matching base rule for %s in rule set %s", input, ruleSet.Name)
+		err := fmt.Errorf("no matching base rule for %s in rule set %s", input, ruleSet.Name)
 		if debug {
 			fmt.Fprintf(os.Stderr, "[rbnf] %v : rule set: %#v\n", err, ruleSet)
 		}
@@ -553,7 +553,7 @@ func (g *RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (stri
 
 	match, ok := matchedRule.Match(input)
 	if !ok {
-		return input, fmt.Errorf("Couldn't get match result for rule %v, input %s", matchedRule, input)
+		return input, fmt.Errorf("couldn't get match result for rule %v, input %s", matchedRule, input)
 	}
 	if debug {
 		fmt.Fprintf(os.Stderr, "[rbnf] Match result: %#v\n", match)
@@ -658,7 +658,7 @@ func (g *RuleSetGroup) spellout(input string, ruleSet RuleSet, debug bool) (stri
 		} else if sub.IsRuleRef() {
 			return input, fmt.Errorf("unknown rule set ref %s in rule sub %s", sub.RuleRef, sub)
 		} else if sub.IsError() {
-			return input, fmt.Errorf("Internal rule error for input string %s (pre-defined in rule)", input)
+			return input, fmt.Errorf("internal rule error for input string %s (pre-defined in rule)", input)
 		} else if sub.Operation == ">>" {
 			spelled, err := g.spellout(match.ForwardRight, ruleSet, debug)
 			if err != nil {

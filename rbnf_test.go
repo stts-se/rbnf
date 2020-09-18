@@ -433,7 +433,7 @@ func Test_Spellout2(t *testing.T) {
 	}
 
 	res, err = g.Spellout("-2001x", "default", false)
-	exp = "No matching base rule for"
+	exp = "no matching base rule for"
 	if err == nil {
 		t.Errorf("Expected error, found %v", err)
 	}
