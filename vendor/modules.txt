@@ -1,6 +1,8 @@
 # github.com/google/uuid v1.1.1
+## explicit
 github.com/google/uuid
 # golang.org/x/text v0.3.2
+## explicit
 golang.org/x/text/feature/plural
 golang.org/x/text/internal
 golang.org/x/text/internal/catmsg
