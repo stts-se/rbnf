@@ -4,5 +4,5 @@ go 1.16
 
 require (
 	github.com/google/uuid v1.1.1
-	golang.org/x/text v0.3.2
+	golang.org/x/text v0.3.8
 )
