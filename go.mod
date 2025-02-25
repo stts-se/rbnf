@@ -1,8 +1,8 @@
 module github.com/stts-se/rbnf
 
-go 1.16
+go 1.24
 
 require (
-	github.com/google/uuid v1.1.1
-	golang.org/x/text v0.3.8
+	github.com/google/uuid v1.6.0
+	golang.org/x/text v0.22.0
 )
